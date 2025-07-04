@@ -1,0 +1,280 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}PWA Preview - HealthyRizz{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-white">PWA Preview & Testing</h1>
+        <a href="{{ url_for('admin.admin_pwa_settings') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-arrow-left mr-2"></i>Back to PWA Settings
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- PWA Preview -->
+        <div class="bg-dark-lighter rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-white mb-4">
+                <i class="fas fa-mobile-alt mr-3 text-primary"></i>PWA Installation Preview
+            </h2>
+            
+            <!-- Mobile Device Preview -->
+            <div class="bg-gray-900 rounded-lg p-4 mb-6">
+                <div class="flex justify-center mb-4">
+                    <div class="w-64 h-96 bg-white rounded-lg shadow-lg relative overflow-hidden">
+                        <!-- Status Bar -->
+                        <div class="h-6 bg-gray-800 flex items-center justify-between px-3 text-white text-xs">
+                            <span>9:41</span>
+                            <div class="flex items-center space-x-1">
+                                <i class="fas fa-signal text-xs"></i>
+                                <i class="fas fa-wifi text-xs"></i>
+                                <i class="fas fa-battery-three-quarters text-xs"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- App Icon -->
+                        <div class="flex flex-col items-center justify-center h-full bg-gray-100">
+                            {% if manifest_data.icons %}
+                                <img src="{{ manifest_data.icons[0].src }}" 
+                                     alt="App Icon" 
+                                     class="w-20 h-20 rounded-lg mb-4 shadow-lg">
+                            {% else %}
+                                <div class="w-20 h-20 bg-primary rounded-lg mb-4 flex items-center justify-center">
+                                    <i class="fas fa-apple-alt text-white text-2xl"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ manifest_data.short_name }}</h3>
+                            <p class="text-sm text-gray-600 text-center px-4">{{ manifest_data.description }}</p>
+                            
+                            <!-- Install Button -->
+                            <button class="mt-6 bg-primary text-white px-6 py-2 rounded-lg font-medium">
+                                Install App
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="text-gray-400 text-sm text-center">Mobile device preview showing PWA installation prompt</p>
+            </div>
+            
+            <!-- PWA Features -->
+            <div class="space-y-4">
+                <h3 class="text-white font-semibold">PWA Features Status</h3>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-dark-lightest rounded-lg p-3 border border-gray-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-download text-green-400 mr-2"></i>
+                            <span class="text-white text-sm">Installable</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark-lightest rounded-lg p-3 border border-gray-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-wifi-slash text-green-400 mr-2"></i>
+                            <span class="text-white text-sm">Offline Ready</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark-lightest rounded-lg p-3 border border-gray-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-bell text-green-400 mr-2"></i>
+                            <span class="text-white text-sm">Push Notifications</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-dark-lightest rounded-lg p-3 border border-gray-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-sync text-green-400 mr-2"></i>
+                            <span class="text-white text-sm">Background Sync</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manifest Preview -->
+        <div class="bg-dark-lighter rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-white mb-4">
+                <i class="fas fa-code mr-3 text-primary"></i>Manifest.json Preview
+            </h2>
+            
+            <div class="bg-gray-900 rounded-lg p-4 mb-4">
+                <pre class="text-green-400 text-sm overflow-x-auto"><code>{{ manifest_data | tojson(indent=2) }}</code></pre>
+            </div>
+            
+            <div class="space-y-4">
+                <h3 class="text-white font-semibold">Current Configuration</h3>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">App Name:</span>
+                        <span class="text-white">{{ manifest_data.name }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Short Name:</span>
+                        <span class="text-white">{{ manifest_data.short_name }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Display Mode:</span>
+                        <span class="text-white">{{ manifest_data.display }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Theme Color:</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-4 h-4 rounded border border-gray-600" style="background-color: {{ manifest_data.theme_color }}"></div>
+                            <span class="text-white">{{ manifest_data.theme_color }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Background Color:</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-4 h-4 rounded border border-gray-600" style="background-color: {{ manifest_data.background_color }}"></div>
+                            <span class="text-white">{{ manifest_data.background_color }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Icons:</span>
+                        <span class="text-white">{{ manifest_data.icons | length }} configured</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testing Tools -->
+    <div class="bg-dark-lighter rounded-lg shadow-md p-6 mt-8">
+        <h2 class="text-xl font-semibold text-white mb-4">
+            <i class="fas fa-tools mr-3 text-primary"></i>Testing Tools
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Lighthouse Test -->
+            <div class="bg-dark-lightest rounded-lg p-4 border border-gray-700">
+                <h3 class="text-white font-semibold mb-2">Lighthouse PWA Score</h3>
+                <p class="text-gray-400 text-sm mb-3">Test your PWA with Google Lighthouse</p>
+                <a href="https://developers.google.com/web/tools/lighthouse" 
+                   target="_blank" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                    <i class="fas fa-external-link-alt mr-2"></i>Run Lighthouse Test
+                </a>
+            </div>
+            
+            <!-- Browser DevTools -->
+            <div class="bg-dark-lightest rounded-lg p-4 border border-gray-700">
+                <h3 class="text-white font-semibold mb-2">Browser DevTools</h3>
+                <p class="text-gray-400 text-sm mb-3">Test PWA in browser developer tools</p>
+                <button onclick="openDevTools()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">
+                    <i class="fas fa-bug mr-2"></i>Open DevTools
+                </button>
+            </div>
+            
+            <!-- PWA Builder -->
+            <div class="bg-dark-lightest rounded-lg p-4 border border-gray-700">
+                <h3 class="text-white font-semibold mb-2">PWA Builder</h3>
+                <p class="text-gray-400 text-sm mb-3">Generate native app packages</p>
+                <a href="https://www.pwabuilder.com/" 
+                   target="_blank" 
+                   class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm">
+                    <i class="fas fa-external-link-alt mr-2"></i>PWA Builder
+                </a>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="mt-6 pt-6 border-t border-gray-700">
+            <h3 class="text-white font-semibold mb-4">Quick Actions</h3>
+            
+            <div class="flex flex-wrap gap-4">
+                <button onclick="testInstallation()" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-download mr-2"></i>Test Installation
+                </button>
+                
+                <button onclick="clearCache()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-broom mr-2"></i>Clear PWA Cache
+                </button>
+                
+                <button onclick="unregisterSW()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-trash mr-2"></i>Unregister Service Worker
+                </button>
+                
+                <a href="{{ url_for('admin.admin_pwa_settings') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-cog mr-2"></i>Edit Settings
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openDevTools() {
+    alert('Please open your browser\'s Developer Tools manually:\n\n' +
+          'Chrome/Edge: F12 or Ctrl+Shift+I\n' +
+          'Firefox: F12 or Ctrl+Shift+I\n' +
+          'Safari: Cmd+Option+I\n\n' +
+          'Then go to the "Application" tab to test PWA features.');
+}
+
+function testInstallation() {
+    if ('serviceWorker' in navigator && 'BeforeInstallPromptEvent' in window) {
+        alert('PWA installation is supported in this browser!\n\n' +
+              'You should see an install prompt when visiting the main site.');
+    } else {
+        alert('PWA installation is not supported in this browser or environment.');
+    }
+}
+
+function clearCache() {
+    if ('caches' in window) {
+        caches.keys().then(function(names) {
+            return Promise.all(names.map(function(name) {
+                return caches.delete(name);
+            }));
+        }).then(function() {
+            alert('PWA cache cleared successfully!');
+        }).catch(function() {
+            alert('Error clearing cache.');
+        });
+    } else {
+        alert('Cache API not supported in this browser.');
+    }
+}
+
+function unregisterSW() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+                registration.unregister();
+            }
+            alert('Service Worker unregistered successfully!');
+        }).catch(function() {
+            alert('Error unregistering Service Worker.');
+        });
+    } else {
+        alert('Service Worker not supported in this browser.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(function(registration) {
+            if (registration) {
+                console.log('Service Worker is registered');
+            } else {
+                console.log('Service Worker is not registered');
+            }
+        });
+    }
+    
+    window.addEventListener('beforeinstallprompt', function(e) {
+        console.log('PWA installation prompt available');
+    });
+});
+</script>
+{% endblock %} 

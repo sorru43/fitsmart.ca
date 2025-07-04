@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <!-- Blog Posts Only -->
+    {% for post in blog_posts %}
+    <url>
+        <loc>https://healthyrizz.in/amp/blog/{{ post.slug }}</loc>
+        <lastmod>{{ post.updated_at.strftime('%Y-%m-%d') if post.updated_at else post.created_at.strftime('%Y-%m-%d') }}</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    {% endfor %}
+</urlset> 

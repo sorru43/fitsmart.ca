@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmation - Fit Smart{% endblock %}
+
+{% block content %}
+<div class="bg-black py-8">
+    <div class="container mx-auto px-4">
+        <div class="max-w-2xl mx-auto">
+            <div class="bg-gray-900 rounded-lg shadow-md overflow-hidden mb-8">
+                <div class="p-8 text-center">
+                    <div class="flex justify-center mb-6">
+                        <div class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
+                            <i class="fas fa-check text-primary text-3xl"></i>
+                        </div>
+                    </div>
+                    
+                    <h1 class="text-3xl font-bold mb-4 text-white">Thank You for Your Order!</h1>
+                    <p class="text-gray-300 mb-8">Your subscription has been successfully created.</p>
+                    
+                    <div class="bg-gray-800 p-6 rounded-lg mb-8">
+                        <h2 class="text-xl font-semibold mb-4 text-white">Subscription Details</h2>
+                        
+                        <div class="space-y-4">
+                            <div class="flex justify-between text-gray-300">
+                                <span>Meal Plan:</span>
+                                <span class="font-semibold text-white">{{ plan.name }}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-gray-300">
+                                <span>Frequency:</span>
+                                <span class="font-semibold text-white">{{ subscription.frequency.value|capitalize }}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-gray-300">
+                                <span>First Delivery:</span>
+                                <span class="font-semibold text-white">{{ subscription.current_period_start.strftime('%B %d, %Y') }}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-gray-300">
+                                <span>Amount:</span>
+                                <div class="text-sm text-gray-600">
+                                    <span class="font-medium">Price:</span> ₹{{ "%.2f"|format(subscription.price) }}/{{ subscription.frequency.value }}
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between text-gray-300">
+                                <span>Subscription Status:</span>
+                                <span class="font-semibold text-green-500">{{ subscription.status.value|capitalize }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-300 mb-6">
+                        A confirmation email has been sent to your email address with all the details.
+                        You can manage your subscription anytime from your profile.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="{{ url_for('profile') }}" class="bg-primary hover:bg-green-600 text-white font-bold py-3 px-6 rounded-md transition">
+                            View My Subscription
+                        </a>
+                        
+                        <a href="{{ url_for('index') }}" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-md transition">
+                            Return to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-900 rounded-lg shadow-md overflow-hidden p-6">
+                <h2 class="text-xl font-bold mb-4 text-white">What's Next?</h2>
+                
+                <div class="space-y-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0 mr-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                <span class="text-primary font-bold">1</span>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">Prepare for Delivery</h3>
+                            <p class="text-gray-300">
+                                Make sure your delivery address is accessible on your scheduled delivery day.
+                                You'll receive a notification when your delivery is on its way.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex">
+                        <div class="flex-shrink-0 mr-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                <span class="text-primary font-bold">2</span>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">Enjoy Your Meals</h3>
+                            <p class="text-gray-300">
+                                Your meals will arrive fresh and ready to eat. Simply follow the heating instructions if needed.
+                                Enjoy your delicious, healthy meals!
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex">
+                        <div class="flex-shrink-0 mr-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                                <span class="text-primary font-bold">3</span>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">Manage Your Subscription</h3>
+                            <p class="text-gray-300">
+                                You can easily manage your subscription from your profile. Skip a delivery, change your meal plan,
+                                or update your payment details at any time.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

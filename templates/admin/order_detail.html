@@ -1,0 +1,196 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Order #{{ order.id }} - Admin{% endblock %}
+
+{% block head %}
+<style>
+    .order-detail {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    .status-pending { background-color: #fef3c7; color: #d97706; }
+    .status-completed { background-color: #d1fae5; color: #059669; }
+    .status-failed { background-color: #fecaca; color: #dc2626; }
+    .status-cancelled { background-color: #f3f4f6; color: #6b7280; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3">Order #{{ order.id }}</h1>
+                <a href="{{ url_for('admin_orders.orders_dashboard') }}" class="btn btn-outline-secondary">
+                    ← Back to Orders
+                </a>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="order-detail">
+                        <h4>Order Information</h4>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th style="width: 150px;">Order ID:</th>
+                                <td>#{{ order.id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Customer:</th>
+                                <td>{{ order.user.name or order.user.username }} ({{ order.user.email }})</td>
+                            </tr>
+                            <tr>
+                                <th>Meal Plan:</th>
+                                <td>{{ order.meal_plan.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Amount:</th>
+                                <td>₹{{ "%.2f"|format(order.amount) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>
+                                    <span class="status-badge status-{{ order.status }}">
+                                        {{ order.status.title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Payment Status:</th>
+                                <td>
+                                    <span class="status-badge status-{{ order.payment_status }}">
+                                        {{ order.payment_status.title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Payment ID:</th>
+                                <td>{{ order.payment_id or 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Order ID (Razorpay):</th>
+                                <td>{{ order.order_id or 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Created At:</th>
+                                <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Updated At:</th>
+                                <td>{{ order.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    {% if order.delivery_address %}
+                    <div class="order-detail">
+                        <h4>Delivery Information</h4>
+                        <p><strong>Address:</strong><br>{{ order.delivery_address }}</p>
+                        {% if order.delivery_instructions %}
+                        <p><strong>Instructions:</strong><br>{{ order.delivery_instructions }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="order-detail">
+                        <h4>Actions</h4>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary" onclick="updateOrderStatus('{{ order.id }}', 'confirmed')">
+                                Mark as Confirmed
+                            </button>
+                            <button class="btn btn-outline-success" onclick="updatePaymentStatus('{{ order.id }}', 'completed')">
+                                Mark Payment Complete
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="updateOrderStatus('{{ order.id }}', 'cancelled')">
+                                Cancel Order
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if related_subscriptions %}
+                    <div class="order-detail">
+                        <h4>Related Subscriptions</h4>
+                        {% for subscription in related_subscriptions %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <p><strong>Subscription #{{ subscription.id }}</strong></p>
+                            <p>Status: {{ subscription.status.value.title() }}</p>
+                            <p>Frequency: {{ subscription.frequency.value.title() }}</p>
+                            <a href="{{ url_for('admin_orders.subscription_detail', subscription_id=subscription.id) }}" 
+                               class="btn btn-sm btn-outline-info">View Details</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateOrderStatus(orderId, status) {
+    if (confirm('Are you sure you want to update this order status?')) {
+        fetch('{{ url_for("admin_orders.update_order_status") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Order status updated successfully');
+                location.reload();
+            } else {
+                alert('Error updating order status: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error updating order status: ' + error);
+        });
+    }
+}
+
+function updatePaymentStatus(orderId, paymentStatus) {
+    if (confirm('Are you sure you want to update this payment status?')) {
+        fetch('{{ url_for("admin_orders.update_order_status") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                payment_status: paymentStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Payment status updated successfully');
+                location.reload();
+            } else {
+                alert('Error updating payment status: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error updating payment status: ' + error);
+        });
+    }
+}
+</script>
+{% endblock %} 

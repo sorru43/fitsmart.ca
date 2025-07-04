@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="300" height="200" viewBox="0 0 300 200" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <!-- Main Logo Text -->
+    <g id="logo-text" transform="translate(30, 80)">
+        <!-- FIT text in green -->
+        <text x="0" y="0" font-family="Arial Black, sans-serif" font-size="48" font-weight="900" fill="#2EAE1F">
+            <tspan>FIT</tspan>
+        </text>
+        <!-- SMART text in white -->
+        <text x="85" y="0" font-family="Arial Black, sans-serif" font-size="48" font-weight="900" fill="#FFFFFF">
+            <tspan>SMART</tspan>
+        </text>
+    </g>
+    
+    <!-- Tagline -->
+    <text x="150" y="120" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">
+        EAT SMART.STAY FIT
+    </text>
+    
+    <!-- Fork and Knife Icon in 'i' of FIT -->
+    <g id="utensils-icon" transform="translate(95, 45)">
+        <!-- Fork -->
+        <path d="M4,0 L4,30 M0,0 L8,0 M2,10 L6,10" stroke="#2EAE1F" stroke-width="2" fill="none"/>
+        <!-- Knife -->
+        <path d="M12,0 C12,0 16,5 16,15 L16,30" stroke="#2EAE1F" stroke-width="2" fill="none"/>
+    </g>
+</svg> 

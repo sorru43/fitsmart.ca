@@ -1,0 +1,258 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Location Management{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-8">
+  <h1 class="text-2xl font-bold mb-6">Location Management (State → City → Area)</h1>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- States -->
+    <div>
+      <h2 class="font-semibold mb-2">States</h2>
+      <ul id="state-list" class="bg-white rounded shadow p-2 mb-2 min-h-[200px]"></ul>
+      <form id="add-state-form" class="flex gap-2 mb-2">
+        <input type="text" id="new-state" class="form-input flex-1 border border-gray-300 rounded px-2 py-1" placeholder="Add state..." required>
+        <button type="submit" class="btn-primary">Add</button>
+      </form>
+    </div>
+    <!-- Cities -->
+    <div>
+      <h2 class="font-semibold mb-2">Cities</h2>
+      <ul id="city-list" class="bg-white rounded shadow p-2 mb-2 min-h-[200px]"></ul>
+      <form id="add-city-form" class="flex gap-2 mb-2">
+        <input type="text" id="new-city" class="form-input flex-1 border border-gray-300 rounded px-2 py-1" placeholder="Add city..." required>
+        <button type="submit" class="btn-primary">Add</button>
+      </form>
+    </div>
+    <!-- Areas -->
+    <div>
+      <h2 class="font-semibold mb-2">Areas</h2>
+      <ul id="area-list" class="bg-white rounded shadow p-2 mb-2 min-h-[200px]"></ul>
+      <form id="add-area-form" class="flex gap-2 mb-2">
+        <input type="text" id="new-area" class="form-input flex-1 border border-gray-300 rounded px-2 py-1" placeholder="Add area..." required>
+        <button type="submit" class="btn-primary">Add</button>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+let selectedState = null;
+let selectedCity = null;
+
+// Get CSRF token from meta tag
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+// Common headers for all fetch requests
+const headers = {
+  'Content-Type': 'application/json',
+  'X-CSRFToken': csrfToken
+};
+
+function fetchStates() {
+  fetch('/admin/locations/state').then(r => r.json()).then(states => {
+    const list = document.getElementById('state-list');
+    list.innerHTML = '';
+    if (states.length === 0) {
+      list.innerHTML = '<li class="text-gray-400 text-center py-8">No states yet</li>';
+    }
+    states.forEach(state => {
+      const li = document.createElement('li');
+      li.className = 'flex justify-between items-center py-2 px-3 mb-1 rounded cursor-pointer transition ' + (selectedState && selectedState.id === state.id ? 'bg-primary text-white' : 'hover:bg-gray-100');
+      li.textContent = state.name;
+      li.onclick = () => { selectState(state); };
+      // Edit/Delete buttons
+      const btns = document.createElement('span');
+      btns.innerHTML = `<button onclick="event.stopPropagation(); editState(${state.id}, '${state.name}')" class="text-xs text-blue-600 mr-2 underline">Edit</button><button onclick="event.stopPropagation(); deleteState(${state.id})" class="text-xs text-red-600 underline">Delete</button>`;
+      li.appendChild(btns);
+      list.appendChild(li);
+    });
+  });
+}
+
+function selectState(state) {
+  selectedState = state;
+  selectedCity = null;
+  fetchStates();
+  fetchCities();
+  document.getElementById('area-list').innerHTML = '<li class="text-gray-400 text-center py-8">Select a city</li>';
+}
+
+function fetchCities() {
+  if (!selectedState) { document.getElementById('city-list').innerHTML = '<li class="text-gray-400 text-center py-8">Select a state</li>'; return; }
+  fetch(`/admin/locations/city/${selectedState.id}`).then(r => r.json()).then(cities => {
+    const list = document.getElementById('city-list');
+    list.innerHTML = '';
+    if (cities.length === 0) {
+      list.innerHTML = '<li class="text-gray-400 text-center py-8">No cities yet</li>';
+    }
+    cities.forEach(city => {
+      const li = document.createElement('li');
+      li.className = 'flex justify-between items-center py-2 px-3 mb-1 rounded cursor-pointer transition ' + (selectedCity && selectedCity.id === city.id ? 'bg-primary text-white' : 'hover:bg-gray-100');
+      li.textContent = city.name;
+      li.onclick = () => { selectCity(city); };
+      // Edit/Delete buttons
+      const btns = document.createElement('span');
+      btns.innerHTML = `<button onclick="event.stopPropagation(); editCity(${city.id}, '${city.name}')" class="text-xs text-blue-600 mr-2 underline">Edit</button><button onclick="event.stopPropagation(); deleteCity(${city.id})" class="text-xs text-red-600 underline">Delete</button>`;
+      li.appendChild(btns);
+      list.appendChild(li);
+    });
+  });
+}
+
+function selectCity(city) {
+  selectedCity = city;
+  fetchCities();
+  fetchAreas();
+}
+
+function fetchAreas() {
+  if (!selectedCity) { document.getElementById('area-list').innerHTML = '<li class="text-gray-400 text-center py-8">Select a city</li>'; return; }
+  fetch(`/admin/locations/area/${selectedCity.id}`).then(r => r.json()).then(areas => {
+    const list = document.getElementById('area-list');
+    list.innerHTML = '';
+    if (areas.length === 0) {
+      list.innerHTML = '<li class="text-gray-400 text-center py-8">No areas yet</li>';
+    }
+    areas.forEach(area => {
+      const li = document.createElement('li');
+      li.className = 'flex justify-between items-center py-2 px-3 mb-1 rounded transition hover:bg-gray-100';
+      li.textContent = area.name;
+      // Edit/Delete buttons
+      const btns = document.createElement('span');
+      btns.innerHTML = `<button onclick="editArea(${area.id}, '${area.name}')" class="text-xs text-blue-600 mr-2 underline">Edit</button><button onclick="deleteArea(${area.id})" class="text-xs text-red-600 underline">Delete</button>`;
+      li.appendChild(btns);
+      list.appendChild(li);
+    });
+  });
+}
+
+// Add State
+addEventListener('DOMContentLoaded', () => {
+  fetchStates();
+  document.getElementById('add-state-form').onsubmit = e => {
+    e.preventDefault();
+    const name = document.getElementById('new-state').value.trim();
+    if (!name) return;
+    fetch('/admin/locations/state', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({name})
+    })
+    .then(() => { 
+      document.getElementById('new-state').value = ''; 
+      fetchStates(); 
+    });
+  };
+
+  // Add City
+  document.getElementById('add-city-form').onsubmit = e => {
+    e.preventDefault();
+    if (!selectedState) return alert('Select a state first');
+    const name = document.getElementById('new-city').value.trim();
+    if (!name) return;
+    fetch('/admin/locations/city', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({name, state_id: selectedState.id})
+    })
+    .then(() => { 
+      document.getElementById('new-city').value = ''; 
+      fetchCities(); 
+    });
+  };
+
+  // Add Area
+  document.getElementById('add-area-form').onsubmit = e => {
+    e.preventDefault();
+    if (!selectedCity) return alert('Select a city first');
+    const name = document.getElementById('new-area').value.trim();
+    if (!name) return;
+    fetch('/admin/locations/area', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({name, city_id: selectedCity.id})
+    })
+    .then(() => { 
+      document.getElementById('new-area').value = ''; 
+      fetchAreas(); 
+    });
+  };
+});
+
+// Edit/Delete State
+function editState(id, oldName) {
+  const name = prompt('Edit state name:', oldName);
+  if (name && name !== oldName) {
+    fetch(`/admin/locations/state/${id}`, {
+      method: 'PUT',
+      headers: headers,
+      body: JSON.stringify({name})
+    })
+    .then(() => fetchStates());
+  }
+}
+
+function deleteState(id) {
+  if (confirm('Delete this state and all its cities/areas?')) {
+    fetch(`/admin/locations/state/${id}`, {
+      method: 'DELETE',
+      headers: headers
+    })
+    .then(() => { 
+      fetchStates(); 
+      document.getElementById('city-list').innerHTML = '<li class="text-gray-400 text-center py-8">Select a state</li>'; 
+      document.getElementById('area-list').innerHTML = '<li class="text-gray-400 text-center py-8">Select a city</li>'; 
+    });
+  }
+}
+
+// Edit/Delete City
+function editCity(id, oldName) {
+  const name = prompt('Edit city name:', oldName);
+  if (name && name !== oldName) {
+    fetch(`/admin/locations/city/${id}`, {
+      method: 'PUT',
+      headers: headers,
+      body: JSON.stringify({name})
+    })
+    .then(() => fetchCities());
+  }
+}
+
+function deleteCity(id) {
+  if (confirm('Delete this city and all its areas?')) {
+    fetch(`/admin/locations/city/${id}`, {
+      method: 'DELETE',
+      headers: headers
+    })
+    .then(() => { 
+      fetchCities(); 
+      document.getElementById('area-list').innerHTML = '<li class="text-gray-400 text-center py-8">Select a city</li>'; 
+    });
+  }
+}
+
+// Edit/Delete Area
+function editArea(id, oldName) {
+  const name = prompt('Edit area name:', oldName);
+  if (name && name !== oldName) {
+    fetch(`/admin/locations/area/${id}`, {
+      method: 'PUT',
+      headers: headers,
+      body: JSON.stringify({name})
+    })
+    .then(() => fetchAreas());
+  }
+}
+
+function deleteArea(id) {
+  if (confirm('Delete this area?')) {
+    fetch(`/admin/locations/area/${id}`, {
+      method: 'DELETE',
+      headers: headers
+    })
+    .then(() => fetchAreas());
+  }
+}
+</script>
+{% endblock %}

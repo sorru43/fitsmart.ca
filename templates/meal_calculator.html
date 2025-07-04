@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}Meal Calculator - Fit Smart{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/calculator.css') }}">
+<style>
+    .fade-in {
+        animation: fadeIn 0.5s ease-in forwards;
+        opacity: 0;
+    }
+    
+    @keyframes fadeIn {
+        from { 
+            opacity: 0; 
+            transform: translateY(10px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+    
+    .loading {
+        position: relative;
+        pointer-events: none;
+    }
+    
+    .loading::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.5rem;
+        z-index: 10;
+    }
+    
+    .loading::before {
+        content: 'Calculating...';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        z-index: 11;
+        font-weight: 500;
+    }
+    
+    .input-error {
+        border-color: #ef4444 !important;
+    }
+    
+    .error-message {
+        color: #ef4444;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    #result {
+        opacity: 0;
+        transition: opacity 0.5s ease-in;
+    }
+
+    #result.fade-in {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-center mb-8">Meal Calculator</h1>
+    
+    <div class="max-w-2xl mx-auto bg-dark rounded-lg shadow-lg p-6">
+        <form id="mealCalculatorForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Age -->
+                <div>
+                    <label for="age" class="block text-sm font-medium text-gray-300">Age</label>
+                    <input type="number" id="age" name="age" min="10" max="120" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                    <div id="ageError" class="error-message hidden"></div>
+                </div>
+                
+                <!-- Gender -->
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-300">Gender</label>
+                    <select id="gender" name="gender" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                        <option value="">Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                    <div id="genderError" class="error-message hidden"></div>
+                </div>
+                
+                <!-- Weight -->
+                <div>
+                    <label for="weight" class="block text-sm font-medium text-gray-300">Weight (kg)</label>
+                    <input type="number" id="weight" name="weight" min="30" max="300" step="0.1" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                    <div id="weightError" class="error-message hidden"></div>
+                </div>
+                
+                <!-- Height -->
+                <div>
+                    <label for="height" class="block text-sm font-medium text-gray-300">Height (cm)</label>
+                    <input type="number" id="height" name="height" min="100" max="250" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                    <div id="heightError" class="error-message hidden"></div>
+                </div>
+                
+                <!-- Activity Level -->
+                <div>
+                    <label for="activity" class="block text-sm font-medium text-gray-300">Activity Level</label>
+                    <select id="activity" name="activity" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                        <option value="">Select Activity Level</option>
+                        <option value="sedentary">Sedentary (little or no exercise)</option>
+                        <option value="light">Lightly active (1-3 days/week)</option>
+                        <option value="moderate">Moderately active (3-5 days/week)</option>
+                        <option value="very">Very active (6-7 days/week)</option>
+                        <option value="extra">Extra active (very active & physical job)</option>
+                    </select>
+                    <div id="activityError" class="error-message hidden"></div>
+                </div>
+                
+                <!-- Goal -->
+                <div>
+                    <label for="goal" class="block text-sm font-medium text-gray-300">Goal</label>
+                    <select id="goal" name="goal" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
+                        <option value="">Select Goal</option>
+                        <option value="lose">Lose Weight</option>
+                        <option value="maintain">Maintain Weight</option>
+                        <option value="gain">Gain Weight</option>
+                    </select>
+                    <div id="goalError" class="error-message hidden"></div>
+                </div>
+            </div>
+            
+            <div class="flex justify-center">
+                <button type="submit" id="calculateButton" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200">
+                    Calculate
+                </button>
+            </div>
+        </form>
+        
+        <div id="result" class="mt-8 hidden fade-in">
+            <h2 class="text-2xl font-bold text-center mb-4">Your Recommended Meal Plan</h2>
+            <div class="bg-darker rounded-lg p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold mb-2">Calories</h3>
+                        <p id="calories" class="text-3xl font-bold text-primary">-</p>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold mb-2">Protein</h3>
+                        <p id="protein" class="text-3xl font-bold text-primary">-</p>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold mb-2">Carbs</h3>
+                        <p id="carbs" class="text-3xl font-bold text-primary">-</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold mb-2">Fat</h3>
+                        <p id="fat" class="text-3xl font-bold text-primary">-</p>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold mb-2">BMR</h3>
+                        <p id="bmr" class="text-3xl font-bold text-primary">-</p>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold mb-2">TDEE</h3>
+                        <p id="tdee" class="text-3xl font-bold text-primary">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('mealCalculatorForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Reset previous errors
+    document.querySelectorAll('.error-message').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+    
+    // Get form data
+    const formData = {
+        age: document.getElementById('age').value,
+        gender: document.getElementById('gender').value,
+        weight: document.getElementById('weight').value,
+        height: document.getElementById('height').value,
+        activity: document.getElementById('activity').value,
+        goal: document.getElementById('goal').value
+    };
+    
+    // Validate form data
+    let hasError = false;
+    
+    if (!formData.age || formData.age < 10 || formData.age > 120) {
+        document.getElementById('age').classList.add('input-error');
+        document.getElementById('ageError').textContent = 'Age must be between 10 and 120 years';
+        document.getElementById('ageError').classList.remove('hidden');
+        hasError = true;
+    }
+    
+    if (!formData.gender) {
+        document.getElementById('gender').classList.add('input-error');
+        document.getElementById('genderError').textContent = 'Please select a gender';
+        document.getElementById('genderError').classList.remove('hidden');
+        hasError = true;
+    }
+    
+    if (!formData.weight || formData.weight < 30 || formData.weight > 300) {
+        document.getElementById('weight').classList.add('input-error');
+        document.getElementById('weightError').textContent = 'Weight must be between 30 and 300 kg';
+        document.getElementById('weightError').classList.remove('hidden');
+        hasError = true;
+    }
+    
+    if (!formData.height || formData.height < 100 || formData.height > 250) {
+        document.getElementById('height').classList.add('input-error');
+        document.getElementById('heightError').textContent = 'Height must be between 100 and 250 cm';
+        document.getElementById('heightError').classList.remove('hidden');
+        hasError = true;
+    }
+    
+    if (!formData.activity) {
+        document.getElementById('activity').classList.add('input-error');
+        document.getElementById('activityError').textContent = 'Please select an activity level';
+        document.getElementById('activityError').classList.remove('hidden');
+        hasError = true;
+    }
+    
+    if (!formData.goal) {
+        document.getElementById('goal').classList.add('input-error');
+        document.getElementById('goalError').textContent = 'Please select a goal';
+        document.getElementById('goalError').classList.remove('hidden');
+        hasError = true;
+    }
+    
+    if (hasError) {
+        return;
+    }
+    
+    // Show loading state
+    const form = document.getElementById('mealCalculatorForm');
+    const button = document.getElementById('calculateButton');
+    form.classList.add('loading');
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/calculate-meal', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to calculate meal plan');
+        }
+        
+        if (data.success) {
+            // Update the UI with the calculated values
+            document.getElementById('calories').textContent = data.calories;
+            document.getElementById('protein').textContent = data.protein + 'g';
+            document.getElementById('carbs').textContent = data.carbs + 'g';
+            document.getElementById('fat').textContent = data.fat + 'g';
+            document.getElementById('bmr').textContent = data.bmr;
+            document.getElementById('tdee').textContent = data.tdee;
+            
+            // Show results with animation
+            const resultDiv = document.getElementById('result');
+            resultDiv.classList.remove('hidden');
+            resultDiv.classList.add('fade-in');
+            
+            // Scroll to results
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            response: error.response
+        });
+        alert(error.message || 'An error occurred while calculating your meal plan');
+    } finally {
+        // Remove loading state
+        form.classList.remove('loading');
+        button.disabled = false;
+    }
+});
+
+// Add input validation on blur
+const inputs = document.querySelectorAll('input, select');
+inputs.forEach(input => {
+    input.addEventListener('blur', function() {
+        const errorId = this.id + 'Error';
+        const errorElement = document.getElementById(errorId);
+        
+        if (!this.value) {
+            this.classList.add('input-error');
+            errorElement.textContent = 'This field is required';
+            errorElement.classList.remove('hidden');
+        } else {
+            this.classList.remove('input-error');
+            errorElement.classList.add('hidden');
+        }
+    });
+});
+</script>
+{% endblock %} 

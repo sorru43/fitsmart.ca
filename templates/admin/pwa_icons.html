@@ -1,0 +1,207 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}PWA Icons - HealthyRizz{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-white">PWA Icons Management</h1>
+        <a href="{{ url_for('admin.admin_pwa_settings') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-arrow-left mr-2"></i>Back to PWA Settings
+        </a>
+    </div>
+
+    <div class="bg-dark-lighter rounded-lg shadow-md p-6">
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-white mb-2">
+                <i class="fas fa-images mr-3 text-primary"></i>PWA Icons Configuration
+            </h2>
+            <p class="text-gray-400">Upload icons for different sizes and purposes. Icons should be square PNG images.</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            <!-- Icon Requirements -->
+            <div class="bg-blue-900 bg-opacity-20 border border-blue-600 rounded-lg p-4 mb-6">
+                <h3 class="text-blue-300 font-semibold mb-2">
+                    <i class="fas fa-info-circle mr-2"></i>Icon Requirements
+                </h3>
+                <ul class="text-blue-200 text-sm space-y-1">
+                    <li>• Icons must be square PNG images</li>
+                    <li>• Recommended format: PNG with transparency</li>
+                    <li>• 192x192 and 512x512 are required for app stores</li>
+                    <li>• Maskable icons should have safe area padding</li>
+                    <li>• Icons will be automatically resized if needed</li>
+                </ul>
+            </div>
+
+            <!-- Icon Upload Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for icon in required_icons %}
+                <div class="bg-dark-lightest rounded-lg p-4 border border-gray-700">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-white font-semibold">{{ icon.size }}</h3>
+                        <span class="px-2 py-1 text-xs rounded {{ 'bg-green-600 text-white' if icon.key in icon_settings else 'bg-gray-600 text-gray-300' }}">
+                            {{ 'Uploaded' if icon.key in icon_settings else 'Missing' }}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm text-gray-400 mb-2">Purpose: {{ icon.purpose }}</label>
+                        
+                        <!-- Current Icon Preview -->
+                        {% if icon.key in icon_settings %}
+                        <div class="mb-3">
+                            <img src="{{ icon_settings[icon.key] }}" 
+                                 alt="{{ icon.size }} icon" 
+                                 class="w-16 h-16 border border-gray-600 rounded-lg object-contain bg-gray-800">
+                            <p class="text-xs text-gray-500 mt-1">Current icon</p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- File Upload -->
+                        <div class="relative">
+                            <input type="file" 
+                                   id="icon_{{ icon.size.replace('x', '_') }}" 
+                                   name="icon_{{ icon.size.replace('x', '_') }}"
+                                   accept="image/png,image/jpeg"
+                                   class="hidden"
+                                   onchange="previewIcon(this, '{{ icon.size }}')">
+                            
+                            <label for="icon_{{ icon.size.replace('x', '_') }}" 
+                                   class="block w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-center text-gray-300 hover:bg-gray-700 cursor-pointer">
+                                <i class="fas fa-upload mr-2"></i>
+                                {% if icon.key in icon_settings %}
+                                    Replace Icon
+                                {% else %}
+                                    Upload Icon
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <!-- Preview Area -->
+                        <div id="preview_{{ icon.size.replace('x', '_') }}" class="mt-3 hidden">
+                            <img id="preview_img_{{ icon.size.replace('x', '_') }}" 
+                                 class="w-16 h-16 border border-gray-600 rounded-lg object-contain bg-gray-800">
+                            <p class="text-xs text-gray-500 mt-1">Preview</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500">
+                        <p><strong>Size:</strong> {{ icon.size }}</p>
+                        <p><strong>Purpose:</strong> {{ icon.purpose }}</p>
+                        {% if icon.purpose == 'maskable' %}
+                        <p><strong>Note:</strong> Should have safe area padding</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Icon Guidelines -->
+            <div class="bg-yellow-900 bg-opacity-20 border border-yellow-600 rounded-lg p-4">
+                <h3 class="text-yellow-300 font-semibold mb-2">
+                    <i class="fas fa-lightbulb mr-2"></i>Icon Design Guidelines
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-yellow-200 text-sm">
+                    <div>
+                        <h4 class="font-semibold mb-2">Regular Icons (any purpose):</h4>
+                        <ul class="space-y-1">
+                            <li>• Use your brand logo or symbol</li>
+                            <li>• Keep it simple and recognizable</li>
+                            <li>• Ensure good contrast with background</li>
+                            <li>• Test at small sizes (16x16, 32x32)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2">Maskable Icons:</h4>
+                        <ul class="space-y-1">
+                            <li>• Add 10% padding around your icon</li>
+                            <li>• Design for circular/square masks</li>
+                            <li>• Keep important elements in center</li>
+                            <li>• Test with different mask shapes</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center pt-6 border-t border-gray-700">
+                <div class="flex space-x-4">
+                    <a href="{{ url_for('admin.admin_pwa_settings') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-cog mr-2"></i>PWA Settings
+                    </a>
+                    <a href="{{ url_for('admin.admin_pwa_preview') }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-eye mr-2"></i>Preview PWA
+                    </a>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button type="button" onclick="clearAllIcons()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-trash mr-2"></i>Clear All
+                    </button>
+                    <button type="submit" class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-save mr-2"></i>Save Icons
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function previewIcon(input, size) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewDiv = document.getElementById(`preview_${size.replace('x', '_')}`);
+            const previewImg = document.getElementById(`preview_img_${size.replace('x', '_')}`);
+            
+            previewImg.src = e.target.result;
+            previewDiv.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearAllIcons() {
+    if (confirm('Are you sure you want to clear all icon uploads? This will reset to default icons.')) {
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => {
+            input.value = '';
+        });
+        
+        const previews = document.querySelectorAll('[id^="preview_"]');
+        previews.forEach(preview => {
+            preview.classList.add('hidden');
+        });
+    }
+}
+
+// Validate file types
+document.querySelectorAll('input[type="file"]').forEach(input => {
+    input.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Please upload only PNG or JPEG images.');
+                this.value = '';
+                return;
+            }
+            
+            // Check if image is square-ish
+            const img = new Image();
+            img.onload = function() {
+                const aspectRatio = this.width / this.height;
+                if (aspectRatio < 0.8 || aspectRatio > 1.2) {
+                    alert('Icons should be square (1:1 aspect ratio). Your image is ' + this.width + 'x' + this.height);
+                    input.value = '';
+                }
+            };
+            img.src = URL.createObjectURL(file);
+        }
+    });
+});
+</script>
+{% endblock %} 

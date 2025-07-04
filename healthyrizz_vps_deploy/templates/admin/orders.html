@@ -1,0 +1,633 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Daily Orders - Admin - Fit Smart{% endblock %}
+
+{% block page_title %}Daily Orders Management{% endblock %}
+
+{% block admin_content %}
+<div class="bg-dark-lighter shadow rounded-lg p-6">
+    <div class="flex flex-col md:flex-row gap-4 justify-between mb-6">
+        <div>
+            <h2 class="text-xl font-semibold text-white">Orders for {{ selected_date.strftime('%A, %B %d, %Y') }}</h2>
+            <p class="text-gray-300">Manage daily meal deliveries, generate reports, and send notifications</p>
+        </div>
+        
+        <div class="flex flex-col md:flex-row gap-2">
+            <form action="{{ url_for('admin.admin_orders') }}" method="get" class="flex gap-2">
+                <input type="date" name="date" value="{{ selected_date.strftime('%Y-%m-%d') }}" class="px-4 py-2 border rounded bg-dark text-white">
+                <button type="submit" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark">
+                    <i class="fas fa-calendar-alt mr-1"></i> View Date
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Order Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-dark-lighter border border-gray-700 rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="bg-dark p-3 rounded-full mr-4">
+                    <i class="fas fa-utensils text-green-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white">{{ orders|length }}</h3>
+                    <p class="text-sm text-gray-300">Total Orders</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-dark-lighter border border-gray-700 rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="bg-dark p-3 rounded-full mr-4">
+                    <i class="fas fa-map-marker-alt text-blue-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white">{{ location_counts|length }}</h3>
+                    <p class="text-sm text-gray-300">Delivery Locations</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-dark-lighter border border-gray-700 rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="bg-dark p-3 rounded-full mr-4">
+                    <i class="fas fa-leaf text-green-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white">{{ meal_counts|length }}</h3>
+                    <p class="text-sm text-gray-300">Meal Plan Types</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-dark-lighter border border-gray-700 rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="bg-dark p-3 rounded-full mr-4">
+                    <i class="fas fa-egg text-purple-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white">{{ skipped|length }}</h3>
+                    <p class="text-sm text-gray-300">Skipped Deliveries</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <a href="{{ url_for('admin.admin_export_orders', date=selected_date.strftime('%Y-%m-%d')) }}" class="text-center block bg-dark-lighter border border-gray-700 hover:bg-dark rounded-lg p-4">
+            <div class="mb-2">
+                <i class="fas fa-file-csv text-indigo-500 text-2xl"></i>
+            </div>
+            <div class="text-white font-medium">Export Orders CSV</div>
+        </a>
+        
+        <a href="{{ url_for('admin.admin_generate_labels', date=selected_date.strftime('%Y-%m-%d')) }}" class="text-center block bg-dark-lighter border border-gray-700 hover:bg-dark rounded-lg p-4">
+            <div class="mb-2">
+                <i class="fas fa-tags text-pink-500 text-2xl"></i>
+            </div>
+            <div class="text-white font-medium">Print Shipping Labels</div>
+        </a>
+        
+        <div class="relative text-center block bg-dark-lighter border border-gray-700 hover:bg-dark rounded-lg p-4" 
+            onclick="document.getElementById('email-form').classList.toggle('hidden')">
+            <div class="mb-2">
+                <i class="fas fa-envelope text-amber-500 text-2xl"></i>
+            </div>
+            <div class="text-white font-medium">Email Orders Report</div>
+            
+            <!-- Email Form Popup -->
+            <div id="email-form" class="hidden absolute left-0 right-0 top-full mt-2 bg-dark-lighter border border-gray-700 shadow-lg rounded-lg p-4 z-10">
+                <form action="{{ url_for('admin.admin_orders') }}/email" method="post" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="date" value="{{ selected_date.strftime('%Y-%m-%d') }}">
+                    <div>
+                        <label for="email" class="block text-left text-gray-300">Email To:</label>
+                        <input type="email" name="email" id="email" placeholder="admin@example.com" required
+                            class="w-full px-3 py-2 border rounded bg-dark text-white">
+                    </div>
+                    <button type="submit" class="w-full bg-primary text-white px-3 py-2 rounded hover:bg-primary-dark">
+                        Send Report
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="relative text-center block bg-dark-lighter border border-gray-700 hover:bg-dark rounded-lg p-4" 
+            onclick="document.getElementById('notification-form').classList.toggle('hidden')">
+            <div class="mb-2">
+                <i class="fas fa-bell text-cyan-500 text-2xl"></i>
+            </div>
+            <div class="text-white font-medium">Send Notifications</div>
+            
+            <!-- Notification Form Popup -->
+            <div id="notification-form" class="hidden absolute left-0 right-0 top-full mt-2 bg-dark-lighter border border-gray-700 shadow-lg rounded-lg p-4 z-10">
+                <form action="{{ url_for('admin.admin_notifications') }}" method="post" class="space-y-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="date" value="{{ selected_date.strftime('%Y-%m-%d') }}">
+                    <p class="text-left text-gray-300">Send SMS notifications to all customers with deliveries on {{ selected_date.strftime('%A, %B %d') }}.</p>
+                    <button type="submit" class="w-full bg-primary text-white px-3 py-2 rounded hover:bg-primary-dark" onclick="return confirm('This will send notifications to {{ orders|length }} customers. Continue?')">
+                        Send Notifications
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="mb-6">
+        <div class="border-b border-gray-700">
+            <nav class="-mb-px flex" aria-label="Tabs">
+                <button class="tab-btn active-tab border-primary text-primary hover:text-primary px-4 py-2 font-medium text-sm"
+                        onclick="showTab('orders-tab')">
+                    Orders ({{ orders|length }})
+                </button>
+                <button class="tab-btn border-transparent text-gray-300 hover:text-white px-4 py-2 font-medium text-sm"
+                        onclick="showTab('skipped-tab')">
+                    Skipped Deliveries ({{ skipped|length }})
+                </button>
+                <button class="tab-btn border-transparent text-gray-300 hover:text-white px-4 py-2 font-medium text-sm"
+                        onclick="showTab('breakdown-tab')">
+                    Meal Breakdown
+                </button>
+                <button class="tab-btn border-transparent text-gray-300 hover:text-white px-4 py-2 font-medium text-sm"
+                        onclick="showTab('locations-tab')">
+                    Delivery Locations
+                </button>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Tab Content -->
+    <div class="tab-content" id="orders-tab">
+        {% if orders %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead class="bg-dark">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Customer
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Meal Plan
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Delivery Address
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Details
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Delivery Status
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-dark-lighter divide-y divide-gray-700">
+                    {% for order in orders %}
+                    <tr class="hover:bg-dark">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-white">{{ order.customer_name }}</div>
+                            <div class="text-sm text-gray-300">{{ order.email }}</div>
+                            <div class="text-sm text-gray-300">{{ order.phone }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-white">{{ order.meal_plan_name }}</div>
+                            <div class="text-sm text-gray-300">
+                                {% if order.is_vegetarian %}
+                                <span class="text-green-400">Vegetarian</span>
+                                {% else %}
+                                <span class="text-red-400">Non-Vegetarian</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-sm text-gray-300">
+                                {% if order.includes_breakfast %}
+                                <span class="text-amber-400">With Breakfast</span>
+                                {% else %}
+                                <span class="text-gray-400">No Breakfast</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-white">{{ order.address }}</div>
+                            <div class="text-sm text-gray-300">{{ order.city }}, {{ order.province }} {{ order.postal_code }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-white">Order #{{ order.subscription_id }}</div>
+                            <div class="text-sm text-gray-300">Created: {{ order.created_at }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if order.delivery_status == 'pending' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Pending
+                                </span>
+                            {% elif order.delivery_status == 'preparing' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Preparing
+                                </span>
+                            {% elif order.delivery_status == 'packed' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    Packed
+                                </span>
+                            {% elif order.delivery_status == 'out_for_delivery' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    Out for Delivery
+                                </span>
+                            {% elif order.delivery_status == 'delivered' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Delivered
+                                </span>
+                            {% elif order.delivery_status == 'delayed' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Delayed
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                {% if order.delivery_id is not none %}
+                                    <button onclick="updateStatus('{{ order.delivery_id }}')" 
+                                            class="text-primary hover:text-primary-dark cursor-pointer group relative"
+                                            title="Update Status">
+                                        <i class="fas fa-edit"></i>
+                                        <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                            Update {{ order.delivery_status|title }} Status
+                                        </span>
+                                    </button>
+                                {% elif order.is_skipped %}
+                                    <span class="text-gray-500 cursor-not-allowed group relative" title="Meal Skipped">
+                                        <i class="fas fa-edit"></i>
+                                        <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                            Meal Skipped
+                                        </span>
+                                    </span>
+                                {% else %}
+                                    <span class="text-gray-500 cursor-not-allowed group relative" title="No delivery record available">
+                                        <i class="fas fa-edit"></i>
+                                        <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                                            No delivery record available
+                                        </span>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <p class="text-gray-300">No orders found for this date.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="tab-content hidden" id="skipped-tab">
+        {% if skipped %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Customer
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Meal Plan
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Location
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Skipped On
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in skipped %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ item.user_name }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ item.phone }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ item.meal_plan_name }}</div>
+                            <div class="text-xs text-gray-500">
+                                {% if item.is_vegetarian %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                    Vegetarian
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                    Non-Veg
+                                </span>
+                                {% endif %}
+                                
+                                {% if item.includes_breakfast %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                    +Breakfast
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ item.city }}, {{ item.province }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">{{ item.skipped_on }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <form action="{{ url_for('admin.admin_update_delivery_status', delivery_id=item.delivery_id) }}" method="post" class="inline">
+                                <input type="hidden" name="status" value="pending">
+                                <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Are you sure you want to unskip this delivery?')">
+                                    <i class="fas fa-undo"></i> Unskip
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <i class="fas fa-info-circle text-gray-400 text-4xl mb-3"></i>
+            <p class="text-gray-500">No skipped deliveries for {{ selected_date.strftime('%A, %B %d, %Y') }}</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="tab-content hidden" id="breakdown-tab">
+        {% if meal_counts %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white border rounded-lg overflow-hidden">
+                <div class="px-6 py-4 border-b">
+                    <h3 class="font-medium text-gray-700">Meal Plan Distribution</h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        {% for meal, count in meal_counts.items() %}
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-600 w-2/3">{{ meal }}</span>
+                            <div class="w-1/3 flex items-center">
+                                <div class="flex-1 bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-primary h-2.5 rounded-full" style="width: {{ (count / orders|length * 100)|round|int }}%"></div>
+                                </div>
+                                <span class="text-sm text-gray-600 ml-2">{{ count }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white border rounded-lg overflow-hidden">
+                <div class="px-6 py-4 border-b">
+                    <h3 class="font-medium text-gray-700">Meal Type Breakdown</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Vegetarian vs Non-Vegetarian -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">Vegetarian</span>
+                                <span class="text-sm font-medium text-gray-700">
+                                    {{ orders|selectattr('is_vegetarian', 'equalto', true)|list|length }} / {{ orders|length }}
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-green-500 h-2.5 rounded-full" 
+                                    style="width: {{ (orders|selectattr('is_vegetarian', 'equalto', true)|list|length / orders|length * 100)|round|int if orders else 0 }}%">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">Non-Vegetarian</span>
+                                <span class="text-sm font-medium text-gray-700">
+                                    {{ orders|selectattr('is_vegetarian', 'equalto', false)|list|length }} / {{ orders|length }}
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-red-500 h-2.5 rounded-full" 
+                                    style="width: {{ (orders|selectattr('is_vegetarian', 'equalto', false)|list|length / orders|length * 100)|round|int if orders else 0 }}%">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- With Breakfast vs Without Breakfast -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">With Breakfast</span>
+                                <span class="text-sm font-medium text-gray-700">
+                                    {{ orders|selectattr('includes_breakfast', 'equalto', true)|list|length }} / {{ orders|length }}
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-blue-500 h-2.5 rounded-full" 
+                                    style="width: {{ (orders|selectattr('includes_breakfast', 'equalto', true)|list|length / orders|length * 100)|round|int if orders else 0 }}%">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">Without Breakfast</span>
+                                <span class="text-sm font-medium text-gray-700">
+                                    {{ orders|selectattr('includes_breakfast', 'equalto', false)|list|length }} / {{ orders|length }}
+                                </span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-yellow-500 h-2.5 rounded-full" 
+                                    style="width: {{ (orders|selectattr('includes_breakfast', 'equalto', false)|list|length / orders|length * 100)|round|int if orders else 0 }}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <i class="fas fa-chart-pie text-gray-400 text-4xl mb-3"></i>
+            <p class="text-gray-500">No meal data available for {{ selected_date.strftime('%A, %B %d, %Y') }}</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="tab-content hidden" id="locations-tab">
+        {% if location_counts %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white border rounded-lg overflow-hidden">
+                <div class="px-6 py-4 border-b">
+                    <h3 class="font-medium text-gray-700">Delivery Locations</h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        {% for location, count in location_counts.items() %}
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-600 w-2/3">{{ location }}</span>
+                            <div class="w-1/3 flex items-center">
+                                <div class="flex-1 bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-purple-500 h-2.5 rounded-full" style="width: {{ (count / orders|length * 100)|round|int }}%"></div>
+                                </div>
+                                <span class="text-sm text-gray-600 ml-2">{{ count }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white border rounded-lg overflow-hidden">
+                <div class="px-6 py-4 border-b">
+                    <h3 class="font-medium text-gray-700">Delivery Map</h3>
+                </div>
+                <div class="p-6 text-center">
+                    <img src="https://placehold.co/600x400/e2e8f0/64748b?text=Delivery+Map" class="mx-auto rounded" alt="Delivery Map">
+                    <p class="text-sm text-gray-500 mt-3">Placeholder for delivery map visualization</p>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <i class="fas fa-map-marker-alt text-gray-400 text-4xl mb-3"></i>
+            <p class="text-gray-500">No location data available for {{ selected_date.strftime('%A, %B %d, %Y') }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Status Update Modal -->
+<div id="statusModal" class="modal hidden">
+    <div class="modal-content bg-dark-lighter border-gray-700">
+        <div class="modal-header border-gray-700">
+            <h3 class="text-lg font-semibold text-white">Update Delivery Status</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="statusForm" action="{{ url_for('admin.admin_update_delivery_status', delivery_id=0) }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="delivery_id" id="deliveryId">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                    <select name="status" id="statusSelect" class="w-full px-3 py-2 border rounded bg-dark text-white" required>
+                        <option value="">Select a status</option>
+                        {% for status in delivery_statuses %}
+                        <option value="{{ status }}">{{ status|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="errorMessage" class="hidden mb-4 p-3 bg-dark border border-red-500 text-red-400 rounded"></div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal()" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTab(tabId) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabId).classList.remove('hidden');
+    
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active-tab', 'border-primary', 'text-primary');
+        btn.classList.add('border-transparent', 'text-gray-300');
+    });
+    
+    // Highlight active tab button
+    event.target.classList.remove('border-transparent', 'text-gray-300');
+    event.target.classList.add('active-tab', 'border-primary', 'text-primary');
+}
+
+function updateStatus(deliveryId) {
+    if (!deliveryId) {
+        showError('Invalid delivery ID');
+        return;
+    }
+    
+    // Reset form and error message
+    document.getElementById('statusForm').reset();
+    hideError();
+    
+    // Update the form action with the correct delivery ID
+    const form = document.getElementById('statusForm');
+    const baseUrl = "{{ url_for('admin.admin_update_delivery_status', delivery_id=0) }}";
+    form.action = baseUrl.replace('0', deliveryId);
+    
+    // Set the hidden delivery ID field
+    document.getElementById('deliveryId').value = deliveryId;
+    
+    // Show the modal
+    document.getElementById('statusModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('statusModal').classList.add('hidden');
+    hideError();
+}
+
+function showError(message) {
+    const errorDiv = document.getElementById('errorMessage');
+    errorDiv.innerHTML = `<div class="flex items-center">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <span>${message}</span>
+    </div>`;
+    errorDiv.classList.remove('hidden');
+}
+
+function hideError() {
+    const errorDiv = document.getElementById('errorMessage');
+    errorDiv.classList.add('hidden');
+    errorDiv.textContent = '';
+}
+
+// Add event listener for form submission
+document.getElementById('statusForm').addEventListener('submit', function(e) {
+    const deliveryId = document.getElementById('deliveryId').value;
+    const status = document.getElementById('statusSelect').value;
+    
+    if (!deliveryId) {
+        e.preventDefault();
+        showError('Invalid delivery ID');
+        return false;
+    }
+    
+    if (!status) {
+        e.preventDefault();
+        showError('Please select a status');
+        return false;
+    }
+    
+    return true;
+});
+</script>
+{% endblock %}

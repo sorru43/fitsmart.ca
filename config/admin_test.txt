@@ -1,0 +1,778 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark-theme">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Fit Smart - Healthy Meal Delivery in Canada. Personalized meal plans delivered to your door.">
+    <meta name="csrf-token" content="ImFjNDRkODRkOTZiYmQ0ZDkwYWY3MjVhNzNiN2IzNDJkYWRkOWMyMDci.aCAheA.S8rrt5tFiC3NnxZf19g0uWABheg">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' ws: wss:;">
+    <title>Login - healthyrizz</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/favicon.png" type="image/png">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    
+    <!-- Apple/Safari PWA Support -->
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/static/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="/static/icons/icon-96x96.png">
+    <link rel="apple-touch-icon" sizes="128x128" href="/static/icons/icon-128x128.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/static/icons/icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/static/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/static/icons/icon-192x192.png">
+    
+    <!-- iOS Safari specific tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="healthyrizz">
+    
+    <!-- Add to home screen for Safari on iOS -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-touch-fullscreen" content="yes">
+    
+    <!-- Local Fonts -->
+    <link rel="stylesheet" href="/static/fonts/fonts.css">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/css/tailwind/tailwind.min.css">
+    <link rel="stylesheet" href="/static/css/tailwind/custom-tailwind.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
+    <link rel="stylesheet" href="/static/css/dark-theme.css">
+    <link rel="stylesheet" href="/static/css/light-theme.css">
+    <link rel="stylesheet" href="/static/css/meal-plans.css">
+    <link rel="stylesheet" href="/static/css/subscriptions.css">
+    <link rel="stylesheet" href="/static/css/pwa-install-popup.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Dark Theme Styles -->
+    <style>
+        :root {
+            --color-primary: #379777;
+            --color-primary-dark: #2D7D65;
+            --color-primary-light: #4CAF50;
+            --color-dark: #151515;
+            --color-darker: #0A0A0A;
+            --color-darkest: #000000;
+            --color-light: #FFFFFF;
+            --color-gray-100: #F5F5F5;
+            --color-gray-200: #EEEEEE;
+            --color-gray-300: #E0E0E0;
+            --color-gray-400: #BDBDBD;
+            --color-gray-500: #9E9E9E;
+            --color-gray-600: #757575;
+            --color-gray-700: #616161;
+            --color-gray-800: #424242;
+            --color-gray-900: #212121;
+        }
+        
+        body {
+            background-color: var(--color-darkest);
+            color: var(--color-light);
+            width: 100%;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        .bg-primary { background-color: var(--color-primary); }
+        .text-primary { color: var(--color-primary); }
+        .border-primary { border-color: var(--color-primary); }
+        .bg-dark { background-color: var(--color-dark); }
+        .bg-darker { background-color: var(--color-darker); }
+        .bg-darkest { background-color: var(--color-darkest); }
+        .text-light { color: var(--color-light); }
+        .border-dark { border-color: var(--color-gray-800); }
+        
+        .hover\:bg-primary:hover { background-color: var(--color-primary-dark); }
+        .hover\:text-primary:hover { color: var(--color-primary-light); }
+        .hover\:border-primary:hover { border-color: var(--color-primary); }
+
+        /* Form styles */
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        input[type="tel"],
+        input[type="url"],
+        input[type="search"],
+        input[type="date"],
+        input[type="datetime-local"],
+        input[type="month"],
+        input[type="week"],
+        input[type="time"],
+        input[type="color"],
+        select,
+        textarea {
+            background-color: var(--color-dark) !important;
+            color: var(--color-light) !important;
+            border: 1px solid var(--color-gray-700) !important;
+            font-size: 16px; /* Prevents zoom on iOS */
+            max-width: 100%;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--color-primary) !important;
+            box-shadow: 0 0 0 2px rgba(55, 151, 119, 0.25) !important;
+        }
+
+        label,
+        .form-label,
+        .form-text,
+        .form-help,
+        .form-error {
+            color: var(--color-light) !important;
+        }
+
+        ::placeholder {
+            color: var(--color-gray-500) !important;
+            opacity: 1;
+        }
+
+        /* Navigation */
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--color-dark);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid var(--color-gray-700);
+            z-index: 50;
+            max-height: 80vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            transform: translateY(-10px);
+            opacity: 0;
+        }
+        
+        .mobile-menu.show {
+            display: block !important;
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Mobile menu button animations */
+        .mobile-menu-button {
+            transition: background-color 0.3s ease;
+        }
+        
+        .mobile-menu-button:hover {
+            background-color: var(--color-gray-800);
+        }
+        
+        .mobile-menu-button i {
+            transition: transform 0.3s ease;
+        }
+        
+        .profile-dropdown {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            z-index: 9999; /* Higher z-index to ensure it's on top */
+            background-color: #222; /* Explicit dark background */
+            border: 1px solid #444;
+            border-radius: 0.5rem;
+            width: 200px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
+            padding: 0.75rem 0;
+            margin-top: 0.75rem;
+            pointer-events: auto !important; /* Ensure it's clickable */
+            display: none; /* Start with display: none */
+        }
+        
+        .profile-dropdown.show {
+            display: block !important; /* Force display when shown */
+        }
+        
+        .profile-dropdown a {
+            color: var(--color-light) !important;
+            padding: 0.75rem 1rem;
+            display: block;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer !important;
+            font-weight: 500;
+        }
+        
+        .profile-dropdown a:hover {
+            background-color: var(--color-primary);
+            color: var(--color-light) !important;
+        }
+        
+        /* Force visibility of dropdown when shown */
+        body.has-dropdown-open .profile-dropdown.show {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Responsive touch-friendly adjustments */
+        @media (max-width: 767px) {
+            .md\:space-y-0 {
+                margin-top: 0;
+            }
+            
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            button, 
+            [role="button"], 
+            a.btn, 
+            input[type="submit"], 
+            .clickable {
+                min-height: 44px; /* Touch-friendly size */
+                min-width: 44px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .footer-links li {
+                margin-bottom: 0.75rem;
+            }
+        }
+    </style>
+    
+    <!-- Page specific CSS -->
+    
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#379777">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="healthyrizz">
+    
+    <!-- iOS splash screen images -->
+    <link rel="apple-touch-startup-image" href="/static/icons/icon-512x512.png">
+    
+    <!-- Service Worker Registration -->
+    <script src="/static/js/register-sw.js" defer></script>
+</head>
+<body class="flex flex-col min-h-screen bg-darkest ">
+    <!-- Active Promotional Banner -->
+    
+    
+    <!-- Header -->
+    <header class="bg-darker shadow-sm sticky top-0 z-30">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 bg-darker">
+                <div class="flex items-center">
+                    <!-- Logo -->
+                    <a href="/" class="flex-shrink-0 flex items-center group">
+                        <img class="h-32 w-auto transition-transform duration-300 group-hover:scale-105" src="/static/images/logo%20white.png" alt="Fit Smart Logo">
+                    </a>
+                </div>
+                
+                <!-- Main Navigation - Desktop -->
+                <nav class="hidden md:flex space-x-6 items-center">
+                    <a href="/" class="text-white hover:text-primary py-2 ">Home</a>
+                    <a href="/meal-calculator" class="text-white hover:text-primary py-2 ">Meal Calculator</a>
+                    <a href="/meal-plans" class="text-white hover:text-primary py-2 ">Meal Plans</a>
+                    <a href="/blog" class="text-white hover:text-primary py-2 ">Blog</a>
+                    <a href="/#faq" class="text-white hover:text-primary py-2">FAQ</a>
+                    
+                    <div class="flex items-center space-x-4 pl-6 ml-6 border-l border-gray-600">
+                        <a href="tel:+14374283393" class="text-white hover:text-primary" title="Call Us">
+                            <i class="fas fa-phone-alt"></i>
+                        </a>
+                        <a href="mailto:info@healthyrizz.ca" class="text-white hover:text-primary" title="Email Us">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        <a href="https://facebook.com/healthyrizz.ca" target="_blank" class="text-white hover:text-primary" title="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://instagram.com/healthyrizz.ca" target="_blank" class="text-white hover:text-primary" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </nav>
+                
+                <div class="flex items-center">
+                    <!-- User Profile / Login -->
+                    <div class="ml-4 flex items-center">
+                        <!-- Debug user state: session_id=None -->
+                        
+                            <!-- Desktop login/signup buttons -->
+                            <div class="hidden md:flex items-center">
+                                <a href="/login" class="mr-4 text-white hover:text-primary">Login</a>
+                                <a href="/register" class="bg-primary hover:bg-primary-dark text-white rounded-md px-4 py-2 text-sm">Sign Up</a>
+                            </div>
+                            
+                            <!-- Mobile login button (combined) -->
+                            <div class="md:hidden">
+                                <a href="/login" class="flex items-center justify-center bg-primary hover:bg-primary-dark text-white rounded-md px-3 py-1.5 text-sm">
+                                    <i class="fas fa-user mr-1"></i> Account
+                                </a>
+                            </div>
+                        
+                    </div>
+                    
+                    <!-- Mobile menu button -->
+                    <div class="flex md:hidden ml-2">
+                        <button type="button" 
+                                id="mobile-menu-button" 
+                                class="mobile-menu-button focus:outline-none rounded-md p-2 hover:bg-gray-800 transition-colors duration-300"
+                                aria-expanded="false"
+                                aria-controls="mobile-menu"
+                                aria-label="Toggle navigation menu">
+                            <span class="sr-only">Open main menu</span>
+                            <i class="fas fa-bars text-white text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="mobile-menu bg-darker" role="navigation" aria-label="Mobile navigation">
+                <div class="px-4 pt-3 pb-6 space-y-3 shadow-lg border-t border-gray-700">
+                    <a href="/" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md ">
+                        <i class="fas fa-home mr-3 text-primary"></i>Home
+                    </a>
+                    <a href="/meal-calculator" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md ">
+                        <i class="fas fa-calculator mr-3 text-primary"></i>Meal Calculator
+                    </a>
+                    
+                    <div class="relative">
+                        <a href="/meal-plans" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md ">
+                            <i class="fas fa-utensils mr-3 text-primary"></i>Meal Plans
+                        </a>
+                        <div class="pl-6 mt-1 space-y-1">
+                            <a href="/meal-plans?type=balanced" class="block px-4 py-2 text-light hover:bg-gray-800 rounded-md text-sm">
+                                <i class="fas fa-circle text-primary text-xs mr-2"></i>Balanced Diet
+                            </a>
+                            <a href="/meal-plans?type=weight-loss" class="block px-4 py-2 text-light hover:bg-gray-800 rounded-md text-sm">
+                                <i class="fas fa-circle text-primary text-xs mr-2"></i>Weight Loss
+                            </a>
+                            <a href="/meal-plans?type=athletic" class="block px-4 py-2 text-light hover:bg-gray-800 rounded-md text-sm">
+                                <i class="fas fa-circle text-primary text-xs mr-2"></i>Athletic Performance
+                            </a>
+                            <a href="/meal-plans?type=vegetarian" class="block px-4 py-2 text-light hover:bg-gray-800 rounded-md text-sm">
+                                <i class="fas fa-circle text-primary text-xs mr-2"></i>Vegetarian
+                            </a>
+                            <a href="/meal-plans?type=high-protein" class="block px-4 py-2 text-light hover:bg-gray-800 rounded-md text-sm">
+                                <i class="fas fa-circle text-primary text-xs mr-2"></i>High Protein
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <a href="/blog" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md ">
+                        <i class="fas fa-newspaper mr-3 text-primary"></i>Blog
+                    </a>
+                    
+                    <a href="/#faq" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md">
+                        <i class="fas fa-question-circle mr-3 text-primary"></i>FAQ
+                    </a>
+                    
+                    <div class="border-t border-gray-700 my-3"></div>
+                    
+                    <div class="border-t border-gray-700 my-3"></div>
+                    
+                    <!-- Mobile contact info -->
+                    <div class="px-4 py-3 rounded-lg bg-gray-800 bg-opacity-50">
+                        <h3 class="text-primary font-medium mb-3">Get in Touch</h3>
+                        <a href="tel:+14374283393" class="flex items-center text-light mb-3 hover:text-primary">
+                            <i class="fas fa-phone-alt mr-3 text-primary"></i>
+                            +1 (437) 428-3393
+                        </a>
+                        <a href="mailto:info@healthyrizz.ca" class="flex items-center text-light mb-3 hover:text-primary">
+                            <i class="fas fa-envelope mr-3 text-primary"></i>
+                            info@healthyrizz.ca
+                        </a>
+                        <div class="flex mt-3 space-x-6">
+                            <a href="https://facebook.com/healthyrizz.ca" target="_blank" class="text-light hover:text-primary text-lg">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="https://instagram.com/healthyrizz.ca" target="_blank" class="text-light hover:text-primary text-lg">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-700 my-3"></div>
+                    
+                    <!-- Mobile login/profile -->
+                    <div class="px-4 py-3">
+                        
+                            <div class="space-y-3">
+                                <a href="/login" class="flex items-center justify-center bg-primary hover:bg-primary-dark text-white rounded-md px-4 py-3 text-base">
+                                    <i class="fas fa-sign-in-alt mr-2"></i>
+                                    Log In
+                                </a>
+                                <a href="/register" class="flex items-center justify-center border border-primary text-primary hover:bg-primary hover:text-white rounded-md px-4 py-3 text-base">
+                                    <i class="fas fa-user-plus mr-2"></i>
+                                    Sign Up
+                                </a>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="flex-grow">
+        
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-darkest">
+    <div class="max-w-md w-full space-y-8 bg-dark p-8 rounded-lg shadow-lg">
+        <div class="text-center">
+            <img class="mx-auto h-36 w-auto" src="/static/images/logo%20white.png" alt="healthyrizz Logo">
+            <h2 class="mt-6 text-3xl font-extrabold text-light">
+                Sign in to your account
+            </h2>
+        </div>
+
+        
+            
+        
+
+        <form class="mt-8 space-y-6" action="/login" method="POST">
+            <input type="hidden" name="csrf_token" value="ImFjNDRkODRkOTZiYmQ0ZDkwYWY3MjVhNzNiN2IzNDJkYWRkOWMyMDci.aCAheA.S8rrt5tFiC3NnxZf19g0uWABheg">
+            
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="email" class="sr-only">Email address</label>
+                    <input id="email" name="email" type="email" required 
+                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 bg-dark text-light placeholder-gray-400 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" 
+                           placeholder="Email address"
+                           value="">
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Password</label>
+                    <input id="password" name="password" type="password" required 
+                           class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 bg-dark text-light placeholder-gray-400 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm" 
+                           placeholder="Password">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input id="remember_me" name="remember_me" type="checkbox" 
+                           class="h-4 w-4 text-primary focus:ring-primary border-gray-700 rounded bg-dark">
+                    <label for="remember_me" class="ml-2 block text-sm text-gray-300">
+                        Remember me
+                    </label>
+                </div>
+
+                <div class="text-sm">
+                    <a href="/forgot-password" class="font-medium text-primary hover:text-primary-light">
+                        Forgot your password?
+                    </a>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" id="login-button" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <span id="button-text">Sign in</span>
+                    <span id="button-spinner" class="hidden ml-2">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                    </span>
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-6">
+            <!-- Google OAuth login temporarily disabled
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-700"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-dark text-gray-400">
+                        Or continue with
+                    </span>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <a href="#" class="w-full inline-flex justify-center py-2 px-4 border border-gray-700 rounded-md shadow-sm bg-dark text-sm font-medium text-gray-300 hover:bg-gray-800 cursor-not-allowed opacity-60">
+                    <img class="h-5 w-5 mr-2" src="/static/images/google.svg" alt="Google logo">
+                    Sign in with Google (Coming Soon)
+                </a>
+            </div>
+            -->
+        </div>
+
+        <div class="text-center mt-6">
+            <p class="text-sm text-gray-400">
+                Don't have an account?
+                <a href="/register" class="font-medium text-primary hover:text-primary-light">
+                    Sign up
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 gap-y-10">
+                <!-- About -->
+                <div>
+                    <h3 class="text-lg font-medium mb-4 text-light relative">
+                        <span class="relative z-10">About Fit Smart</span>
+                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-primary"></span>
+                    </h3>
+                    <p class="text-gray-300 mb-4 text-sm md:text-base">Fit Smart provides healthy, delicious meal plans delivered to your door. We use fresh, locally-sourced ingredients to create nutritious meals that help you achieve your health goals.</p>
+                    <div class="flex space-x-5 mt-6">
+                        <a href="https://facebook.com/healthyrizz.ca" target="_blank" class="text-gray-400 hover:text-primary transition-colors duration-300 text-xl">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://instagram.com/healthyrizz.ca" target="_blank" class="text-gray-400 hover:text-primary transition-colors duration-300 text-xl">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://twitter.com/healthyrizz_ca" target="_blank" class="text-gray-400 hover:text-primary transition-colors duration-300 text-xl">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Meal Plans -->
+                <div>
+                    <h3 class="text-lg font-medium mb-4 text-light relative">
+                        <span class="relative z-10">Meal Plans</span>
+                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-primary"></span>
+                    </h3>
+                    <ul class="space-y-3 footer-links">
+                        <li><a href="/meal-plans?type=balanced" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Balanced Diet</a></li>
+                        <li><a href="/meal-plans?type=weight-loss" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Weight Loss</a></li>
+                        <li><a href="/meal-plans?type=athletic" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Athletic Performance</a></li>
+                        <li><a href="/meal-plans?type=vegetarian" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Vegetarian</a></li>
+                        <li><a href="/meal-plans?type=high-protein" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">High Protein</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="text-lg font-medium mb-4 text-light relative">
+                        <span class="relative z-10">Quick Links</span>
+                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-primary"></span>
+                    </h3>
+                    <ul class="space-y-3 footer-links">
+                        <li><a href="/" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Home</a></li>
+                        <li><a href="/meal-calculator" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Meal Calculator</a></li>
+                        <li><a href="/meal-plans" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Meal Plans</a></li>
+                        <li><a href="/blog" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Blog</a></li>
+                        <li><a href="/#faq" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">FAQ</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">About Us</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact Us -->
+                <div>
+                    <h3 class="text-lg font-medium mb-4 text-light relative">
+                        <span class="relative z-10">Contact Us</span>
+                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-primary"></span>
+                    </h3>
+                    <ul class="space-y-4 mb-6">
+                        <li class="flex items-start">
+                            <i class="fas fa-phone-alt mt-1.5 mr-3 text-primary"></i>
+                            <span class="text-gray-300">+1 (437) 428-3393</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-envelope mt-1.5 mr-3 text-primary"></i>
+                            <span class="text-gray-300">info@healthyrizz.ca</span>
+                        </li>
+                    </ul>
+                    
+                    <!-- Newsletter -->
+                    <form action="/subscribe-newsletter" method="post" class="mt-5">
+                        <input type="hidden" name="csrf_token" value="ImFjNDRkODRkOTZiYmQ0ZDkwYWY3MjVhNzNiN2IzNDJkYWRkOWMyMDci.aCAheA.S8rrt5tFiC3NnxZf19g0uWABheg">
+                        <label for="newsletter-email" class="block text-sm font-medium mb-2 text-gray-300">Subscribe to our newsletter</label>
+                        <div class="flex">
+                            <input type="email" id="newsletter-email" name="email" placeholder="Your email" required
+                                   class="flex-grow rounded-l-md border-gray-700 bg-dark text-light focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-3 py-2 text-sm">
+                            <button type="submit" class="bg-primary hover:bg-primary-dark rounded-r-md text-white px-3 py-2 text-sm transition-colors duration-300">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Copyright Section -->
+            <div class="border-t border-gray-700 mt-12 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 text-sm mb-4 md:mb-0">
+                        &copy; 2025 Fit Smart Inc. All rights reserved. | Managed by <a href="https://gogroww.in" target="_blank" class="text-primary hover:text-primary-dark transition-colors duration-300">GOGROWW.IN</a>
+                    </p>
+                    <div class="flex flex-wrap justify-center md:justify-end space-x-4 text-sm text-gray-400">
+                        <a href="#" class="hover:text-primary transition-colors duration-300 mb-2 md:mb-0">Privacy Policy</a>
+                        <a href="#" class="hover:text-primary transition-colors duration-300 mb-2 md:mb-0">Terms of Service</a>
+                        <a href="#" class="hover:text-primary transition-colors duration-300 mb-2 md:mb-0">Delivery Areas</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- JavaScript -->
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/testimonials.js"></script>
+    
+    
+    <!-- JavaScript for interactive elements -->
+    <script>
+        // Function to toggle the profile dropdown
+        function toggleProfileDropdown(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const dropdown = document.getElementById('profile-dropdown');
+            if (dropdown.classList.contains('hidden')) {
+                dropdown.classList.remove('hidden');
+                console.log("Profile dropdown shown");
+            } else {
+                dropdown.classList.add('hidden');
+                console.log("Profile dropdown hidden");
+            }
+        }
+        
+        // Initialize dropdowns, mobile menu, and other interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Note: Mobile menu is now handled by main.js to avoid duplicate handlers
+                // Add the correct class to the mobile-menu-button for compatibility
+                const mobileMenuButton = document.getElementById('mobile-menu-button');
+                if (mobileMenuButton) {
+                    mobileMenuButton.classList.add('mobile-menu-button');
+                }
+                
+                // Handle clicks outside the dropdown to close it
+                document.addEventListener('click', function(event) {
+                    const dropdown = document.getElementById('profile-dropdown');
+                    const toggle = document.getElementById('profile-dropdown-toggle');
+                    
+                    if (dropdown && toggle) {
+                        if (!dropdown.classList.contains('hidden') && 
+                            !toggle.contains(event.target) && 
+                            !dropdown.contains(event.target)) {
+                            dropdown.classList.add('hidden');
+                            console.log("Dropdown closed by outside click");
+                        }
+                    }
+                });
+                
+                // Initialize testimonial carousel if it exists
+                if (typeof initializeTestimonialCarousel === 'function') {
+                    initializeTestimonialCarousel();
+                }
+                
+                // Initialize promotional banner if it exists
+                if (typeof initializePromoBanner === 'function') {
+                    initializePromoBanner();
+                }
+                
+                // Add smooth scrolling for anchor links
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function(e) {
+                        const href = this.getAttribute('href');
+                        
+                        // Skip if it's just '#' or javascript void
+                        if (href === '#' || href.includes('javascript:')) return;
+                        
+                        const targetElement = document.querySelector(href);
+                        if (targetElement) {
+                            e.preventDefault();
+                            targetElement.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                            
+                            // Close mobile menu if it's open
+                            const mobileMenu = document.querySelector('.mobile-menu');
+                            if (mobileMenu && mobileMenu.classList.contains('show')) {
+                                mobileMenu.classList.remove('show');
+                                if (mobileMenuButton) {
+                                    mobileMenuButton.setAttribute('aria-expanded', 'false');
+                                }
+                            }
+                        }
+                    });
+                });
+                
+            } catch (error) {
+                console.error("Error initializing UI elements:", error);
+            }
+        });
+    </script>
+    
+    <!-- PWA Install popup script -->
+    <script src="/static/js/pwa-install-popup.js"></script>
+    
+    <!-- PWA Install Popup -->
+    <div id="pwa-install-popup" class="pwa-popup-container hidden" aria-hidden="true">
+        <button type="button" class="pwa-close-btn" onclick="dismissInstallPopup()" aria-label="Close">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="p-5">
+            <div class="flex items-start mb-4">
+                <img src="/static/icons/icon-192x192.png" alt="healthyrizz App" class="app-icon">
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-1">Add healthyrizz to Home Screen</h3>
+                    <p class="text-gray-300 text-sm">Get quick access to meal plans, delivery schedules and more!</p>
+                </div>
+            </div>
+            
+            <div class="mb-4 p-3 bg-gray-800 rounded-lg">
+                <div class="flex items-center">
+                    <div class="device-icon">
+                        <i class="fas fa-mobile-alt add-to-home-icon"></i>
+                    </div>
+                    <div>
+                        <p class="text-light text-sm">
+                            <span class="platform-ios">On Safari, tap <i class="fas fa-share"></i> then "Add to Home Screen"</span>
+                            <span class="platform-android">Install this web app for easier access and improved experience</span>
+                            <span class="platform-desktop">Install healthyrizz for quick desktop access, even offline</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-between">
+                <button type="button" class="pwa-dismiss-btn" onclick="dismissInstallPopup()">
+                    Not now
+                </button>
+                <button type="button" class="pwa-install-btn" onclick="installPWA()">
+                    <i class="fas fa-download mr-2"></i> Install App
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Detect platform for customizing the install popup text
+        document.addEventListener('DOMContentLoaded', function() {
+            const popup = document.getElementById('pwa-install-popup');
+            if (popup) {
+                // Detect iOS devices
+                if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+                    popup.classList.add('ios-device');
+                }
+                // Detect Android devices 
+                else if (/android/i.test(navigator.userAgent)) {
+                    popup.classList.add('android-device');
+                }
+                // Desktop is the default
+                else {
+                    popup.classList.add('desktop-device');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

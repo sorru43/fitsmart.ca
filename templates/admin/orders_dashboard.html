@@ -1,0 +1,198 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Orders Dashboard - Admin{% endblock %}
+
+{% block head %}
+<style>
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2563eb;
+    }
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+    .order-table {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    .status-pending { background-color: #fef3c7; color: #d97706; }
+    .status-completed { background-color: #d1fae5; color: #059669; }
+    .status-failed { background-color: #fecaca; color: #dc2626; }
+    .status-cancelled { background-color: #f3f4f6; color: #6b7280; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Orders Dashboard</h1>
+            
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ stats.total_orders }}</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ stats.completed_orders }}</div>
+                        <div class="stat-label">Completed Orders</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-value">₹{{ "%.2f"|format(stats.total_revenue) }}</div>
+                        <div class="stat-label">Total Revenue</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-value">{{ stats.success_rate }}%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <form method="GET" class="d-flex gap-3 align-items-end">
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                                <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="payment_status">Payment Status</label>
+                            <select name="payment_status" id="payment_status" class="form-control">
+                                <option value="all" {% if payment_status_filter == 'all' %}selected{% endif %}>All</option>
+                                <option value="pending" {% if payment_status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="completed" {% if payment_status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="failed" {% if payment_status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="date_range">Date Range</label>
+                            <select name="date_range" id="date_range" class="form-control">
+                                <option value="7" {% if date_filter == '7' %}selected{% endif %}>Last 7 days</option>
+                                <option value="30" {% if date_filter == '30' %}selected{% endif %}>Last 30 days</option>
+                                <option value="90" {% if date_filter == '90' %}selected{% endif %}>Last 90 days</option>
+                                <option value="all" {% if date_filter == 'all' %}selected{% endif %}>All time</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Orders Table -->
+            <div class="order-table">
+                <table class="table table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Meal Plan</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Payment Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders.items %}
+                        <tr>
+                            <td>#{{ order.id }}</td>
+                            <td>{{ order.user.name or order.user.username }}</td>
+                            <td>{{ order.meal_plan.name }}</td>
+                            <td>₹{{ "%.2f"|format(order.amount) }}</td>
+                            <td>
+                                <span class="status-badge status-{{ order.status }}">
+                                    {{ order.status.title() }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ order.payment_status }}">
+                                    {{ order.payment_status.title() }}
+                                </span>
+                            </td>
+                            <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <a href="{{ url_for('admin_orders.order_detail', order_id=order.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <!-- Pagination -->
+                {% if orders.pages > 1 %}
+                <div class="d-flex justify-content-center py-3">
+                    {{ orders.links }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Recent Orders -->
+            <div class="mt-4">
+                <h4>Recent Orders</h4>
+                <div class="order-table">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>#{{ order.id }}</td>
+                                <td>{{ order.user.name or order.user.username }}</td>
+                                <td>₹{{ "%.2f"|format(order.amount) }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ order.payment_status }}">
+                                        {{ order.payment_status.title() }}
+                                    </span>
+                                </td>
+                                <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

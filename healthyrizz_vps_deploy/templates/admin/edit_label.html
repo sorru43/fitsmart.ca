@@ -1,0 +1,90 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Edit Label - HealthyRizz Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Edit Label Details</h1>
+        <div class="flex space-x-4">
+            <a href="{{ url_for('admin.admin_labels', date=delivery.delivery_date.strftime('%Y-%m-%d')) }}" class="btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Labels
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <form method="POST" class="space-y-6">
+                <!-- Order Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Order Information</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Order ID</label>
+                                <div class="mt-1 text-gray-900">#{{ delivery.id }}</div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Customer</label>
+                                <div class="mt-1 text-gray-900">{{ delivery.user.username if delivery.user else 'N/A' }}</div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Meal Plan</label>
+                                <div class="mt-1 text-gray-900">
+                                    {{ delivery.subscription.meal_plan.name if delivery.subscription and delivery.subscription.meal_plan else 'N/A' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Details -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Delivery Details</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="delivery_time" class="block text-sm font-medium text-gray-700">Delivery Time</label>
+                                <input type="time" name="delivery_time" id="delivery_time"
+                                       value="{{ delivery.delivery_time.strftime('%H:%M') if delivery.delivery_time else '' }}"
+                                       class="mt-1 form-input">
+                            </div>
+                            <div>
+                                <label for="tracking_number" class="block text-sm font-medium text-gray-700">Tracking Number</label>
+                                <input type="text" name="tracking_number" id="tracking_number"
+                                       value="{{ delivery.tracking_number or '' }}"
+                                       class="mt-1 form-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meal Details -->
+                <div class="border-t pt-6">
+                    <h3 class="text-lg font-semibold mb-4">Meal Details</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="meal_notes" class="block text-sm font-medium text-gray-700">Meal Notes</label>
+                            <textarea name="meal_notes" id="meal_notes" rows="3"
+                                      class="mt-1 form-textarea">{{ delivery.meal_notes or '' }}</textarea>
+                            <p class="mt-1 text-sm text-gray-500">Add any special notes about the meal preparation or ingredients.</p>
+                        </div>
+                        <div>
+                            <label for="special_instructions" class="block text-sm font-medium text-gray-700">Special Instructions</label>
+                            <textarea name="special_instructions" id="special_instructions" rows="3"
+                                      class="mt-1 form-textarea">{{ delivery.special_instructions or '' }}</textarea>
+                            <p class="mt-1 text-sm text-gray-500">Add any special delivery instructions or customer preferences.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

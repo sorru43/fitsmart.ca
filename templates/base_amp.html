@@ -1,0 +1,383 @@
+<!doctype html>
+<html ⚡ lang="en">
+<head>
+    <meta charset="utf-8">
+    <script async src="https://cdn.ampproject.org/v0.js"></script>
+    <title>{% block title %}HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana{% endblock %}</title>
+    <link rel="canonical" href="https://healthyrizz.in{{ request.path.replace('/amp', '') if request.path.startswith('/amp') else request.path }}">
+    <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+    <meta name="description" content="{% block meta_description %}HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana. Nutritionist-curated meals delivered to your doorstep.{% endblock %}">
+    
+    <!-- AMP Boilerplate -->
+    <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
+    <noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
+    
+    <!-- AMP CSS -->
+    <style amp-custom>
+        /* AMP-compliant CSS */
+        :root {
+            --color-primary: #10b981;
+            --color-primary-dark: #059669;
+            --color-primary-light: #34d399;
+            --color-dark: #151515;
+            --color-darker: #0A0A0A;
+            --color-darkest: #000000;
+            --color-light: #FFFFFF;
+            --color-gray-100: #F5F5F5;
+            --color-gray-200: #EEEEEE;
+            --color-gray-300: #E0E0E0;
+            --color-gray-400: #BDBDBD;
+            --color-gray-500: #9E9E9E;
+            --color-gray-600: #757575;
+            --color-gray-700: #616161;
+            --color-gray-800: #424242;
+            --color-gray-900: #212121;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--color-darkest);
+            color: var(--color-light);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .header {
+            background-color: var(--color-dark);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+        
+        .nav {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav a {
+            color: var(--color-light);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .nav a:hover {
+            color: var(--color-primary);
+        }
+        
+        .hero {
+            background: linear-gradient(135deg, var(--color-dark) 0%, var(--color-darker) 100%);
+            padding: 4rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--color-light);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: var(--color-gray-300);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--color-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: var(--color-primary-dark);
+        }
+        
+        .section {
+            padding: 4rem 0;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--color-light);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .card {
+            background-color: var(--color-dark);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--color-primary);
+        }
+        
+        .card p {
+            color: var(--color-gray-300);
+            margin-bottom: 1rem;
+        }
+        
+        .footer {
+            background-color: var(--color-darker);
+            padding: 3rem 0 1rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h4 {
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+        }
+        
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-section ul li a {
+            color: var(--color-gray-300);
+            text-decoration: none;
+        }
+        
+        .footer-section ul li a:hover {
+            color: var(--color-primary);
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--color-gray-700);
+            color: var(--color-gray-400);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* AMP-specific styles */
+        amp-img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .amp-form {
+            background-color: var(--color-dark);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin: 2rem 0;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--color-gray-300);
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--color-gray-700);
+            border-radius: 0.375rem;
+            background-color: var(--color-darker);
+            color: var(--color-light);
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+    </style>
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://healthyrizz.in{{ request.path }}">
+    <meta property="og:title" content="{% block og_title %}HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana. Nutritionist-curated meals delivered to your doorstep.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}https://healthyrizz.in{{ url_for('static', filename='images/healthy-meal-bowl.jpg') }}{% endblock %}">
+    <meta property="og:site_name" content="HealthyRizz">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://healthyrizz.in{{ request.path }}">
+    <meta property="twitter:title" content="{% block twitter_title %}HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana{% endblock %}">
+    <meta property="twitter:description" content="{% block twitter_description %}HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana. Nutritionist-curated meals delivered to your doorstep.{% endblock %}">
+    <meta property="twitter:image" content="{% block twitter_image %}https://healthyrizz.in{{ url_for('static', filename='images/healthy-meal-bowl.jpg') }}{% endblock %}">
+    <meta property="twitter:site" content="@healthyrizz">
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="author" content="HealthyRizz">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    <meta name="theme-color" content="#10b981">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    
+    <!-- AMP Components -->
+    <script async custom-element="amp-form" src="https://cdn.ampproject.org/v0/amp-form-0.1.js"></script>
+    <script async custom-element="amp-carousel" src="https://cdn.ampproject.org/v0/amp-carousel-0.1.js"></script>
+    <script async custom-element="amp-sidebar" src="https://cdn.ampproject.org/v0/amp-sidebar-0.1.js"></script>
+    <script async custom-element="amp-analytics" src="https://cdn.ampproject.org/v0/amp-analytics-0.1.js"></script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">HealthyRizz</a>
+                <nav>
+                    <ul class="nav">
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/meal-plans">Meal Plans</a></li>
+                        <li><a href="/about">About</a></li>
+                        <li><a href="/contact">Contact</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>HealthyRizz</h4>
+                    <p>Fresh, healthy meal plans delivered to your doorstep in Ludhiana. Nutritionist-curated meals for a healthier lifestyle.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/meal-plans">Meal Plans</a></li>
+                        <li><a href="/about">About Us</a></li>
+                        <li><a href="/contact">Contact</a></li>
+                        <li><a href="/blog">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="/delivery-locations">Delivery Areas</a></li>
+                        <li><a href="/shipping-delivery-policy">Delivery Policy</a></li>
+                        <li><a href="/cancellation-refund-policy">Cancellation Policy</a></li>
+                        <li><a href="/privacy-policy">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <ul>
+                        <li>📞 {{ site_settings.get('contact_phone', '+91-98765-43210') }}</li>
+                        <li>📧 {{ site_settings.get('contact_email', 'info@healthyrizz.in') }}</li>
+                        <li>📍 Ludhiana, Punjab, India</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 HealthyRizz. All rights reserved. | FSSAI License: {{ site_settings.get('fssai_license_number', 'N/A') }}</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AMP Analytics -->
+    <amp-analytics type="gtag" data-credentials="include">
+        <script type="application/json">
+        {
+            "vars": {
+                "gtag_id": "G-XXXXXXXXXX",
+                "config": {
+                    "G-XXXXXXXXXX": {
+                        "groups": "default"
+                    }
+                }
+            }
+        }
+        </script>
+    </amp-analytics>
+</body>
+</html> 

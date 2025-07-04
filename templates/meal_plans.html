@@ -1,0 +1,520 @@
+{% extends 'base.html' %}
+
+{% block title %}Meal Plans - HealthyRizz{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/meal-plans.css') }}">
+<style>
+    .meal-plan-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .meal-plan-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    }
+
+    .meal-plan-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+    }
+
+    .meal-plan-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .nutrition-icon {
+        transition: all 0.3s ease;
+    }
+
+    .meal-plan-card:hover .nutrition-icon {
+        transform: scale(1.1);
+        background-color: var(--primary-color);
+    }
+
+    .meal-plan-card:hover .nutrition-icon i {
+        color: white;
+    }
+
+    .tag {
+        transition: all 0.3s ease;
+    }
+
+    .tag:hover {
+        transform: translateY(-2px);
+    }
+
+    .subscribe-btn, .trial-btn {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .subscribe-btn::after, .trial-btn::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+    }
+
+    .subscribe-btn:hover::after, .trial-btn:hover::after {
+        width: 300px;
+        height: 300px;
+    }
+
+    .filter-btn {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .filter-btn::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: var(--primary-color);
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .filter-btn:hover::after {
+        width: 100%;
+    }
+
+    /* Frequency Selection Styles */
+    .frequency-option {
+        transition: all 0.3s ease;
+        cursor: pointer;
+        user-select: none;
+        background: #374151;
+        color: #d1d5db;
+    }
+    input[type="radio"][name^="frequency-"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    input[type="radio"][name^="frequency-"]:checked + .frequency-option {
+        background: var(--primary-color);
+        color: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .frequency-option:hover {
+        transform: translateY(-1px);
+    }
+    .price-display {
+        text-align: center;
+        margin-top: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .meal-plan-card {
+            margin: 0 1rem;
+        }
+
+        .action-row {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .price-container {
+            text-align: center;
+            width: 100%;
+        }
+
+        .subscribe-btn, .trial-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .filter-buttons {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            width: calc(50% - 0.5rem);
+            text-align: center;
+        }
+    }
+
+    /* Loading animation */
+    .loading-skeleton {
+        background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-darker pt-12 pb-16 md:pt-16 md:pb-20">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-light mb-3 md:mb-4 animate-fade-in">
+            Our Healthy Meal Plans
+        </h1>
+        <p class="text-gray-300 text-lg md:text-xl max-w-3xl mx-auto mb-8 animate-fade-in-delay">
+            Select the perfect meal plan tailored to your specific dietary needs and health goals.
+        </p>
+        
+        <!-- Filter Buttons -->
+        <div class="filter-buttons flex flex-wrap justify-center gap-3 mb-10 animate-fade-in-delay-2">
+            <a href="{{ url_for('main.meal_plans') }}" 
+               class="filter-btn px-4 py-2 rounded-full border border-gray-700 {% if not request.args.get('type') %}bg-primary text-white{% else %}text-gray-300 hover:border-primary hover:text-primary{% endif %} transition-all duration-300">
+                All Plans
+            </a>
+            <a href="{{ url_for('main.meal_plans', type='balanced') }}" 
+               class="filter-btn px-4 py-2 rounded-full border border-gray-700 {% if request.args.get('type') == 'balanced' %}bg-primary text-white{% else %}text-gray-300 hover:border-primary hover:text-primary{% endif %} transition-all duration-300">
+                Balanced Diet
+            </a>
+            <a href="{{ url_for('main.meal_plans', type='weight-loss') }}" 
+               class="filter-btn px-4 py-2 rounded-full border border-gray-700 {% if request.args.get('type') == 'weight-loss' %}bg-primary text-white{% else %}text-gray-300 hover:border-primary hover:text-primary{% endif %} transition-all duration-300">
+                Weight Loss
+            </a>
+            <a href="{{ url_for('main.meal_plans', type='athletic') }}" 
+               class="filter-btn px-4 py-2 rounded-full border border-gray-700 {% if request.args.get('type') == 'athletic' %}bg-primary text-white{% else %}text-gray-300 hover:border-primary hover:text-primary{% endif %} transition-all duration-300">
+                Athletic
+            </a>
+            <a href="{{ url_for('main.meal_plans', type='vegetarian') }}" 
+               class="filter-btn px-4 py-2 rounded-full border border-gray-700 {% if request.args.get('type') == 'vegetarian' %}bg-primary text-white{% else %}text-gray-300 hover:border-primary hover:text-primary{% endif %} transition-all duration-300">
+                Vegetarian
+            </a>
+            <a href="{{ url_for('main.meal_plans', type='keto') }}" 
+               class="filter-btn px-4 py-2 rounded-full border border-gray-700 {% if request.args.get('type') == 'keto' %}bg-primary text-white{% else %}text-gray-300 hover:border-primary hover:text-primary{% endif %} transition-all duration-300">
+                Keto
+            </a>
+        </div>
+
+        <!-- Advanced Filters -->
+        <div class="max-w-4xl mx-auto mb-10 animate-fade-in-delay-3">
+            <form action="{{ url_for('main.meal_plans') }}" method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="relative">
+                    <label for="gender" class="block text-sm font-medium text-gray-300 mb-2">Gender</label>
+                    <select name="gender" id="gender" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-all duration-300">
+                        <option value="">All</option>
+                        <option value="male" {% if request.args.get('gender') == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if request.args.get('gender') == 'female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+                <div class="relative">
+                    <label for="breakfast" class="block text-sm font-medium text-gray-300 mb-2">Breakfast</label>
+                    <select name="breakfast" id="breakfast" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-all duration-300">
+                        <option value="">All</option>
+                        <option value="1" {% if request.args.get('breakfast') == '1' %}selected{% endif %}>With Breakfast</option>
+                        <option value="0" {% if request.args.get('breakfast') == '0' %}selected{% endif %}>Without Breakfast</option>
+                    </select>
+                </div>
+                <div class="relative">
+                    <label for="trial_only" class="block text-sm font-medium text-gray-300 mb-2">Trial Availability</label>
+                    <select name="trial_only" id="trial_only" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-all duration-300">
+                        <option value="">All Plans</option>
+                        <option value="1" {% if request.args.get('trial_only') == '1' %}selected{% endif %}>Trial Available</option>
+                    </select>
+                </div>
+                <div class="md:col-span-3 flex justify-center">
+                    <button type="submit" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Meal Plans Grid -->
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {% for plan in plans %}
+            <div class="meal-plan-card bg-dark rounded-xl shadow-lg overflow-hidden border border-gray-800 hover:border-primary transition-all duration-300">
+                <!-- Plan Details -->
+                <div class="p-5 sm:p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <h2 class="text-xl sm:text-2xl font-bold text-light">{{ plan.name }}</h2>
+                        {% if plan.is_popular %}
+                        <div class="bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold shadow-md animate-pulse">
+                            Most Popular
+                        </div>
+                        {% endif %}
+                    </div>
+                    <p class="text-gray-300 mb-5 text-sm sm:text-base">{{ plan.description }}</p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center">
+                            <div class="nutrition-icon w-8 h-8 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mr-3">
+                                <i class="fas fa-fire text-primary"></i>
+                            </div>
+                            <span class="text-gray-200">{{ plan.calories }} calories</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="nutrition-icon w-8 h-8 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mr-3">
+                                <i class="fas fa-drumstick-bite text-primary"></i>
+                            </div>
+                            <span class="text-gray-200">{{ plan.protein }} protein</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="nutrition-icon w-8 h-8 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mr-3">
+                                <i class="fas fa-bread-slice text-primary"></i>
+                            </div>
+                            <span class="text-gray-200">{{ plan.carbs }} carbs</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="nutrition-icon w-8 h-8 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mr-3">
+                                <i class="fas fa-cheese text-primary"></i>
+                            </div>
+                            <span class="text-gray-200">{{ plan.fat }} fat</span>
+                        </div>
+                    </div>
+
+                    <!-- Dietary Tags -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        {% if plan.is_vegetarian %}
+                        <span class="tag px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs hover:bg-green-800">Vegetarian</span>
+                        {% endif %}
+                        {% if plan.tag == 'Keto' %}
+                        <span class="tag px-2 py-1 bg-purple-900 text-purple-300 rounded-full text-xs hover:bg-purple-800">Keto</span>
+                        {% endif %}
+                        {% if plan.tag == 'High Protein' %}
+                        <span class="tag px-2 py-1 bg-blue-900 text-blue-300 rounded-full text-xs hover:bg-blue-800">High Protein</span>
+                        {% endif %}
+                        {% if plan.tag == 'Low Carb' %}
+                        <span class="tag px-2 py-1 bg-red-900 text-red-300 rounded-full text-xs hover:bg-red-800">Low Carb</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="action-row flex items-center justify-between pt-4 border-t border-gray-800">
+                        <div class="price-container">
+                            <!-- Simple Frequency Selection -->
+                            <div class="frequency-selector mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <label class="flex items-center cursor-pointer relative">
+                                        <input type="radio" name="frequency-{{ plan.id }}" value="weekly" checked>
+                                        <span class="frequency-option px-2 py-1 text-xs rounded">Weekly</span>
+                                    </label>
+                                    <label class="flex items-center cursor-pointer relative">
+                                        <input type="radio" name="frequency-{{ plan.id }}" value="monthly">
+                                        <span class="frequency-option px-2 py-1 text-xs rounded">Monthly</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Price Display -->
+                            <div class="price-display">
+                                <div class="text-lg font-bold text-primary selected-price" data-weekly="{{ plan.get_price_weekly() }}" data-monthly="{{ plan.get_price_monthly() }}">
+                                    ₹{{ "%.2f"|format(plan.get_price_weekly()) }}
+                                </div>
+                                <div class="text-xs text-gray-400 selected-frequency">per week</div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <a href="{{ url_for('main.subscribe', plan_id=plan.id, frequency='weekly') }}" 
+                               class="subscribe-btn inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300"
+                               data-plan-id="{{ plan.id }}"
+                               data-frequency="weekly">
+                                <span>Subscribe Now</span>
+                                <i class="fas fa-arrow-right ml-2"></i>
+                            </a>
+                            {% if plan.available_for_trial %}
+                            <a href="{{ url_for('main.trial_request', plan_id=plan.id) }}" 
+                               class="trial-btn inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition duration-300"
+                               data-plan-id="{{ plan.id }}">
+                                <span class="trial-price-text">Try 1-Day Trial (₹{{ "%.2f"|format(plan.get_price_trial()) }})</span>
+                                <i class="fas fa-gift ml-2"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-span-full bg-dark rounded-xl p-10 text-center shadow-lg border border-gray-800 animate-fade-in">
+                <i class="fas fa-utensils text-5xl text-primary mb-4 opacity-50"></i>
+                <h2 class="text-2xl font-bold text-gray-300 mb-4">No meal plans available at the moment</h2>
+                <p class="text-gray-400 mb-6">Please check back later for our latest meal plan offerings.</p>
+                <a href="{{ url_for('main.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary-dark transition-all duration-300 transform hover:scale-105">
+                    Return to Home
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action Section -->
+<div class="bg-primary-dark py-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-3xl font-bold text-white mb-4 animate-fade-in">Ready to Start Your Healthy Journey?</h2>
+        <p class="text-gray-200 text-lg mb-8 max-w-2xl mx-auto animate-fade-in-delay">Join thousands of satisfied customers who have transformed their lives with our personalized meal plans.</p>
+        <a href="{{ url_for('main.register') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-primary bg-white hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50">
+            Get Started Today
+            <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth transitions to meal plan cards
+    const mealPlanCards = document.querySelectorAll('.meal-plan-card');
+    
+    // Intersection Observer for fade-in animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-fade-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+
+    mealPlanCards.forEach(card => {
+        observer.observe(card);
+    });
+
+    // Handle responsive behavior for smaller screens
+    function handleResponsive() {
+        const actionRows = document.querySelectorAll('.action-row');
+        const filterButtons = document.querySelector('.filter-buttons');
+        
+        if (window.innerWidth < 640) {
+            actionRows.forEach(row => {
+                row.classList.add('flex-col', 'items-stretch', 'space-y-3');
+                row.classList.remove('justify-between', 'items-center');
+            });
+            
+            if (filterButtons) {
+                filterButtons.classList.add('flex-col', 'items-stretch');
+                filterButtons.classList.remove('flex-wrap', 'justify-center');
+            }
+        } else {
+            actionRows.forEach(row => {
+                row.classList.remove('flex-col', 'items-stretch', 'space-y-3');
+                row.classList.add('justify-between', 'items-center');
+            });
+            
+            if (filterButtons) {
+                filterButtons.classList.remove('flex-col', 'items-stretch');
+                filterButtons.classList.add('flex-wrap', 'justify-center');
+            }
+        }
+    }
+    
+    // Run on load and resize
+    handleResponsive();
+    window.addEventListener('resize', handleResponsive);
+
+    // Add loading animation for dynamic content
+    function showLoadingState() {
+        const cards = document.querySelectorAll('.meal-plan-card');
+        cards.forEach(card => {
+            card.classList.add('loading-skeleton');
+        });
+    }
+
+    function hideLoadingState() {
+        const cards = document.querySelectorAll('.meal-plan-card');
+        cards.forEach(card => {
+            card.classList.remove('loading-skeleton');
+        });
+    }
+
+    // Handle filter form submission
+    const filterForm = document.querySelector('form');
+    if (filterForm) {
+        filterForm.addEventListener('submit', () => {
+            showLoadingState();
+        });
+    }
+
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Handle frequency selection for radio buttons
+    console.log('Setting up frequency selection...');
+    document.querySelectorAll('.meal-plan-card').forEach((card, index) => {
+        const radios = card.querySelectorAll('input[type="radio"][name^="frequency-"]');
+        const priceDisplay = card.querySelector('.selected-price');
+        const frequencyDisplay = card.querySelector('.selected-frequency');
+        const subscribeBtn = card.querySelector('.subscribe-btn');
+        
+        console.log(`Card ${index + 1}:`, {
+            radios: radios.length,
+            priceDisplay: !!priceDisplay,
+            frequencyDisplay: !!frequencyDisplay,
+            subscribeBtn: !!subscribeBtn
+        });
+
+        if (priceDisplay && frequencyDisplay && subscribeBtn) {
+            const weeklyPrice = priceDisplay.getAttribute('data-weekly');
+            const monthlyPrice = priceDisplay.getAttribute('data-monthly');
+            
+            console.log(`Card ${index + 1} prices:`, { weeklyPrice, monthlyPrice });
+
+            radios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    console.log(`Frequency changed to: ${this.value}`);
+                    
+                    // Update radio button styles
+                    card.querySelectorAll('.frequency-option').forEach(option => {
+                        option.classList.remove('bg-primary', 'text-white');
+                        option.classList.add('bg-gray-700', 'text-gray-300');
+                    });
+                    
+                    // Highlight selected option
+                    const selectedOption = this.nextElementSibling;
+                    selectedOption.classList.remove('bg-gray-700', 'text-gray-300');
+                    selectedOption.classList.add('bg-primary', 'text-white');
+
+                    // Update price display and frequency text
+                    if (this.value === 'weekly') {
+                        priceDisplay.textContent = `₹${parseFloat(weeklyPrice).toFixed(2)}`;
+                        frequencyDisplay.textContent = 'per week';
+                        console.log(`Updated to weekly: ₹${weeklyPrice}`);
+                    } else {
+                        priceDisplay.textContent = `₹${parseFloat(monthlyPrice).toFixed(2)}`;
+                        frequencyDisplay.textContent = 'per month';
+                        console.log(`Updated to monthly: ₹${monthlyPrice}`);
+                    }
+                    
+                    // Update subscribe button URL
+                    const baseUrl = subscribeBtn.getAttribute('href').split('?')[0];
+                    subscribeBtn.setAttribute('href', `${baseUrl}?frequency=${this.value}`);
+                    subscribeBtn.setAttribute('data-frequency', this.value);
+                });
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

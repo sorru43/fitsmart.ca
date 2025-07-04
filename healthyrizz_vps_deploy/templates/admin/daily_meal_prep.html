@@ -1,0 +1,320 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Daily Meal Preparation - HealthyRizz Admin{% endblock %}
+
+{% block page_title %}Daily Meal Preparation{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Date Selector -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">📅 Select Preparation Date</h3>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('main.daily_meal_prep') }}">
+                        <div class="row align-items-end">
+                            <div class="col-md-3">
+                                <label for="date">Date:</label>
+                                <input type="date" id="date" name="date" value="{{ prep_date.strftime('%Y-%m-%d') }}" class="form-control">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary">View Meals</button>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="text-muted">
+                                    <small>
+                                        📋 Selected: <strong>{{ prep_date.strftime('%A, %B %d, %Y') }}</strong>
+                                        {% if prep_date == date.today() %}
+                                        <span class="badge badge-success">Today</span>
+                                        {% elif prep_date == date.today() + timedelta(days=1) %}
+                                        <span class="badge badge-info">Tomorrow</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            {% set total_veg = meal_prep_data.values() | sum(attribute='veg_count') %}
+            {% set total_nonveg = meal_prep_data.values() | sum(attribute='nonveg_count') %}
+            {% set total_breakfast = meal_prep_data.values() | sum(attribute='breakfast_count') %}
+            {% set total_meals = meal_prep_data.values() | sum(attribute='total_count') %}
+            
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-leaf fa-2x"></i>
+                                </div>
+                                <div>
+                                    <div class="h4 mb-0">{{ total_veg }}</div>
+                                    <div>Vegetarian Meals</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-drumstick-bite fa-2x"></i>
+                                </div>
+                                <div>
+                                    <div class="h4 mb-0">{{ total_nonveg }}</div>
+                                    <div>Non-Veg Meals</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-coffee fa-2x"></i>
+                                </div>
+                                <div>
+                                    <div class="h4 mb-0">{{ total_breakfast }}</div>
+                                    <div>Breakfasts</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-3 col-md-6">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-utensils fa-2x"></i>
+                                </div>
+                                <div>
+                                    <div class="h4 mb-0">{{ total_meals }}</div>
+                                    <div>Total Meals</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meal Plan Breakdown -->
+            {% if meal_prep_data %}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🍽️ Meal Plan Breakdown</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" onclick="window.print()">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                        <button type="button" class="btn btn-tool" onclick="exportToCSV()">
+                            <i class="fas fa-download"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% for plan_id, plan_data in meal_prep_data.items() %}
+                    <div class="meal-plan-section border-bottom">
+                        <div class="p-3">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h4 class="text-primary">{{ plan_data.name }}</h4>
+                                    <div class="meal-counts">
+                                        <span class="badge badge-success mr-2">
+                                            <i class="fas fa-leaf"></i> {{ plan_data.veg_count }} Veg
+                                        </span>
+                                        {% if plan_data.nonveg_count > 0 %}
+                                        <span class="badge badge-danger mr-2">
+                                            <i class="fas fa-drumstick-bite"></i> {{ plan_data.nonveg_count }} Non-Veg
+                                        </span>
+                                        {% endif %}
+                                        {% if plan_data.breakfast_count > 0 %}
+                                        <span class="badge badge-warning mr-2">
+                                            <i class="fas fa-coffee"></i> {{ plan_data.breakfast_count }} Breakfast
+                                        </span>
+                                        {% endif %}
+                                        <span class="badge badge-info">
+                                            <i class="fas fa-utensils"></i> {{ plan_data.total_count }} Total
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-right">
+                                    <button class="btn btn-sm btn-outline-primary" type="button" data-toggle="collapse" data-target="#customers-{{ plan_id }}" aria-expanded="false">
+                                        <i class="fas fa-users"></i> View Customers ({{ plan_data.customers|length }})
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Customer Details (Collapsible) -->
+                            <div class="collapse mt-3" id="customers-{{ plan_id }}">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Customer</th>
+                                                <th>Email</th>
+                                                <th>Address</th>
+                                                <th>Meal Type</th>
+                                                <th>Breakfast</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for customer in plan_data.customers %}
+                                            <tr>
+                                                <td>{{ customer.name }}</td>
+                                                <td>{{ customer.email }}</td>
+                                                <td>{{ customer.address }}</td>
+                                                <td>
+                                                    {% if customer.is_veg %}
+                                                    <span class="badge badge-success">Vegetarian</span>
+                                                    {% else %}
+                                                    <span class="badge badge-danger">Non-Vegetarian</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if customer.with_breakfast %}
+                                                    <span class="badge badge-warning">Yes</span>
+                                                    {% else %}
+                                                    <span class="badge badge-secondary">No</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Meals Scheduled</h4>
+                    <p class="text-muted">There are no meal deliveries scheduled for {{ prep_date.strftime('%A, %B %d, %Y') }}.</p>
+                    <a href="{{ url_for('main.daily_meal_prep', date=(prep_date + timedelta(days=1)).strftime('%Y-%m-%d')) }}" class="btn btn-primary">
+                        Check Tomorrow
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Preparation Notes -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">📝 Preparation Notes</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('main.save_prep_notes') }}">
+                        <input type="hidden" name="prep_date" value="{{ prep_date.strftime('%Y-%m-%d') }}">
+                        <div class="form-group">
+                            <label for="notes">Kitchen Notes:</label>
+                            <textarea id="notes" name="notes" class="form-control" rows="4" placeholder="Add any special preparation notes for today..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Save Notes
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print Styles -->
+<style>
+@media print {
+    .sidebar, .navbar, .card-tools, .btn, .form-control, .breadcrumb {
+        display: none !important;
+    }
+    
+    .content-wrapper {
+        margin: 0 !important;
+    }
+    
+    .meal-plan-section {
+        page-break-inside: avoid;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+    
+    .badge {
+        border: 1px solid #000 !important;
+    }
+}
+
+.meal-counts .badge {
+    font-size: 0.9em;
+}
+
+.meal-plan-section:last-child {
+    border-bottom: none !important;
+}
+</style>
+
+<script>
+function exportToCSV() {
+    const prepDate = "{{ prep_date.strftime('%Y-%m-%d') }}";
+    const data = [];
+    
+    // Add headers
+    data.push(['Date', 'Meal Plan', 'Customer', 'Email', 'Address', 'Meal Type', 'Breakfast']);
+    
+    // Add data rows
+    {% for plan_id, plan_data in meal_prep_data.items() %}
+    {% for customer in plan_data.customers %}
+    data.push([
+        prepDate,
+        "{{ plan_data.name }}",
+        "{{ customer.name }}",
+        "{{ customer.email }}",
+        "{{ customer.address }}",
+        "{{ 'Vegetarian' if customer.is_veg else 'Non-Vegetarian' }}",
+        "{{ 'Yes' if customer.with_breakfast else 'No' }}"
+    ]);
+    {% endfor %}
+    {% endfor %}
+    
+    // Convert to CSV
+    const csvContent = data.map(row => 
+        row.map(field => `"${field}"`).join(',')
+    ).join('\n');
+    
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `meal_prep_${prepDate}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Auto-refresh every 5 minutes
+setTimeout(() => {
+    location.reload();
+}, 300000);
+</script>
+{% endblock %} 

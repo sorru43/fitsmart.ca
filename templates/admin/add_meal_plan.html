@@ -1,0 +1,148 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Add Meal Plan - HealthyRizz Admin{% endblock %}
+
+{% block page_title %}Add Meal Plan{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Add New Meal Plan</h1>
+        <a href="{{ url_for('admin.admin_meal_plans') }}" class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Meal Plans
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="POST" class="space-y-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <!-- Basic Information -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Basic Information</h3>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Meal Plan Name *</label>
+                    <input type="text" name="name" class="form-input" placeholder="Enter meal plan name..." required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" class="form-textarea" rows="4" placeholder="Enter meal plan description..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                    <input type="url" name="image_url" class="form-input" placeholder="Enter image URL...">
+                </div>
+            </div>
+            
+            <!-- Pricing -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Pricing</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Weekly Price *</label>
+                        <input type="number" name="price_weekly" class="form-input" step="0.01" placeholder="0.00" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Monthly Price *</label>
+                        <input type="number" name="price_monthly" class="form-input" step="0.01" placeholder="0.00" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Trial Price</label>
+                        <input type="number" name="price_trial" class="form-input" step="0.01" placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nutritional Information -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Nutritional Information</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Calories</label>
+                        <input type="number" name="calories" class="form-input" placeholder="Calories">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Protein (g)</label>
+                        <input type="number" name="protein" class="form-input" step="0.1" placeholder="Protein">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Carbs (g)</label>
+                        <input type="number" name="carbs" class="form-input" step="0.1" placeholder="Carbs">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fat (g)</label>
+                        <input type="number" name="fat" class="form-input" step="0.1" placeholder="Fat">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Category and Tags -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Category & Tags</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">Select category</option>
+                            <option value="weight-loss">Weight Loss</option>
+                            <option value="muscle-gain">Muscle Gain</option>
+                            <option value="balanced">Balanced</option>
+                            <option value="vegetarian">Vegetarian</option>
+                            <option value="keto">Keto</option>
+                            <option value="paleo">Paleo</option>
+                            <option value="vegan">Vegan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tag</label>
+                        <input type="text" name="tag" class="form-input" placeholder="Enter tag (e.g., 'Popular', 'New')">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Options -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Options</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="is_vegetarian" value="true" class="form-checkbox">
+                            <span class="ml-2 text-sm text-gray-700">Vegetarian Meal Plan</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" name="available_for_trial" value="true" class="form-checkbox">
+                            <span class="ml-2 text-sm text-gray-700">Available for Trial</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" name="is_popular" value="true" class="form-checkbox">
+                            <span class="ml-2 text-sm text-gray-700">Mark as Popular</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" name="is_active" value="true" class="form-checkbox" checked>
+                            <span class="ml-2 text-sm text-gray-700">Active</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-4 pt-4">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Add Meal Plan
+                </button>
+                <a href="{{ url_for('admin.admin_meal_plans') }}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

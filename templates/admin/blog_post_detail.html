@@ -1,0 +1,114 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ post.title }} - Blog Post Details{% endblock %}
+
+{% block admin_content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Blog Post Details</h1>
+        <div class="space-x-2">
+            <a href="{{ url_for('admin.edit_blog_post', id=post.id) }}" 
+               class="bg-primary hover:bg-primary-dark text-white font-bold py-2 px-4 rounded">
+                Edit Post
+            </a>
+            <a href="{{ url_for('admin.admin_blog') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+                Back to Posts
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <!-- Post Header -->
+        <div class="border-b border-gray-200 pb-4 mb-6">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">{{ post.title }}</h2>
+            <div class="flex items-center space-x-4 text-sm text-gray-500">
+                <span>By {{ post.author.username }}</span>
+                <span>Created: {{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                {% if post.updated_at %}
+                <span>Updated: {{ post.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                {% endif %}
+                <span class="px-2 py-1 rounded-full text-xs font-semibold 
+                           {% if post.is_published %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                    {{ 'Published' if post.is_published else 'Draft' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Post Meta -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Post Information</h3>
+                <dl class="space-y-2">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Slug</dt>
+                        <dd class="text-sm text-gray-900">{{ post.slug }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Meta Description</dt>
+                        <dd class="text-sm text-gray-900">{{ post.meta_description or 'Not set' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Tags</dt>
+                        <dd class="text-sm text-gray-900">{{ post.tags or 'No tags' }}</dd>
+                    </div>
+                </dl>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Statistics</h3>
+                <dl class="space-y-2">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Views</dt>
+                        <dd class="text-sm text-gray-900">{{ post.views or 0 }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Featured Image</dt>
+                        <dd class="text-sm text-gray-900">
+                            {% if post.featured_image %}
+                            <img src="{{ post.featured_image }}" alt="Featured Image" class="w-20 h-20 object-cover rounded">
+                            {% else %}
+                            No featured image
+                            {% endif %}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Post Content -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Content</h3>
+            <div class="prose max-w-none">
+                {{ post.content|safe }}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="border-t border-gray-200 pt-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
+            <div class="flex space-x-4">
+                <form method="POST" action="{{ url_for('admin.toggle_blog_post_status', post_id=post.id) }}" class="inline">
+                    <button type="submit" 
+                            class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded">
+                        {{ 'Unpublish' if post.is_published else 'Publish' }}
+                    </button>
+                </form>
+                <form method="POST" 
+                      action="{{ url_for('admin.delete_blog_post', id=post.id) }}" 
+                      class="inline"
+                      onsubmit="return confirm('Are you sure you want to delete this post? This action cannot be undone.');">
+                    <button type="submit" 
+                            class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                        Delete Post
+                    </button>
+                </form>
+                <a href="{{ url_for('main.blog_post', slug=post.slug) }}" 
+                   target="_blank"
+                   class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                    View on Site
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

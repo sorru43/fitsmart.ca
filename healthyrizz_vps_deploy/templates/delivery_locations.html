@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Locations - HealthyRizz{% endblock %}
+
+{% block content %}
+<main class="bg-gray-900 py-16 md:py-20">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto bg-darker rounded-lg shadow-lg p-8 md:p-12 border border-gray-700">
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-8 text-center">
+                <i class="fas fa-map-marked-alt text-primary mr-3"></i>Our Delivery Zones
+            </h1>
+            <div class="text-gray-300">
+                {% if states %}
+                    {% for state in states %}
+                        <div class="mb-8">
+                            <h2 class="text-2xl font-semibold text-primary mb-4 border-b border-gray-700 pb-2">{{ state.name }}</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {% for city in state.cities %}
+                                    <div class="bg-dark rounded-lg p-4">
+                                        <h3 class="text-xl font-bold text-white mb-2">{{ city.name }}</h3>
+                                        <ul class="space-y-2">
+                                            {% for area in city.areas %}
+                                                <li class="flex items-center text-gray-400">
+                                                    <i class="fas fa-check-circle text-green-500 mr-3"></i>{{ area.name }}
+                                                </li>
+                                            {% else %}
+                                                <li class="text-gray-500">No specific areas listed.</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% else %}
+                                    <p class="text-gray-500">No cities available for this state.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center text-lg text-gray-400">We are currently finalizing our delivery zones. Please check back soon!</p>
+                {% endif %}
+
+                <div class="mt-12 text-center border-t border-gray-700 pt-8">
+                    <h2 class="text-2xl font-semibold text-white mb-4">📦 Don't See Your Area?</h2>
+                    <p class="text-gray-400">If your location isn't listed, please <a href="{{ url_for('main.contact') }}" class="text-primary hover:underline font-semibold">Request Delivery</a>. We are always expanding!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %} 

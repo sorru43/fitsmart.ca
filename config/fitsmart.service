@@ -1,0 +1,16 @@
+[Unit]
+Description=FitSmart Flask Application
+After=network.target postgresql.service redis.service
+Requires=postgresql.service redis.service
+
+[Service]
+User=fitsmart1
+WorkingDirectory=/home/fitsmart1/htdocs/www.fitsmart.ca
+Environment="PATH=/home/fitsmart1/htdocs/www.fitsmart.ca/venv/bin"
+Environment="FLASK_APP=app.py"
+Environment="FLASK_ENV=production"
+ExecStart=/home/fitsmart1/htdocs/www.fitsmart.ca/venv/bin/gunicorn --workers 3 --bind unix:fitsmart.sock -m 007 app:create_app()
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

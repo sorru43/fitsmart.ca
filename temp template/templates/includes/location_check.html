@@ -1,0 +1,430 @@
+<div class="bg-white rounded-lg shadow-md p-6 mb-6" id="location-checker">
+    <h3 class="text-lg font-semibold mb-4">Check Delivery Availability</h3>
+    
+    <form id="location-check-form" action="{{ url_for('check_location') }}" method="POST" class="space-y-4">
+        <!-- Add CSRF token -->
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="province" class="block text-sm font-medium text-gray-700 mb-1">Province</label>
+                <select id="province" name="province" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    <option value="">Select Province</option>
+                    <option value="AB">Alberta</option>
+                    <option value="BC">British Columbia</option>
+                    <option value="MB">Manitoba</option>
+                    <option value="NB">New Brunswick</option>
+                    <option value="NL">Newfoundland and Labrador</option>
+                    <option value="NS">Nova Scotia</option>
+                    <option value="ON">Ontario</option>
+                    <option value="PE">Prince Edward Island</option>
+                    <option value="QC">Quebec</option>
+                    <option value="SK">Saskatchewan</option>
+                    <option value="NT">Northwest Territories</option>
+                    <option value="NU">Nunavut</option>
+                    <option value="YT">Yukon</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                <select id="city" name="city" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required disabled>
+                    <option value="">Select Province First</option>
+                </select>
+                <input type="text" id="city_manual" name="city_manual" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary mt-2 hidden" placeholder="Enter your city">
+                <input type="text" id="other_location" name="other_location" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary mt-2 hidden" placeholder="Enter your specific location">
+                <div class="text-xs text-blue-600 mt-1 cursor-pointer manual-entry-toggle" data-field="city">
+                    City not in the list? Enter manually
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+            <input type="text" id="postal_code" name="postal_code" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. M5V 2H1" required>
+            <p class="text-sm text-gray-500 mt-1">Format: A1A 1A1 (Canadian postal code)</p>
+        </div>
+        
+        <div class="flex justify-end">
+            <button type="submit" class="bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-md transition flex items-center">
+                <span>Check Availability</span>
+                <span class="loader hidden ml-2">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </span>
+            </button>
+        </div>
+    </form>
+    
+    <div id="location-result" class="mt-4 hidden"></div>
+    
+    <!-- Request Service Form - Initially Hidden -->
+    <div id="request-service-container" class="mt-6 pt-6 border-t border-gray-200 hidden">
+        <h4 class="text-md font-semibold mb-4">Request Service in Your Area</h4>
+        <form id="request-service-form" action="{{ url_for('request_service') }}" method="POST" class="space-y-4">
+            <!-- Add CSRF token -->
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <!-- Hidden fields for location info -->
+            <input type="hidden" id="rs_city" name="city" value="">
+            <input type="hidden" id="rs_province" name="province" value="">
+            <input type="hidden" id="rs_postal_code" name="postal_code" value="">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="rs_name" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                    <input type="text" id="rs_name" name="name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                </div>
+                
+                <div>
+                    <label for="rs_email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <input type="email" id="rs_email" name="email" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                </div>
+            </div>
+            
+            <div>
+                <label for="rs_phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number (Optional)</label>
+                <input type="tel" id="rs_phone" name="phone" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. 416-555-1234">
+                <p class="text-sm text-gray-500 mt-1">We'll notify you when delivery becomes available in your area</p>
+            </div>
+            
+            <div class="flex justify-end">
+                <button type="submit" class="bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-md transition">
+                    Submit Request
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('location-check-form');
+    const resultDiv = document.getElementById('location-result');
+    const provinceSelect = document.getElementById('province');
+    const citySelect = document.getElementById('city');
+    const cityInput = document.getElementById('city_manual');
+    const requestServiceContainer = document.getElementById('request-service-container');
+    const manualEntryToggles = document.querySelectorAll('.manual-entry-toggle');
+    
+    // Toggle manual entry fields
+    manualEntryToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const field = this.getAttribute('data-field');
+            if (field === 'city') {
+                if (cityInput.classList.contains('hidden')) {
+                    cityInput.classList.remove('hidden');
+                    citySelect.classList.add('hidden');
+                    citySelect.removeAttribute('required');
+                    cityInput.setAttribute('required', 'required');
+                    this.textContent = 'Use dropdown list instead';
+                } else {
+                    cityInput.classList.add('hidden');
+                    citySelect.classList.remove('hidden');
+                    citySelect.setAttribute('required', 'required');
+                    cityInput.removeAttribute('required');
+                    this.textContent = 'City not in the list? Enter manually';
+                }
+            }
+        });
+    });
+    
+    // Function to handle city selection changes
+    function handleCityChange() {
+        const otherLocation = document.getElementById('other_location');
+        
+        // If "Other" is selected, show the specific location field
+        if (citySelect.value === 'Other') {
+            otherLocation.classList.remove('hidden');
+            otherLocation.setAttribute('required', 'required');
+        } else {
+            otherLocation.classList.add('hidden');
+            otherLocation.removeAttribute('required');
+        }
+    }
+    
+    // Function to check location & add "Other" if postal code prefix matches active area
+    function checkPostalCodeLocation() {
+        const postalCode = document.getElementById('postal_code').value;
+        const province = provinceSelect.value;
+        
+        if (postalCode && postalCode.length >= 3 && province) {
+            // Get current city value
+            const selectedCity = citySelect.value;
+            
+            // Construct URL with postal code parameters
+            let url = `/get-cities-by-province?province=${province}&postal_code=${encodeURIComponent(postalCode)}`;
+            
+            // Fetch cities for the selected province with postal code check
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // If this is an active location by postal code and "Other" option isn't already there
+                if (data.success && data.is_active_location) {
+                    // Check if we already have "Other" option
+                    let hasOther = false;
+                    for (let i = 0; i < citySelect.options.length; i++) {
+                        if (citySelect.options[i].value === 'Other') {
+                            hasOther = true;
+                            break;
+                        }
+                    }
+                    
+                    // If we don't have "Other" option yet, add it
+                    if (!hasOther && !citySelect.disabled) {
+                        const option = document.createElement('option');
+                        option.value = 'Other';
+                        option.textContent = 'Other';
+                        option.setAttribute('data-is-other', 'true');
+                        option.style.fontStyle = 'italic';
+                        citySelect.appendChild(option);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error checking postal code location:', error);
+            });
+        }
+    }
+    
+    // Add event listener to city dropdown
+    if (citySelect) {
+        citySelect.addEventListener('change', handleCityChange);
+    }
+    
+    // Add event listener to postal code field
+    const postalCodeField = document.getElementById('postal_code');
+    if (postalCodeField) {
+        postalCodeField.addEventListener('blur', function() {
+            // When user finishes entering postal code, check if it's in an active area
+            if (this.value && this.value.length >= 3) {
+                checkPostalCodeLocation();
+            }
+        });
+    }
+    
+    // Load cities when province changes
+    if (provinceSelect) {
+        provinceSelect.addEventListener('change', function() {
+            const province = this.value;
+            
+            if (!province) {
+                citySelect.innerHTML = '<option value="">Select Province First</option>';
+                citySelect.setAttribute('disabled', 'disabled');
+                return;
+            }
+            
+            // Show loading state
+            citySelect.innerHTML = '<option value="">Loading cities...</option>';
+            citySelect.setAttribute('disabled', 'disabled');
+            
+            // Hide the other location field when province changes
+            document.getElementById('other_location').classList.add('hidden');
+            
+            // Get the postal code if available
+            const postalCode = document.getElementById('postal_code').value;
+            // Get user city if it's been manually entered
+            const userCity = !cityInput.classList.contains('hidden') ? cityInput.value : '';
+            
+            // Construct URL with additional parameters
+            let url = `/get-cities-by-province?province=${province}`;
+            if (postalCode) url += `&postal_code=${encodeURIComponent(postalCode)}`;
+            if (userCity) url += `&user_city=${encodeURIComponent(userCity)}`;
+            
+            // Fetch cities for the selected province
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.cities && data.cities.length > 0) {
+                        // Populate city dropdown with available cities
+                    citySelect.innerHTML = '<option value="">Select City</option>';
+                    data.cities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city;
+                        option.textContent = city;
+                        citySelect.appendChild(option);
+                    });
+                    citySelect.removeAttribute('disabled');
+                    } else {
+                        // No cities available for this province
+                        citySelect.innerHTML = '<option value="">No cities available for this province</option>';
+                        citySelect.setAttribute('disabled', 'disabled');
+                    }
+                } else {
+                    // Handle error case
+                    citySelect.innerHTML = '<option value="">Error loading cities</option>';
+                    citySelect.setAttribute('disabled', 'disabled');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching cities:', error);
+                citySelect.innerHTML = '<option value="">Error loading cities</option>';
+                citySelect.setAttribute('disabled', 'disabled');
+            });
+        });
+    }
+    
+    // Handle the check availability form submission
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get the active city input (either select or manual)
+            const cityValue = cityInput.classList.contains('hidden') ? 
+                citySelect.value : cityInput.value;
+                
+            if (!cityValue) {
+                alert('Please select or enter a city');
+                return;
+            }
+            
+            // Show loading spinner
+            const button = this.querySelector('button[type="submit"]');
+            const loader = button.querySelector('.loader');
+            const buttonText = button.querySelector('span:not(.loader)');
+            
+            buttonText.textContent = 'Checking...';
+            loader.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+            requestServiceContainer.classList.add('hidden');
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Replace city value with the active input value
+            formData.set('city', cityValue);
+            
+            // If "Other" is selected, include the other_location value
+            if (cityValue === 'Other') {
+                const otherLocationValue = document.getElementById('other_location').value;
+                formData.set('other_location', otherLocationValue);
+            }
+            
+            // Add CSRF token to headers
+            const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+            
+            // Make AJAX request
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Reset button
+                buttonText.textContent = 'Check Availability';
+                loader.classList.add('hidden');
+                
+                // Display result
+                resultDiv.classList.remove('hidden');
+                
+                if (data.available) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-50 border-l-4 border-green-500 p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-check-circle text-green-500"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-green-700">Great news! We deliver to your area.</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add hidden fields to parent form if it exists
+                    const parentForm = form.closest('.location-check-container').querySelector('form:not(#location-check-form)');
+                    if (parentForm) {
+                        // Add or update hidden fields
+                        let cityField = parentForm.querySelector('input[name="city"]');
+                        if (!cityField) {
+                            cityField = document.createElement('input');
+                            cityField.type = 'hidden';
+                            cityField.name = 'city';
+                            parentForm.appendChild(cityField);
+                        }
+                        cityField.value = cityValue;
+                        
+                        let provinceField = parentForm.querySelector('input[name="province"]');
+                        if (!provinceField) {
+                            provinceField = document.createElement('input');
+                            provinceField.type = 'hidden';
+                            provinceField.name = 'province';
+                            parentForm.appendChild(provinceField);
+                        }
+                        provinceField.value = formData.get('province');
+                        
+                        let postalCodeField = parentForm.querySelector('input[name="postal_code"]');
+                        if (!postalCodeField) {
+                            postalCodeField = document.createElement('input');
+                            postalCodeField.type = 'hidden';
+                            postalCodeField.name = 'postal_code';
+                            parentForm.appendChild(postalCodeField);
+                        }
+                        postalCodeField.value = formData.get('postal_code');
+                    }
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-red-700">Sorry, we don't deliver to your area yet.</p>
+                                    <button type="button" id="request-service-btn" class="mt-2 py-1 px-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm">
+                                        Request Service in My Area
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Set up request service button
+                    document.getElementById('request-service-btn').addEventListener('click', function() {
+                        // Show request service form
+                        requestServiceContainer.classList.remove('hidden');
+                        
+                        // Set values from check form to request form
+                        document.getElementById('rs_city').value = cityValue;
+                        document.getElementById('rs_province').value = formData.get('province');
+                        document.getElementById('rs_postal_code').value = formData.get('postal_code');
+                        
+                        // Scroll to the form
+                        requestServiceContainer.scrollIntoView({behavior: 'smooth', block: 'start'});
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                buttonText.textContent = 'Check Availability';
+                loader.classList.add('hidden');
+                
+                resultDiv.classList.remove('hidden');
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-circle text-red-500"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-red-700">An error occurred. Please try again.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    }
+});
+</script>

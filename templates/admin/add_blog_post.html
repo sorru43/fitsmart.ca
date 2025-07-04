@@ -1,0 +1,410 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Add Blog Post - HealthyRizz Admin{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    #editor {
+        height: 400px;
+        margin-bottom: 1rem;
+    }
+    .ql-editor {
+        min-height: 350px;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    .ql-toolbar {
+        border-top: 1px solid #ccc;
+        border-left: 1px solid #ccc;
+        border-right: 1px solid #ccc;
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+    }
+    .ql-container {
+        border: 1px solid #ccc;
+        border-radius: 0 0 4px 4px;
+    }
+    .content-preview {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 1rem;
+        margin-top: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .html-editor {
+        display: none;
+        width: 100%;
+        min-height: 400px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.4;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: #f8f9fa;
+        resize: vertical;
+    }
+    .editor-mode-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .mode-btn {
+        padding: 8px 16px;
+        border: 1px solid #ccc;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .mode-btn.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    .mode-btn:hover {
+        background: #f8f9fa;
+    }
+    .mode-btn.active:hover {
+        background: #0056b3;
+    }
+    .html-toolbar {
+        display: none;
+        margin-bottom: 10px;
+        padding: 10px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
+    .html-toolbar button {
+        margin-right: 5px;
+        padding: 4px 8px;
+        font-size: 12px;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    .html-toolbar button:hover {
+        background: #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Add New Blog Post</h1>
+        <a href="{{ url_for('admin.admin_blog') }}" class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Blog
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="content" id="content-input">
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <input type="text" name="title" class="form-input" placeholder="Enter blog post title..." required>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Content *</label>
+                
+                <!-- Editor Mode Buttons -->
+                <div class="editor-mode-buttons">
+                    <button type="button" class="mode-btn active" id="visual-mode-btn">
+                        <i class="fas fa-eye mr-1"></i>Visual Editor
+                    </button>
+                    <button type="button" class="mode-btn" id="html-mode-btn">
+                        <i class="fas fa-code mr-1"></i>HTML Editor
+                    </button>
+                </div>
+                
+                <!-- HTML Toolbar -->
+                <div class="html-toolbar" id="html-toolbar">
+                    <button type="button" onclick="insertHTMLTag('h1')">H1</button>
+                    <button type="button" onclick="insertHTMLTag('h2')">H2</button>
+                    <button type="button" onclick="insertHTMLTag('h3')">H3</button>
+                    <button type="button" onclick="insertHTMLTag('p')">Paragraph</button>
+                    <button type="button" onclick="insertHTMLTag('div')">Div</button>
+                    <button type="button" onclick="insertHTMLTag('span')">Span</button>
+                    <button type="button" onclick="insertHTMLTag('strong')">Bold</button>
+                    <button type="button" onclick="insertHTMLTag('em')">Italic</button>
+                    <button type="button" onclick="insertHTMLTag('ul')">List</button>
+                    <button type="button" onclick="insertHTMLTag('table')">Table</button>
+                    <button type="button" onclick="insertHTMLTag('img')">Image</button>
+                    <button type="button" onclick="insertHTMLTag('a')">Link</button>
+                    <button type="button" onclick="insertHTMLTag('br')">Line Break</button>
+                </div>
+                
+                <!-- Visual Editor -->
+                <div id="visual-editor">
+                    <div id="editor"></div>
+                </div>
+                
+                <!-- HTML Editor -->
+                <textarea id="html-editor" class="html-editor" placeholder="Write your HTML code here..."></textarea>
+                
+                <div class="flex space-x-2 mt-2">
+                    <button type="button" id="preview-btn" class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                        <i class="fas fa-eye mr-1"></i>Preview
+                    </button>
+                    <button type="button" id="hide-preview-btn" class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 hidden">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </button>
+                </div>
+                <div id="content-preview" class="content-preview hidden"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                    <select name="category" class="form-select" required>
+                        <option value="">Select category</option>
+                        <option value="Nutrition">Nutrition</option>
+                        <option value="Fitness">Fitness</option>
+                        <option value="Wellness">Wellness</option>
+                        <option value="Recipes">Recipes</option>
+                        <option value="Lifestyle">Lifestyle</option>
+                        <option value="Health Tips">Health Tips</option>
+                        <option value="Workout">Workout</option>
+                        <option value="Diet">Diet</option>
+                        <option value="custom">Custom Category</option>
+                    </select>
+                </div>
+                
+                <div id="custom-category-field" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Custom Category</label>
+                    <input type="text" name="custom_category" class="form-input" placeholder="Enter custom category...">
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                <input type="text" name="tags" class="form-input" placeholder="Enter tags separated by commas...">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
+                <input type="file" name="image" class="form-input" accept="image/*">
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <label class="flex items-center">
+                    <input type="checkbox" name="is_published" value="true" class="form-checkbox">
+                    <span class="ml-2 text-sm text-gray-700">Publish immediately</span>
+                </label>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Add Blog Post
+                </button>
+                <a href="{{ url_for('admin.admin_blog') }}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let quill;
+    let currentMode = 'visual';
+    
+    // Initialize Quill editor
+    function initQuill() {
+        quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['link', 'image', 'video'],
+                    ['code-block'],
+                    ['clean']
+                ]
+            },
+            placeholder: 'Write your blog post content here...'
+        });
+    }
+    
+    initQuill();
+    
+    // Mode switching
+    const visualModeBtn = document.getElementById('visual-mode-btn');
+    const htmlModeBtn = document.getElementById('html-mode-btn');
+    const visualEditor = document.getElementById('visual-editor');
+    const htmlEditor = document.getElementById('html-editor');
+    const htmlToolbar = document.getElementById('html-toolbar');
+    
+    visualModeBtn.addEventListener('click', function() {
+        if (currentMode !== 'visual') {
+            // Save HTML content to visual editor
+            const htmlContent = htmlEditor.value;
+            quill.root.innerHTML = htmlContent;
+            
+            // Switch modes
+            visualEditor.style.display = 'block';
+            htmlEditor.style.display = 'none';
+            htmlToolbar.style.display = 'none';
+            
+            visualModeBtn.classList.add('active');
+            htmlModeBtn.classList.remove('active');
+            currentMode = 'visual';
+        }
+    });
+    
+    htmlModeBtn.addEventListener('click', function() {
+        if (currentMode !== 'html') {
+            // Save visual content to HTML editor
+            const visualContent = quill.root.innerHTML;
+            htmlEditor.value = visualContent;
+            
+            // Switch modes
+            visualEditor.style.display = 'none';
+            htmlEditor.style.display = 'block';
+            htmlToolbar.style.display = 'block';
+            
+            htmlModeBtn.classList.add('active');
+            visualModeBtn.classList.remove('active');
+            currentMode = 'html';
+        }
+    });
+    
+    // HTML toolbar functions
+    window.insertHTMLTag = function(tag) {
+        if (currentMode === 'html') {
+            const textarea = document.getElementById('html-editor');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            
+            let insertText = '';
+            switch(tag) {
+                case 'h1':
+                    insertText = `<h1>${selectedText || 'Heading 1'}</h1>`;
+                    break;
+                case 'h2':
+                    insertText = `<h2>${selectedText || 'Heading 2'}</h2>`;
+                    break;
+                case 'h3':
+                    insertText = `<h3>${selectedText || 'Heading 3'}</h3>`;
+                    break;
+                case 'p':
+                    insertText = `<p>${selectedText || 'Paragraph text'}</p>`;
+                    break;
+                case 'div':
+                    insertText = `<div>${selectedText || 'Content'}</div>`;
+                    break;
+                case 'span':
+                    insertText = `<span>${selectedText || 'Inline text'}</span>`;
+                    break;
+                case 'strong':
+                    insertText = `<strong>${selectedText || 'Bold text'}</strong>`;
+                    break;
+                case 'em':
+                    insertText = `<em>${selectedText || 'Italic text'}</em>`;
+                    break;
+                case 'ul':
+                    insertText = `<ul>\n  <li>${selectedText || 'List item'}</li>\n</ul>`;
+                    break;
+                case 'table':
+                    insertText = `<table border="1">\n  <tr>\n    <td>${selectedText || 'Cell content'}</td>\n  </tr>\n</table>`;
+                    break;
+                case 'img':
+                    insertText = `<img src="image-url.jpg" alt="${selectedText || 'Image description'}" style="max-width: 100%; height: auto;">`;
+                    break;
+                case 'a':
+                    insertText = `<a href="url" target="_blank">${selectedText || 'Link text'}</a>`;
+                    break;
+                case 'br':
+                    insertText = '<br>';
+                    break;
+            }
+            
+            textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + insertText.length, start + insertText.length);
+        }
+    };
+
+    // Category selection logic
+    const categorySelect = document.querySelector('select[name="category"]');
+    const customCategoryField = document.getElementById('custom-category-field');
+    
+    categorySelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customCategoryField.classList.remove('hidden');
+        } else {
+            customCategoryField.classList.add('hidden');
+        }
+    });
+
+    // Preview functionality
+    const previewBtn = document.getElementById('preview-btn');
+    const hidePreviewBtn = document.getElementById('hide-preview-btn');
+    const contentPreview = document.getElementById('content-preview');
+    const editor = document.querySelector('#editor');
+
+    previewBtn.addEventListener('click', function() {
+        let content;
+        if (currentMode === 'visual') {
+            content = quill.root.innerHTML;
+        } else {
+            content = htmlEditor.value;
+        }
+        
+        contentPreview.innerHTML = content;
+        contentPreview.classList.remove('hidden');
+        visualEditor.style.display = 'none';
+        htmlEditor.style.display = 'none';
+        previewBtn.classList.add('hidden');
+        hidePreviewBtn.classList.remove('hidden');
+    });
+
+    hidePreviewBtn.addEventListener('click', function() {
+        contentPreview.classList.add('hidden');
+        if (currentMode === 'visual') {
+            visualEditor.style.display = 'block';
+        } else {
+            htmlEditor.style.display = 'block';
+        }
+        hidePreviewBtn.classList.add('hidden');
+        previewBtn.classList.remove('hidden');
+    });
+
+    // Form submission - get content from current mode
+    const form = document.querySelector('form');
+    const contentInput = document.getElementById('content-input');
+    
+    form.addEventListener('submit', function(e) {
+        let content;
+        if (currentMode === 'visual') {
+            content = quill.root.innerHTML;
+        } else {
+            content = htmlEditor.value;
+        }
+        
+        contentInput.value = content;
+        
+        if (!content.trim()) {
+            e.preventDefault();
+            alert('Please enter some content for your blog post.');
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}

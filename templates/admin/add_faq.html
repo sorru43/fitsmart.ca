@@ -1,0 +1,63 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block admin_content %}
+<div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-6 py-4 border-b">
+        <h2 class="text-xl font-semibold text-black">Add FAQ</h2>
+    </div>
+    
+    <form action="{{ url_for('admin.admin_add_faq') }}" method="POST" class="p-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="grid grid-cols-1 gap-6 mb-6">
+            <div>
+                <label for="question" class="block text-sm font-medium text-black mb-1">Question *</label>
+                <input type="text" id="question" name="question" placeholder="e.g., How do I change my delivery schedule?" 
+                       class="px-4 py-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary text-black" required>
+            </div>
+            
+            <div>
+                <label for="answer" class="block text-sm font-medium text-black mb-1">Answer *</label>
+                <textarea id="answer" name="answer" rows="6" 
+                          class="px-4 py-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary text-black" required
+                          placeholder="Provide a detailed answer to the question..."></textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="category" class="block text-sm font-medium text-black mb-1">Category</label>
+                    <select id="category" name="category" class="px-4 py-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary text-black">
+                        <option value="General">General</option>
+                        <option value="Delivery">Delivery</option>
+                        <option value="Payment">Payment</option>
+                        <option value="Meals">Meals</option>
+                        <option value="Account">Account</option>
+                        <option value="Subscription">Subscription</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="order" class="block text-sm font-medium text-black mb-1">Display Order</label>
+                    <input type="number" id="order" name="order" min="0" value="0" 
+                          class="px-4 py-2 border rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary text-black">
+                    <p class="text-xs text-black mt-1">Lower numbers appear first. FAQs with the same order value are sorted by creation date.</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" id="is_active" name="is_active" class="h-5 w-5 text-primary focus:ring-primary rounded" checked>
+                <label for="is_active" class="ml-2 block text-sm text-black">Active (visible on website)</label>
+            </div>
+        </div>
+        
+        <div class="flex justify-end space-x-4">
+            <a href="{{ url_for('admin.admin_faqs') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md transition">
+                Cancel
+            </a>
+            <button type="submit" class="bg-primary hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition">
+                Add FAQ
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

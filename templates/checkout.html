@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - HealthyRizz</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind/tailwind.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+<!-- Razorpay JS -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+<style>
+        body {
+            background-color: #151515;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+}
+        .bg-primary { background-color: #4CAF50; }
+        .text-primary { color: #4CAF50; }
+        .border-primary { border-color: #4CAF50; }
+        .bg-dark { background-color: #151515; }
+        .bg-darker { background-color: #0A0A0A; }
+        .text-light { color: #FFFFFF; }
+        .border-dark { border-color: #424242; }
+        
+        input, select, textarea {
+            background-color: #151515 !important;
+            color: #FFFFFF !important;
+            border: 1px solid #424242 !important;
+}
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #4CAF50 !important;
+            outline: none !important;
+}
+</style>
+</head>
+<body>
+    <div class="min-h-screen bg-dark">
+        <!-- Header -->
+        <header class="bg-darker border-b border-gray-800">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <a href="/" class="flex items-center">
+                        <img src="{{ site_settings.get('site_logo', '/static/images/logo white.png') }}" 
+                             alt="HealthyRizz Logo" 
+                             class="h-8 md:h-12 w-auto">
+                    </a>
+                    <a href="/" class="text-light hover:text-primary">← Back to Home</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="container mx-auto px-4 py-8">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-3xl font-bold text-center mb-8">Complete Your Order</h1>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Order Form -->
+                    <div class="bg-darker p-6 rounded-lg border border-gray-800">
+                        <h2 class="text-xl font-semibold mb-6">Customer Information</h2>
+                        
+                        <form id="checkout-form" method="POST" action="{{ url_for('main.process_checkout') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="plan_id" value="{{ meal_plan.id }}">
+                            <input type="hidden" name="frequency" value="weekly">
+                            <input type="hidden" name="total_amount" value="{{ meal_plan.price_weekly }}">
+                            
+                            <div class="space-y-4">
+          <div>
+                                    <label class="block text-sm font-medium mb-2">Full Name *</label>
+                                    <input type="text" name="customer_name" required class="w-full px-3 py-2 rounded-md" 
+                                           value="{{ user_data.name if user_data else '' }}">
+          </div>
+                                
+          <div>
+                                    <label class="block text-sm font-medium mb-2">Email Address *</label>
+                                    <input type="email" name="customer_email" required class="w-full px-3 py-2 rounded-md"
+                                           value="{{ user_data.email if user_data else '' }}">
+          </div>
+                                
+        <div>
+                                    <label class="block text-sm font-medium mb-2">Phone Number *</label>
+                                    <input type="tel" name="customer_phone" required class="w-full px-3 py-2 rounded-md"
+                                           value="{{ user_data.phone if user_data else '' }}">
+        </div>
+                                
+        <div>
+                                    <label class="block text-sm font-medium mb-2">Delivery Address *</label>
+                                    <textarea name="customer_address" required rows="3" class="w-full px-3 py-2 rounded-md">{{ user_data.address if user_data else '' }}</textarea>
+        </div>
+        
+                                          <div>
+                                    <label class="block text-sm font-medium mb-2">State *</label>
+                                    <select name="customer_state" id="state-select" required class="w-full px-3 py-2 rounded-md">
+                                        <option value="">Select your state</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">City *</label>
+                                    <select name="customer_city" id="city-select" required class="w-full px-3 py-2 rounded-md">
+                                        <option value="">Select your city</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Location/Area *</label>
+                                    <select name="location" id="area-select" required class="w-full px-3 py-2 rounded-md">
+                                        <option value="">Select your area</option>
+                                    </select>
+                                </div>
+                                
+          <div>
+                                    <label class="block text-sm font-medium mb-2">Pincode *</label>
+                                    <input type="text" name="customer_pincode" required class="w-full px-3 py-2 rounded-md" placeholder="141001"
+                                           value="{{ user_data.postal_code if user_data else '' }}">
+        </div>
+        
+        <div>
+                                    <label class="block text-sm font-medium mb-2">Special Instructions</label>
+                                    <textarea name="special_instructions" rows="2" class="w-full px-3 py-2 rounded-md" placeholder="Any dietary restrictions or delivery preferences"></textarea>
+                                </div>
+        </div>
+                        </form>
+        </div>
+        
+                    <!-- Order Summary -->
+                    <div class="bg-darker p-6 rounded-lg border border-gray-800">
+                        <h2 class="text-xl font-semibold mb-6">Order Summary</h2>
+                        
+                        <div class="space-y-4">
+                            <div class="flex justify-between">
+                                <span>Meal Plan:</span>
+                                <span class="font-medium">{{ meal_plan.name }}</span>
+          </div>
+                            
+                            <div class="flex justify-between">
+                                <span>Duration:</span>
+                                <span class="font-medium">Weekly</span>
+          </div>
+                            
+                            <div class="flex justify-between">
+                                <span>Base Price:</span>
+                                <span>₹{{ "%.2f"|format(meal_plan.price_weekly) }}</span>
+        </div>
+        
+                            <div class="flex justify-between">
+                                <span>GST (5%):</span>
+                                <span>₹{{ "%.2f"|format(weekly_gst) }}</span>
+          </div>
+                            
+                            <!-- Coupon Code Section -->
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium mb-2">Coupon Code (Optional)</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="coupon_code" name="coupon_code"
+                                           class="flex-1 px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                                           placeholder="Enter coupon code">
+                                    <button type="button" id="apply-coupon" 
+                                            class="px-4 py-2 bg-primary text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-primary">
+                                        Apply
+                                    </button>
+                                </div>
+                                <div id="coupon-message" class="mt-2 text-sm hidden"></div>
+                            </div>
+                            
+                            <!-- Discount Display (hidden by default) -->
+                            <div id="discount-row" class="flex justify-between hidden">
+                                <span>Discount:</span>
+                                <span id="discount-amount" class="text-green-500">-₹0.00</span>
+                            </div>
+                            
+                            <hr class="border-gray-700">
+                            
+                            <div class="flex justify-between text-lg font-bold">
+                                <span>Total Amount:</span>
+                                <span id="total-amount" class="text-primary">₹{{ "%.2f"|format(weekly_total) }}</span>
+          </div>
+        </div>
+        
+                        <div class="mt-6">
+                            <button id="pay-button" class="w-full bg-primary hover:bg-green-600 text-white font-bold py-3 px-4 rounded-md transition-colors duration-300">
+                                <i class="fas fa-credit-card mr-2"></i>
+                                Proceed to Payment
+                            </button>
+    </div>
+                        
+                        <div class="mt-4 text-sm text-gray-400">
+                            <p>• Secure payment via Razorpay</p>
+                            <p>• Free delivery in Ludhiana</p>
+                            <p>• 100% money-back guarantee</p>
+      </div>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <script>
+        // User data for pre-filling (if available)
+        const userData = {{ user_data|tojson if user_data else 'null' }};
+        
+        // Load states when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStates();
+        });
+
+        // Load states from API
+        function loadStates() {
+            fetch('/get-delivery-states')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const stateSelect = document.getElementById('state-select');
+                        stateSelect.innerHTML = '<option value="">Select your state</option>';
+                        
+                        data.states.forEach(state => {
+                            const option = document.createElement('option');
+                            option.value = state.name;  // Use state name instead of ID
+                            option.textContent = state.name;
+                            stateSelect.appendChild(option);
+                        });
+                        
+                        // Pre-select state if user data is available
+                        if (userData && userData.state) {
+                            stateSelect.value = userData.state;
+                            // Trigger city loading
+                            loadCities(userData.state);
+                        }
+                    }
+                })
+                .catch(error => console.error('Error loading states:', error));
+        }
+        
+        // Load cities for a specific state
+        function loadCities(stateName) {
+            const citySelect = document.getElementById('city-select');
+            const areaSelect = document.getElementById('area-select');
+            
+            // Reset city and area dropdowns
+            citySelect.innerHTML = '<option value="">Select your city</option>';
+            areaSelect.innerHTML = '<option value="">Select your area</option>';
+            
+            if (stateName) {
+                fetch(`/get-delivery-cities?state=${encodeURIComponent(stateName)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            data.cities.forEach(city => {
+                                const option = document.createElement('option');
+                                option.value = city.name;  // Use city name instead of ID
+                                option.textContent = city.name;
+                                citySelect.appendChild(option);
+                            });
+                            
+                            // Pre-select city if user data is available
+                            if (userData && userData.city) {
+                                citySelect.value = userData.city;
+                                // Trigger area loading
+                                loadAreas(userData.city);
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error loading cities:', error));
+            }
+        }
+        
+        // Load areas for a specific city
+        function loadAreas(cityName) {
+            const areaSelect = document.getElementById('area-select');
+            
+            // Reset area dropdown
+            areaSelect.innerHTML = '<option value="">Select your area</option>';
+            
+            if (cityName) {
+                fetch(`/get-delivery-areas?city=${encodeURIComponent(cityName)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            data.areas.forEach(area => {
+                                const option = document.createElement('option');
+                                option.value = area.name;  // Use area name instead of ID
+                                option.textContent = area.name;
+                                areaSelect.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error loading areas:', error));
+            }
+        }
+
+        // Load cities when state changes
+        document.getElementById('state-select').addEventListener('change', function() {
+            loadCities(this.value);
+        });
+
+        // Load areas when city changes
+        document.getElementById('city-select').addEventListener('change', function() {
+            loadAreas(this.value);
+        });
+
+        // Coupon code functionality
+        const couponCode = document.getElementById('coupon_code');
+        const applyCouponButton = document.getElementById('apply-coupon');
+        const couponMessage = document.getElementById('coupon-message');
+        const discountRow = document.getElementById('discount-row');
+        const discountAmount = document.getElementById('discount-amount');
+        const totalAmount = document.getElementById('total-amount');
+        
+        let originalTotal = {{ weekly_total }};
+        let appliedCoupon = null;
+        
+        if (applyCouponButton && couponCode) {
+            applyCouponButton.addEventListener('click', async function() {
+                const code = couponCode.value.trim();
+                if (!code) {
+                    showCouponMessage('Please enter a coupon code', 'error');
+                    return;
+                }
+                
+                // Show loading state
+                this.disabled = true;
+                this.textContent = 'Applying...';
+                
+                try {
+                    const response = await fetch('/validate_coupon', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                        },
+                        body: JSON.stringify({
+                            coupon_code: code,
+                            amount: originalTotal
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.valid) {
+                        // Calculate discount
+                        let discount = 0;
+                        if (data.discount_percentage) {
+                            discount = originalTotal * (data.discount_percentage / 100);
+                        } else if (data.discount_amount) {
+                            discount = data.discount_amount;
+                        }
+                        
+                        const finalTotal = originalTotal - discount;
+                        
+                        // Update display
+                        discountAmount.textContent = `-₹${discount.toFixed(2)}`;
+                        totalAmount.textContent = `₹${finalTotal.toFixed(2)}`;
+                        discountRow.classList.remove('hidden');
+                        
+                        // Store coupon info
+                        appliedCoupon = {
+                            code: code,
+                            discount: discount,
+                            finalTotal: finalTotal
+                        };
+                        
+                        showCouponMessage(`Coupon applied! ${data.message}`, 'success');
+                        couponCode.disabled = true;
+                        this.textContent = 'Applied';
+                        this.classList.add('bg-gray-600');
+                        this.classList.remove('bg-primary', 'hover:bg-green-600');
+                    } else {
+                        showCouponMessage(data.message || 'Invalid coupon code', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showCouponMessage('Error applying coupon code. Please try again.', 'error');
+                } finally {
+                    // Reset button state
+                    this.disabled = false;
+                    if (!appliedCoupon) {
+                        this.textContent = 'Apply';
+                    }
+                }
+            });
+        }
+        
+        function showCouponMessage(message, type) {
+            couponMessage.textContent = message;
+            couponMessage.className = `mt-2 text-sm ${type === 'success' ? 'text-green-500' : 'text-red-500'}`;
+            couponMessage.classList.remove('hidden');
+            
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                couponMessage.classList.add('hidden');
+            }, 5000);
+        }
+        
+        document.getElementById('pay-button').addEventListener('click', function() {
+            const form = document.getElementById('checkout-form');
+            const formData = new FormData(form);
+            
+            // Add coupon data if applied
+            if (appliedCoupon) {
+                formData.append('coupon_code', appliedCoupon.code);
+                formData.append('discount_amount', appliedCoupon.discount);
+                formData.append('final_total', appliedCoupon.finalTotal);
+            }
+  
+  // Show loading state
+  this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+  
+            fetch(form.action, {
+    method: 'POST',
+                body: formData,
+    headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Store order_id for use in handler
+      const orderId = data.order_id;
+      
+      // Initialize Razorpay
+      const options = {
+                        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: 'HealthyRizz',
+        description: data.description,
+        order_id: data.order_id,
+        handler: function(response) {
+                            // Payment successful - redirect with order_id
+                            window.location.href = '/checkout-success?order_id=' + orderId;
+        },
+        prefill: {
+                            name: formData.get('customer_name'),
+                            email: formData.get('customer_email'),
+                            contact: formData.get('customer_phone')
+        },
+        theme: {
+                            color: '#4CAF50'
+        }
+      };
+      
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } else {
+                    alert('Error: ' + data.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+                alert('An error occurred while processing your checkout.');
+  })
+  .finally(() => {
+                // Reset button state
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Proceed to Payment';
+            });
+        });
+</script>
+</body>
+</html> 
