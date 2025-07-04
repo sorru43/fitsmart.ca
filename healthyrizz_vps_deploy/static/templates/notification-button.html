@@ -1,0 +1,67 @@
+<!-- Notification Permission Button Template -->
+<div class="notification-container">
+  <button id="enable-notifications" class="btn btn-primary">
+    <i class="fas fa-bell"></i> Enable Notifications
+  </button>
+  <p class="notification-status" id="notification-status"></p>
+</div>
+
+<style>
+  .notification-container {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+  }
+  .notification-status {
+    margin-top: 10px;
+    font-size: 0.9rem;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const notifyButton = document.getElementById('enable-notifications');
+    const statusElement = document.getElementById('notification-status');
+    
+    // Check if notifications are supported
+    if (!('Notification' in window)) {
+      notifyButton.disabled = true;
+      statusElement.textContent = 'This browser does not support notifications';
+      return;
+    }
+    
+    // Update button based on current permission
+    function updateButtonState(permission) {
+      if (permission === 'granted') {
+        notifyButton.textContent = 'Notifications Enabled';
+        notifyButton.classList.remove('btn-primary');
+        notifyButton.classList.add('btn-success');
+        statusElement.textContent = 'You will receive notifications about your meals and orders';
+      } else if (permission === 'denied') {
+        notifyButton.disabled = true;
+        statusElement.textContent = 'You have blocked notifications. Please update your browser settings to enable them.';
+      }
+    }
+    
+    // Check initial permission state
+    updateButtonState(Notification.permission);
+    
+    // Handle button click
+    notifyButton.addEventListener('click', function() {
+      Notification.requestPermission().then(permission => {
+        updateButtonState(permission);
+        
+        if (permission === 'granted') {
+          // Subscribe to push notifications if permission is granted
+          if ('serviceWorker' in navigator && 'PushManager' in window) {
+            // Load the push notifications script
+            const script = document.createElement('script');
+            script.src = '/static/js/push-notifications.js';
+            document.head.appendChild(script);
+          }
+        }
+      });
+    });
+  });
+</script>

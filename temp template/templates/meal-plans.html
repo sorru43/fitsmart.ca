@@ -1,0 +1,562 @@
+{% from "includes/cross_selling.html" import plan_cross_sell %}
+{% extends 'base.html' %}
+
+{% set meta_description = 'Discover personalized healthy meal plans in Ludhiana. Fresh, nutritious meals delivered to your doorstep. Choose from weekly and monthly plans designed by nutrition experts.' %}
+{% set og_title = 'Healthy Meal Plans - Fresh Nutrition Delivered in Ludhiana' %}
+{% set og_image = 'https://healthyrizz.in' + url_for('static', filename='images/healthy-meal-bowl.jpg') %}
+
+{% block title %}Healthy Meal Plans - Fresh Nutrition Delivered in Ludhiana | HealthyRizz{% endblock %}
+
+{% block meta_description %}Discover personalized healthy meal plans in Ludhiana. Fresh, nutritious meals delivered to your doorstep. Choose from weekly and monthly plans designed by nutrition experts.{% endblock %}
+
+{% block og_title %}Healthy Meal Plans - Fresh Nutrition Delivered in Ludhiana{% endblock %}
+{% block og_description %}Discover personalized healthy meal plans in Ludhiana. Fresh, nutritious meals delivered to your doorstep. Choose from weekly and monthly plans designed by nutrition experts.{% endblock %}
+{% block og_image %}https://healthyrizz.in{{ url_for('static', filename='images/healthy-meal-bowl.jpg') }}{% endblock %}
+
+{% block twitter_title %}Healthy Meal Plans - Fresh Nutrition Delivered in Ludhiana{% endblock %}
+{% block twitter_description %}Discover personalized healthy meal plans in Ludhiana. Fresh, nutritious meals delivered to your doorstep. Choose from weekly and monthly plans designed by nutrition experts.{% endblock %}
+{% block twitter_image %}https://healthyrizz.in{{ url_for('static', filename='images/healthy-meal-bowl.jpg') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/meal-plans.css') }}">
+<style>
+    /* Experts Approved badge pulse animation */
+    .pulse-badge {
+        position: relative;
+        animation: pulseBadge 2s infinite;
+        overflow: hidden;
+    }
+    
+    @keyframes pulseBadge {
+        0% { box-shadow: 0 0 0 0 rgba(0, 145, 58, 0.5); }
+        70% { box-shadow: 0 0 0 10px rgba(0, 145, 58, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 145, 58, 0); }
+    }
+    
+    .pulse-badge::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        animation: shimmerBadge 3s infinite;
+        transform: translateX(-100%);
+    }
+    
+    @keyframes shimmerBadge {
+        100% { transform: translateX(100%); }
+    }
+    
+    /* Price change animation */
+    @keyframes priceChange {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .price-change-animation {
+        animation: priceChange 0.3s ease;
+    }
+    
+    /* Processing button style */
+    .processing {
+        opacity: 0.7;
+        cursor: not-allowed;
+        position: relative;
+    }
+    
+    .processing::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: calc(50% - 10px);
+        right: 10px;
+        border: 2px solid rgba(255,255,255,0.5);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: buttonSpinner 0.8s linear infinite;
+    }
+    
+    @keyframes buttonSpinner {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Toggle switch styling */
+    .toggle-container {
+        position: relative;
+        background-color: #1E4D3E;
+        border-radius: 9999px;
+        padding: 2px;
+        transition: all 0.3s ease;
+    }
+    
+    .toggle-pill {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        height: calc(100% - 4px);
+        width: calc(50% - 4px);
+        background-color: #151515;
+        border-radius: 9999px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .toggle-pill.translate-x-full {
+        transform: translateX(100%);
+    }
+    
+    .plan-switch-option.active {
+        color: #379777;
+        font-weight: 600;
+    }
+    /* Animated badge */
+    .badge-popular {
+        position: absolute;
+        top: 10px;
+        right: -30px;
+        background: linear-gradient(45deg, #22c55e, #4ade80);
+        color: white;
+        transform: rotate(45deg);
+        padding: 5px 30px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 10;
+    }
+    
+    /* Featured plan highlight */
+    .featured-plan {
+        transform: scale(1.03);
+        border: 2px solid #4ade80;
+        z-index: 5;
+    }
+    
+    .featured-plan::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, #4ade80, #22c55e);
+    }
+    
+    /* Nutrition box styling */
+    .nutrition-box {
+        background-color: #1E1E1E;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+    
+    .nutrition-box:hover {
+        background-color: #2D2D2D; color: white;
+    }
+    
+    /* Save badge with enhanced animations */
+    .save-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #ef4444, #f87171);
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.4rem 0.75rem;
+        border-radius: 0.5rem;
+        margin-left: 0.5rem;
+        animation: floatBadge 3s ease-in-out infinite;
+        position: relative;
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.5);
+        overflow: hidden;
+        z-index: 1;
+    }
+    
+    .save-badge::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+        animation: rotateShineBadge 3s linear infinite;
+        z-index: -1;
+    }
+    
+    @keyframes floatBadge {
+        0% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-5px) scale(1.05); }
+        100% { transform: translateY(0) scale(1); }
+    }
+    
+    @keyframes rotateShineBadge {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Service Structured Data -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Healthy Meal Plans",
+    "description": "Fresh, nutritious meals delivered to your doorstep in Ludhiana. Personalized meal plans designed by nutrition experts.",
+    "provider": {
+        "@type": "Organization",
+        "name": "HealthyRizz",
+        "url": "https://healthyrizz.in",
+        "logo": "https://healthyrizz.in{{ url_for('static', filename='images/logo white.png') }}"
+    },
+    "areaServed": {
+        "@type": "City",
+        "name": "Ludhiana",
+        "addressRegion": "Punjab",
+        "addressCountry": "IN"
+    },
+    "serviceType": "Meal Delivery Service",
+    "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Healthy Meal Plans",
+        "itemListElement": [
+            {% for plan in meal_plans %}
+            {
+                "@type": "Offer",
+                "itemOffered": {
+                    "@type": "Service",
+                    "name": "{{ plan.name }}",
+                    "description": "{{ plan.description }}"
+                },
+                "price": "{{ plan.price_weekly }}",
+                "priceCurrency": "INR",
+                "priceSpecification": {
+                    "@type": "UnitPriceSpecification",
+                    "price": "{{ plan.price_weekly }}",
+                    "priceCurrency": "INR",
+                    "unitText": "per week"
+                }
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    },
+    "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "{{ site_settings.get('contact_phone', '+91-98765-43210') }}",
+        "contactType": "customer service",
+        "email": "{{ site_settings.get('contact_email', 'info@healthyrizz.in') }}"
+    }
+}
+</script>
+
+<!-- Breadcrumb Structured Data -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://healthyrizz.in"
+        },
+        {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Meal Plans",
+            "item": "https://healthyrizz.in/meal-plans"
+        }
+    ]
+}
+</script>
+
+<!-- Hero Section -->
+<section class="bg-gradient-to-br from-primary to-primary-dark text-white py-20">
+    <div class="container mx-auto px-4 text-center">
+        <h1 class="text-4xl md:text-6xl font-bold mb-6">Healthy Meal Plans</h1>
+        <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            Fresh, nutritious meals delivered to your doorstep in Ludhiana. 
+            Personalized plans designed by certified nutrition experts.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#meal-plans" class="bg-white text-primary px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                View Plans
+            </a>
+            <a href="{{ url_for('main.meal_calculator') }}" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-primary transition-colors">
+                Calculate Your Needs
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-leaf text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Fresh & Nutritious</h3>
+                <p class="text-gray-600">Made with fresh, locally sourced ingredients and balanced nutrition.</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-truck text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Home Delivery</h3>
+                <p class="text-gray-600">Convenient delivery to your doorstep in Ludhiana area.</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-md text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Expert Guidance</h3>
+                <p class="text-gray-600">Plans designed by certified nutrition and fitness experts.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Meal Plans Section -->
+<section id="meal-plans" class="py-16">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Choose Your Plan</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                Select the perfect meal plan that fits your lifestyle and nutrition goals. 
+                All plans include fresh, balanced meals delivered to your home.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for plan in meal_plans %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden {% if plan.is_popular %}ring-2 ring-primary{% endif %}">
+                {% if plan.is_popular %}
+                <div class="bg-primary text-white text-center py-2">
+                    <span class="font-semibold">Most Popular</span>
+                </div>
+                {% endif %}
+                
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-2">{{ plan.name }}</h3>
+                    <p class="text-gray-600 mb-4">{{ plan.description }}</p>
+                    
+                    <div class="text-3xl font-bold text-primary mb-6">
+                        ₹{{ plan.price_weekly }}
+                        <span class="text-lg text-gray-500 font-normal">/week</span>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        {% for feature in plan.features.split(',') %}
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>{{ feature.strip() }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    <a href="{{ url_for('main.subscribe', plan_id=plan.id) }}" 
+                       class="w-full bg-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-primary-dark transition-colors text-center block">
+                        Choose This Plan
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-16 bg-gray-50">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                Getting started with your healthy meal plan is simple and convenient.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="text-center">
+                <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                    1
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Choose Your Plan</h3>
+                <p class="text-gray-600">Select from our variety of meal plans designed for different needs.</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                    2
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Customize</h3>
+                <p class="text-gray-600">Tell us about your preferences and dietary requirements.</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                    3
+                </div>
+                <h3 class="text-xl font-semibold mb-2">We Prepare</h3>
+                <p class="text-gray-600">Our expert chefs prepare fresh, nutritious meals in our kitchen.</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+                    4
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Deliver</h3>
+                <p class="text-gray-600">Fresh meals delivered to your doorstep at your preferred time.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="py-16">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="max-w-3xl mx-auto space-y-4">
+            <div class="bg-white rounded-lg shadow-md">
+                <button class="w-full px-6 py-4 text-left font-semibold focus:outline-none">
+                    What areas do you deliver to?
+                </button>
+                <div class="px-6 pb-4">
+                    <p class="text-gray-600">We currently deliver to all areas within Ludhiana city limits.</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md">
+                <button class="w-full px-6 py-4 text-left font-semibold focus:outline-none">
+                    How fresh are the meals?
+                </button>
+                <div class="px-6 pb-4">
+                    <p class="text-gray-600">All meals are prepared fresh daily and delivered within hours of cooking to ensure maximum freshness and nutrition.</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md">
+                <button class="w-full px-6 py-4 text-left font-semibold focus:outline-none">
+                    Can I customize my meal plan?
+                </button>
+                <div class="px-6 pb-4">
+                    <p class="text-gray-600">Yes! We offer customization options for dietary preferences, allergies, and specific nutrition goals.</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md">
+                <button class="w-full px-6 py-4 text-left font-semibold focus:outline-none">
+                    What if I'm not satisfied?
+                </button>
+                <div class="px-6 pb-4">
+                    <p class="text-gray-600">We offer a satisfaction guarantee. If you're not happy with your meals, we'll work to make it right.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-16 bg-primary text-white">
+    <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Start Your Healthy Journey?</h2>
+        <p class="text-xl mb-8 max-w-2xl mx-auto">
+            Join thousands of satisfied customers who have transformed their health with our meal plans.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#meal-plans" class="bg-white text-primary px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                View Meal Plans
+            </a>
+            <a href="tel:{{ site_settings.get('contact_phone', '+91-98765-43210') }}" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-primary transition-colors">
+                Call Us Now
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/debug.js') }}"></script>
+<script>
+    // Debug information about plans
+    document.addEventListener('DOMContentLoaded', function() {
+        debug('Page loaded with ' + {{ meal_plans|length }} + ' meal plans');
+        {% for plan in meal_plans %}
+        debug('Plan: {{ plan.name }}');
+        {% endfor %}
+        
+        // Add click protection for subscribe buttons
+        const subscribeForms = document.querySelectorAll('.subscribe-form');
+        subscribeForms.forEach(form => {
+            form.addEventListener('submit', function(event) {
+                // Get the button
+                const button = form.querySelector('.subscribe-button');
+                
+                // If the button is already disabled, prevent the form submission
+                if (button.disabled || button.classList.contains('processing')) {
+                    event.preventDefault();
+                    return false;
+                }
+                
+                // Store form action URL for manual navigation
+                const formAction = form.getAttribute('action');
+                const formMethod = form.getAttribute('method') || 'get';
+                
+                // Disable the button and show processing state
+                button.disabled = true;
+                button.classList.add('processing');
+                button.innerHTML = 'Processing...';
+                
+                // Allow a brief moment for the user to see the button change
+                if (formMethod.toLowerCase() === 'get') {
+                    // For GET requests, navigate manually after visual feedback
+                    setTimeout(function() {
+                        window.location.href = formAction;
+                    }, 100);
+                    event.preventDefault();
+                    return false;
+                }
+                
+                // For POST requests, allow normal form submission
+                return true;
+            });
+        });
+        
+        // Add click protection for trial buttons
+        const trialButtons = document.querySelectorAll('.trial-button');
+        trialButtons.forEach(button => {
+            button.addEventListener('click', function(event) {
+                // If the button is already disabled, prevent the click
+                if (button.disabled || button.classList.contains('processing')) {
+                    event.preventDefault();
+                    return;
+                }
+                
+                // Disable the button and show processing state
+                button.disabled = true;
+                button.classList.add('processing');
+                const originalText = button.innerHTML;
+                button.innerHTML = 'Processing...';
+                
+                // Store the original URL and set a timeout to navigate
+                const href = button.getAttribute('href');
+                
+                // Navigate to the URL after a short delay to allow visual feedback
+                setTimeout(function() {
+                    window.location.href = href;
+                }, 100);
+                
+                // Prevent the default link behavior as we're handling it manually
+                event.preventDefault();
+            });
+        });
+    });
+</script>
+<script src="{{ url_for('static', filename='js/meal-plans.js') }}"></script>
+{% endblock %}

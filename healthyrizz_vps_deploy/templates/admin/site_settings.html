@@ -1,0 +1,205 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Site Settings - HealthyRizz{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-white">Site Settings</h1>
+        <a href="{{ url_for('admin.admin_media') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Media
+        </a>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-dark-lighter rounded-lg shadow-md p-6">
+            <form method="POST" novalidate>
+                {{ csrf_token() }}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- General Information -->
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-semibold text-white border-b border-gray-600 pb-2">General Information</h3>
+                        
+                        <div>
+                            <label for="company_name" class="block text-sm font-medium text-white mb-2">Company Name</label>
+                            <input type="text" id="company_name" name="company_name" 
+                                   value="{{ site_settings.company_name if site_settings else 'HealthyRizz' }}"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                        </div>
+
+                        <div>
+                            <label for="hero_subtitle" class="block text-sm font-medium text-white mb-2">Hero Subtitle</label>
+                            <input type="text" id="hero_subtitle" name="hero_subtitle" 
+                                   value="{{ site_settings.hero_subtitle if site_settings else 'In Supervision Of Nutrition Experts' }}"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                        </div>
+
+                        <div>
+                            <label for="site_logo" class="block text-sm font-medium text-white mb-2">Site Logo URL <span class="text-gray-400 text-xs">(Optional)</span></label>
+                            <input type="text" id="site_logo" name="site_logo" 
+                                   value="{{ site_settings.get('site_logo', '/static/images/logo white.png') }}"
+                                   placeholder="https://example.com/logo.png (optional)"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                            <p class="text-gray-400 text-xs mt-1">Enter a direct URL to your logo image (leave empty if uploading file below)</p>
+                        </div>
+
+                        <div>
+                            <label for="site_logo_file" class="block text-sm font-medium text-white mb-2">Or Upload New Logo <span class="text-gray-400 text-xs">(Optional)</span></label>
+                            <input type="file" id="site_logo_file" name="site_logo_file"
+                                   accept="image/png, image/jpeg, image/svg+xml, image/webp"
+                                   class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark cursor-pointer">
+                            <p class="text-gray-400 text-xs mt-1">Supported formats: PNG, JPG, JPEG, SVG, WEBP. Recommended size: 200x60px or larger.</p>
+                        </div>
+
+                        <!-- Logo Preview -->
+                        <div class="mt-4">
+                            <h4 class="text-md font-semibold text-white mb-2">Current Logo Preview</h4>
+                            <div class="bg-dark-lightest rounded-lg p-4 border border-gray-600 flex justify-center items-center h-24">
+                                <img id="logo-preview" src="{{ site_settings.get('site_logo', '/static/images/logo white.png') }}" alt="Logo Preview" class="max-h-full max-w-full object-contain">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="contact_email" class="block text-sm font-medium text-white mb-2">Contact Email</label>
+                            <input type="email" id="contact_email" name="contact_email" 
+                                   value="{{ site_settings.get('contact_email', 'info@healthyrizz.in') }}"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                        </div>
+
+                        <div>
+                            <label for="contact_phone" class="block text-sm font-medium text-white mb-2">Contact Phone</label>
+                            <input type="tel" id="contact_phone" name="contact_phone" 
+                                   value="{{ site_settings.contact_phone if site_settings else '+1 (437) 428-3393' }}"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                        </div>
+
+                        <!-- FSSAI Badge Settings -->
+                        <div>
+                            <label class="inline-flex items-center mt-2">
+                                <input type="checkbox" id="show_fssai_badge" name="show_fssai_badge" class="form-checkbox h-5 w-5 text-primary" {% if site_settings.get('show_fssai_badge', 'True') == 'True' %}checked{% endif %}>
+                                <span class="ml-2 text-white">Show FSSAI Badge</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label for="fssai_license_number" class="block text-sm font-medium text-white mb-2">FSSAI License Number</label>
+                            <input type="text" id="fssai_license_number" name="fssai_license_number" 
+                                   value="{{ site_settings.get('fssai_license_number', '') }}"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white">
+                        </div>
+
+                        <!-- Hygiene Badge Settings -->
+                        <div class="mt-4 border-t border-gray-700 pt-4">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="show_hygiene_badge" name="show_hygiene_badge" class="form-checkbox h-5 w-5 text-primary" {% if site_settings.get('show_hygiene_badge', 'True') == 'True' %}checked{% endif %}>
+                                <span class="ml-2 text-white">Show Hygiene Badge</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label for="hygiene_badge_text" class="block text-sm font-medium text-white mb-2">Hygiene Badge Text</label>
+                            <input type="text" id="hygiene_badge_text" name="hygiene_badge_text" 
+                                   value="{{ site_settings.get('hygiene_badge_text', '100% Hygienic') }}"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white">
+                        </div>
+                    </div>
+
+                    <!-- Social Media -->
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-semibold text-white border-b border-gray-600 pb-2">Social Media</h3>
+                        
+                        <div>
+                            <label for="facebook_url" class="block text-sm font-medium text-white mb-2">Facebook URL</label>
+                            <input type="text" id="facebook_url" name="facebook_url" 
+                                   value="{{ site_settings.get('facebook_url', 'https://facebook.com/healthyrizz.in') }}"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white">
+                        </div>
+
+                        <div>
+                            <label for="instagram_url" class="block text-sm font-medium text-white mb-2">Instagram URL</label>
+                            <input type="text" id="instagram_url" name="instagram_url" 
+                                   value="{{ site_settings.instagram_url if site_settings else 'https://instagram.com/healthyrizz.in' }}"
+                                   placeholder="https://instagram.com/yourpage"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="mt-8">
+                            <h4 class="text-md font-semibold text-white mb-3">Preview</h4>
+                            <div class="bg-dark-lightest rounded-lg p-4 border border-gray-600">
+                                <div class="text-center">
+                                    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-800 flex items-center justify-center">
+                                        <i class="fas fa-image text-2xl text-gray-500"></i>
+                                    </div>
+                                    <h3 class="text-white font-semibold" id="preview-company">{{ site_settings.company_name if site_settings else 'HealthyRizz' }}</h3>
+                                    <p class="text-gray-400 text-sm" id="preview-subtitle">{{ site_settings.hero_subtitle if site_settings else 'In Supervision Of Nutrition Experts' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-600">
+                    <a href="{{ url_for('admin.admin_media') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-save mr-2"></i>Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview for text inputs
+document.getElementById('company_name').addEventListener('input', function() {
+    document.getElementById('preview-company').textContent = this.value || 'HealthyRizz';
+});
+document.getElementById('hero_subtitle').addEventListener('input', function() {
+    document.getElementById('preview-subtitle').textContent = this.value || 'In Supervision Of Nutrition Experts';
+});
+
+// Live preview for logo upload
+document.getElementById('site_logo_file').addEventListener('change', function(event) {
+    const preview = document.getElementById('logo-preview');
+    const file = event.target.files[0];
+    if (file) {
+        preview.src = URL.createObjectURL(file);
+        // When a file is chosen, clear the URL input to prioritize the upload
+        document.getElementById('site_logo').value = '';
+    }
+});
+
+// Handle logo URL input
+document.getElementById('site_logo').addEventListener('input', function() {
+    const preview = document.getElementById('logo-preview');
+    const url = this.value.trim();
+    if (url) {
+        preview.src = url;
+        // When URL is entered, clear the file input
+        document.getElementById('site_logo_file').value = '';
+    }
+});
+
+// Form submission handling
+document.querySelector('form').addEventListener('submit', function(e) {
+    const logoUrl = document.getElementById('site_logo');
+    const logoFile = document.getElementById('site_logo_file');
+    
+    // Clear empty logo URL field to prevent validation issues
+    if (logoUrl.value.trim() === '') {
+        logoUrl.value = '';
+    }
+    
+    // If no file is selected, clear the file input
+    if (logoFile.files.length === 0) {
+        logoFile.value = '';
+    }
+    
+    // Both fields are optional, so form will submit successfully
+    console.log('Form submitting with logo URL:', logoUrl.value);
+    console.log('Form submitting with logo file:', logoFile.files.length > 0 ? 'File selected' : 'No file');
+});
+</script>
+{% endblock %} 

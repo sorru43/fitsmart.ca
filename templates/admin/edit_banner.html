@@ -1,0 +1,96 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Edit Banner - HealthyRizz Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Edit Banner</h1>
+        <a href="{{ url_for('admin.admin_banners') }}" class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Banners
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow">
+        <form method="POST" action="{{ url_for('admin.admin_edit_banner', banner_id=banner.id) }}" class="p-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Message -->
+                <div class="col-span-2">
+                    <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                    <textarea name="message" id="message" rows="3" required
+                              class="form-textarea w-full" placeholder="Enter banner message">{{ banner.message }}</textarea>
+                </div>
+
+                <!-- Link Text -->
+                <div>
+                    <label for="link_text" class="block text-sm font-medium text-gray-700 mb-1">Link Text</label>
+                    <input type="text" name="link_text" id="link_text"
+                           class="form-input w-full" placeholder="Enter link text"
+                           value="{{ banner.link_text }}">
+                </div>
+
+                <!-- Link URL -->
+                <div>
+                    <label for="link_url" class="block text-sm font-medium text-gray-700 mb-1">Link URL</label>
+                    <input type="url" name="link_url" id="link_url"
+                           class="form-input w-full" placeholder="Enter link URL"
+                           value="{{ banner.link_url }}">
+                </div>
+
+                <!-- Background Color -->
+                <div>
+                    <label for="background_color" class="block text-sm font-medium text-gray-700 mb-1">Background Color</label>
+                    <input type="color" name="background_color" id="background_color"
+                           class="form-input w-full h-10" value="{{ banner.background_color }}">
+                </div>
+
+                <!-- Text Color -->
+                <div>
+                    <label for="text_color" class="block text-sm font-medium text-gray-700 mb-1">Text Color</label>
+                    <input type="color" name="text_color" id="text_color"
+                           class="form-input w-full h-10" value="{{ banner.text_color }}">
+                </div>
+
+                <!-- Date Range -->
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" required
+                           class="form-input w-full" value="{{ banner.start_date.strftime('%Y-%m-%d') }}">
+                </div>
+
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">End Date (Optional)</label>
+                    <input type="date" name="end_date" id="end_date"
+                           class="form-input w-full" value="{{ banner.end_date.strftime('%Y-%m-%d') if banner.end_date else '' }}">
+                </div>
+
+                <!-- Active Status -->
+                <div class="col-span-2">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="is_active" class="form-checkbox"
+                                   {% if banner.is_active %}checked{% endif %}>
+                            <span class="ml-2 text-sm text-gray-700">Active</span>
+                        </label>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-4">
+                <a href="{{ url_for('admin.admin_banners') }}" class="btn-secondary">Cancel</a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any additional JavaScript functionality here
+});
+</script>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}PWA Settings - HealthyRizz{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-white">PWA Settings</h1>
+        <a href="{{ url_for('admin.admin_media') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Media
+        </a>
+    </div>
+
+    <div class="bg-dark-lighter rounded-lg shadow-md p-6">
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-white mb-2">
+                <i class="fas fa-mobile-alt mr-3 text-primary"></i>Progressive Web App Configuration
+            </h2>
+            <p class="text-gray-400">Configure your PWA settings for better mobile experience and app-like functionality.</p>
+        </div>
+
+        <form method="POST" class="space-y-6">
+            <!-- Basic PWA Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-dark-lightest rounded-lg p-4 border border-gray-700">
+                    <h3 class="text-white font-semibold mb-4">Basic Information</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="pwa_name" class="block text-sm font-medium text-gray-300 mb-2">App Name</label>
+                            <input type="text" id="pwa_name" name="pwa_name" 
+                                   value="{{ pwa_settings.pwa_name }}" 
+                                   class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary">
+                            <p class="text-xs text-gray-500 mt-1">Full name of your PWA (displayed in app stores)</p>
+                        </div>
+                        
+                        <div>
+                            <label for="pwa_short_name" class="block text-sm font-medium text-gray-300 mb-2">Short Name</label>
+                            <input type="text" id="pwa_short_name" name="pwa_short_name" 
+                                   value="{{ pwa_settings.pwa_short_name }}" 
+                                   class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary">
+                            <p class="text-xs text-gray-500 mt-1">Short name for app icons and splash screens</p>
+                        </div>
+                        
+                        <div>
+                            <label for="pwa_description" class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                            <textarea id="pwa_description" name="pwa_description" rows="3"
+                                      class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary">{{ pwa_settings.pwa_description }}</textarea>
+                            <p class="text-xs text-gray-500 mt-1">Brief description of your PWA</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PWA Behavior -->
+                <div class="bg-dark-lightest rounded-lg p-4 border border-gray-700">
+                    <h3 class="text-white font-semibold mb-4">App Behavior</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="pwa_start_url" class="block text-sm font-medium text-gray-300 mb-2">Start URL</label>
+                            <input type="text" id="pwa_start_url" name="pwa_start_url" 
+                                   value="{{ pwa_settings.pwa_start_url }}" 
+                                   class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary">
+                            <p class="text-xs text-gray-500 mt-1">URL to load when PWA is launched</p>
+                        </div>
+                        
+                        <div>
+                            <label for="pwa_scope" class="block text-sm font-medium text-gray-300 mb-2">Scope</label>
+                            <input type="text" id="pwa_scope" name="pwa_scope" 
+                                   value="{{ pwa_settings.pwa_scope }}" 
+                                   class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary">
+                            <p class="text-xs text-gray-500 mt-1">Navigation scope of the PWA</p>
+                        </div>
+                        
+                        <div>
+                            <label for="pwa_display_mode" class="block text-sm font-medium text-gray-300 mb-2">Display Mode</label>
+                            <select id="pwa_display_mode" name="pwa_display_mode" 
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary">
+                                <option value="standalone" {{ 'selected' if pwa_settings.pwa_display_mode == 'standalone' }}>Standalone (App-like)</option>
+                                <option value="fullscreen" {{ 'selected' if pwa_settings.pwa_display_mode == 'fullscreen' }}>Fullscreen</option>
+                                <option value="minimal-ui" {{ 'selected' if pwa_settings.pwa_display_mode == 'minimal-ui' }}>Minimal UI</option>
+                                <option value="browser" {{ 'selected' if pwa_settings.pwa_display_mode == 'browser' }}>Browser</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">How the PWA should be displayed</p>
+                        </div>
+                        
+                        <div>
+                            <label for="pwa_orientation" class="block text-sm font-medium text-gray-300 mb-2">Orientation</label>
+                            <select id="pwa_orientation" name="pwa_orientation" 
+                                    class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary">
+                                <option value="portrait-primary" {{ 'selected' if pwa_settings.pwa_orientation == 'portrait-primary' }}>Portrait Primary</option>
+                                <option value="landscape-primary" {{ 'selected' if pwa_settings.pwa_orientation == 'landscape-primary' }}>Landscape Primary</option>
+                                <option value="any" {{ 'selected' if pwa_settings.pwa_orientation == 'any' }}>Any</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">Preferred orientation for the PWA</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Theme Colors -->
+            <div class="bg-dark-lightest rounded-lg p-4 border border-gray-700">
+                <h3 class="text-white font-semibold mb-4">Theme Colors</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="pwa_theme_color" class="block text-sm font-medium text-gray-300 mb-2">Theme Color</label>
+                        <div class="flex items-center space-x-3">
+                            <input type="color" id="pwa_theme_color" name="pwa_theme_color" 
+                                   value="{{ pwa_settings.pwa_theme_color }}" 
+                                   class="w-12 h-10 border border-gray-600 rounded-lg cursor-pointer">
+                            <input type="text" value="{{ pwa_settings.pwa_theme_color }}" 
+                                   class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                                   onchange="document.getElementById('pwa_theme_color').value = this.value">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Color for browser UI elements (address bar, etc.)</p>
+                    </div>
+                    
+                    <div>
+                        <label for="pwa_background_color" class="block text-sm font-medium text-gray-300 mb-2">Background Color</label>
+                        <div class="flex items-center space-x-3">
+                            <input type="color" id="pwa_background_color" name="pwa_background_color" 
+                                   value="{{ pwa_settings.pwa_background_color }}" 
+                                   class="w-12 h-10 border border-gray-600 rounded-lg cursor-pointer">
+                            <input type="text" value="{{ pwa_settings.pwa_background_color }}" 
+                                   class="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary"
+                                   onchange="document.getElementById('pwa_background_color').value = this.value">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Background color for splash screens</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center pt-6 border-t border-gray-700">
+                <div class="flex space-x-4">
+                    <a href="{{ url_for('admin.admin_pwa_icons') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-images mr-2"></i>Manage Icons
+                    </a>
+                    <a href="{{ url_for('admin.admin_pwa_preview') }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-eye mr-2"></i>Preview PWA
+                    </a>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button type="button" onclick="resetToDefaults()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-undo mr-2"></i>Reset to Defaults
+                    </button>
+                    <button type="submit" class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg">
+                        <i class="fas fa-save mr-2"></i>Save Settings
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function resetToDefaults() {
+    if (confirm('Are you sure you want to reset all PWA settings to defaults?')) {
+        document.getElementById('pwa_name').value = 'HealthyRizz - Healthy Meal Delivery';
+        document.getElementById('pwa_short_name').value = 'HealthyRizz';
+        document.getElementById('pwa_description').value = 'Fresh, healthy meal plans delivered to your doorstep';
+        document.getElementById('pwa_theme_color').value = '#10b981';
+        document.getElementById('pwa_background_color').value = '#ffffff';
+        document.getElementById('pwa_display_mode').value = 'standalone';
+        document.getElementById('pwa_orientation').value = 'portrait-primary';
+        document.getElementById('pwa_start_url').value = '/';
+        document.getElementById('pwa_scope').value = '/';
+    }
+}
+
+// Sync color inputs
+document.getElementById('pwa_theme_color').addEventListener('input', function() {
+    this.nextElementSibling.value = this.value;
+});
+
+document.getElementById('pwa_background_color').addEventListener('input', function() {
+    this.nextElementSibling.value = this.value;
+});
+</script>
+{% endblock %} 

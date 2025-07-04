@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Your Personalized Recommendations - Fit Smart{% endblock %}
+
+{% block content %}
+<section class="bg-gradient-to-b from-green-50 to-white py-16">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4 text-center">Your Personalized Recommendations</h1>
+            <p class="text-lg text-gray-600 text-center mb-10">Based on your profile details and goals</p>
+            
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="text-center p-4 border rounded-lg bg-green-50">
+                        <p class="text-sm text-gray-600 mb-1">BMI</p>
+                        <p class="text-lg font-bold text-gray-800">{{ bmi }}</p>
+                        <p class="text-xs text-gray-500">{{ bmi_category }}</p>
+                    </div>
+                    
+                    <div class="text-center p-4 border rounded-lg bg-green-50">
+                        <p class="text-sm text-gray-600 mb-1">Daily Calories</p>
+                        <p class="text-lg font-bold text-gray-800">{{ daily_calories }}</p>
+                        <p class="text-xs text-gray-500">Recommended Intake</p>
+                    </div>
+                    
+                    <div class="text-center p-4 border rounded-lg bg-green-50">
+                        <p class="text-sm text-gray-600 mb-1">Protein</p>
+                        <p class="text-lg font-bold text-gray-800">{{ daily_protein }}g</p>
+                        <p class="text-xs text-gray-500">Daily Target</p>
+                    </div>
+                    
+                    <div class="text-center p-4 border rounded-lg bg-green-50">
+                        <p class="text-sm text-gray-600 mb-1">Water</p>
+                        <p class="text-lg font-bold text-gray-800">{{ daily_water }}L</p>
+                        <p class="text-xs text-gray-500">Daily Target</p>
+                    </div>
+                </div>
+                
+                <!-- Recommended Plan -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Recommended Meal Plan</h2>
+                    <div class="bg-green-100 p-5 rounded-lg border-l-4 border-green-500">
+                        <div class="flex justify-between items-center flex-wrap">
+                            <div>
+                                <h3 class="font-bold text-xl">{{ recommended_plan.name }}</h3>
+                                <p class="text-gray-700 my-2">{{ recommended_plan.description }}</p>
+                                <div class="flex flex-wrap gap-3 mt-3">
+                                    <span class="px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700">
+                                        {{ recommended_plan.calories }} calories
+                                    </span>
+                                    <span class="px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700">
+                                        {{ recommended_plan.protein }} protein
+                                    </span>
+                                    {% if recommended_plan.fat %}
+                                    <span class="px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700">
+                                        {{ recommended_plan.fat }} fat
+                                    </span>
+                                    {% endif %}
+                                    {% if recommended_plan.carbs %}
+                                    <span class="px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700">
+                                        {{ recommended_plan.carbs }} carbs
+                                    </span>
+                                    {% endif %}
+                                    {% if recommended_plan.is_vegetarian %}
+                                    <span class="px-3 py-1 bg-green-200 rounded-full text-sm font-medium text-green-800">
+                                        Vegetarian
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mt-4 sm:mt-0">
+                                <a href="{{ url_for('checkout', plan_id=recommended_plan.id) }}" class="inline-block px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition duration-200">
+                                    Select This Plan
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Alternative Plans -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Alternative Options</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for plan in alternative_plans %}
+                        <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <h3 class="font-bold text-lg">{{ plan.name }}</h3>
+                            <p class="text-gray-600 text-sm my-2 line-clamp-2">{{ plan.description }}</p>
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                <span class="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-700">
+                                    {{ plan.calories }} calories
+                                </span>
+                                <span class="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-700">
+                                    {{ plan.protein }} protein
+                                </span>
+                                {% if plan.is_vegetarian %}
+                                <span class="px-2 py-1 bg-green-100 rounded-full text-xs text-green-700">
+                                    Vegetarian
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ url_for('checkout', plan_id=plan.id) }}" class="text-green-600 hover:text-green-700 font-medium text-sm">
+                                    View Plan →
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Lifestyle Recommendations -->
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Lifestyle Recommendations</h2>
+                    <div class="border rounded-lg p-5">
+                        <ul class="space-y-3">
+                            {% for rec in lifestyle_recommendations %}
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-2">✓</span>
+                                <span>{{ rec }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a href="{{ url_for('meal_plans') }}" class="inline-block px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition duration-200 mr-3">
+                    View All Meal Plans
+                </a>
+                <a href="{{ url_for('meal_calculator') }}" class="inline-block px-6 py-3 border border-green-600 text-green-600 hover:bg-green-50 font-medium rounded-lg transition duration-200">
+                    Recalculate
+                </a>
+            </div>
+            
+            <div class="mt-10 text-center">
+                <p class="text-sm text-gray-600">
+                    These recommendations are provided as general guidance based on the information you provided.
+                    For professional advice, please consult with a healthcare provider or registered dietitian.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

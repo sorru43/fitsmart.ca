@@ -1,0 +1,455 @@
+{% extends 'base.html' %}
+
+{% block title %}HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/video-player.css') }}">
+<style>
+    .hero-slide { opacity: 0; transition: opacity 1s ease-in-out; }
+    .hero-slide:first-child { opacity: 1; }
+    
+    .border-primary {
+        border-color: var(--primary) !important;
+    }
+    
+    /* Counter animation */
+    .counter-animate {
+        display: inline-block;
+        position: relative;
+        animation: countUp 3s ease-out forwards;
+    }
+    
+    @keyframes countUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .blinking-cursor { animation: blink 1s steps(2, start) infinite; }
+    @keyframes blink { to { visibility: hidden; } }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .animate-float {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    /* HealthyRizz specific styles */
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 16px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .meal-plan-card {
+        background: #000;
+        border: 1px solid #222;
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .meal-plan-card:hover {
+        transform: translateY(-8px);
+        border-color: #10b981;
+        box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
+    }
+
+    .meal-plan-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .testimonial-card {
+        background: #000;
+        border: 1px solid #222;
+        border-radius: 16px;
+        padding: 24px;
+        position: relative;
+    }
+
+    .testimonial-card::before {
+        content: '"';
+        position: absolute;
+        top: -10px;
+        left: 20px;
+        font-size: 60px;
+        color: #10b981;
+        font-family: serif;
+    }
+
+    .menu-item {
+        background: #000;
+        border: 1px solid #222;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .menu-item:hover {
+        border-color: #10b981;
+        transform: translateX(8px);
+    }
+
+    .step-number {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #000;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 20px;
+        margin-bottom: 16px;
+        border: 2px solid #10b981;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{# --- Hero Section --- #}
+<div class="relative h-screen w-full overflow-hidden bg-black">
+  <!-- Image Slider -->
+  <div class="absolute inset-0 z-0 transition-all duration-1000">
+    {% for slide in hero_slides %}
+      <img src="{{ slide.image_url }}" class="object-cover w-full h-full absolute inset-0 transition-opacity duration-1000 hero-slide {% if loop.index0 == 0 %}opacity-100{% else %}opacity-0{% endif %}" />
+    {% endfor %}
+  </div>
+  <!-- Overlay -->
+  <div class="absolute inset-0 bg-black bg-opacity-60 z-10"></div>
+  <!-- Animated Text Overlay -->
+  <div class="relative z-20 flex flex-col items-center justify-center h-full text-center text-white">
+    <h1 class="text-4xl md:text-6xl font-bold mb-6">
+      <span id="typed-text"></span>
+      <span class="blinking-cursor">|</span>
+    </h1>
+    <p class="text-xl md:text-2xl font-medium">{{ site_settings.get('hero_subtitle', 'Fresh, Healthy Meals Delivered to Your Doorstep in Ludhiana') }}</p>
+  </div>
+</div>
+
+<!-- Why Choose HealthyRizz Section -->
+<section class="py-20 bg-black">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Why Choose HealthyRizz?</h2>
+      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Discover what makes us different and why thousands of Ludhiana residents trust us for their daily nutrition.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Feature 1 -->
+      <div class="text-center p-6">
+        <div class="feature-icon mx-auto">✅</div>
+        <h3 class="text-xl font-bold text-white mb-3">100% Fresh Ingredients</h3>
+        <p class="text-gray-300">No frozen or packaged food. Every ingredient is fresh and sourced locally.</p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="text-center p-6">
+        <div class="feature-icon mx-auto">🥗</div>
+        <h3 class="text-xl font-bold text-white mb-3">Zero Oil or Light Olive Oil Only</h3>
+        <p class="text-gray-300">Healthy cooking methods that preserve nutrition without compromising taste.</p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="text-center p-6">
+        <div class="feature-icon mx-auto">🍱</div>
+        <h3 class="text-xl font-bold text-white mb-3">Nutritionist-Curated Meals</h3>
+        <p class="text-gray-300">Every meal is designed by certified nutritionists for optimal health benefits.</p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="text-center p-6">
+        <div class="feature-icon mx-auto">🌍</div>
+        <h3 class="text-xl font-bold text-white mb-3">Indian + Global Flavors</h3>
+        <p class="text-gray-300">Enjoy the best of Indian cuisine with international healthy food trends.</p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="text-center p-6">
+        <div class="feature-icon mx-auto">🧘‍♀️</div>
+        <h3 class="text-xl font-bold text-white mb-3">Goal-Based Plans</h3>
+        <p class="text-gray-300">Weight Loss, PCOD/PCOS, Diabetes, Clean Eating - tailored to your needs.</p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="text-center p-6">
+        <div class="feature-icon mx-auto">🚚</div>
+        <h3 class="text-xl font-bold text-white mb-3">Local Delivery in Ludhiana</h3>
+        <p class="text-gray-300">Fresh delivery to your doorstep. Expanding to more areas soon!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Meal Plans Section -->
+<section class="py-20 bg-black">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Goal-Based Meal Plans</h2>
+      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Choose the perfect plan that aligns with your health goals and lifestyle.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {% for plan in meal_plans %}
+      <div class="meal-plan-card">
+        <h3 class="text-2xl font-bold text-white mb-4">{{ plan.name }}</h3>
+        <p class="text-gray-300 mb-6">{{ plan.description }}</p>
+        <div class="mb-6">
+          <h4 class="text-lg font-semibold text-green-400 mb-3">Nutritional Info:</h4>
+          <div class="grid grid-cols-3 gap-4 mb-4">
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+              <p class="text-white font-semibold">{{ plan.calories }}</p>
+              <p class="text-gray-400 text-sm">Calories</p>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+              <p class="text-white font-semibold">{{ plan.protein }}</p>
+              <p class="text-gray-400 text-sm">Protein</p>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-3 text-center">
+              <p class="text-white font-semibold">{{ plan.fat or 'N/A' }}</p>
+              <p class="text-gray-400 text-sm">Fat</p>
+            </div>
+          </div>
+          {% if plan.carbs %}
+          <div class="bg-gray-800 rounded-lg p-3 text-center">
+            <p class="text-white font-semibold">{{ plan.carbs }}</p>
+            <p class="text-gray-400 text-sm">Carbs</p>
+          </div>
+          {% endif %}
+        </div>
+        <div class="flex justify-between items-center">
+          <div class="text-left">
+            <span class="text-green-400 text-lg font-bold">₹{{ "%.0f"|format(plan.price_weekly) }}/week</span>
+            {% if plan.available_for_trial %}
+            <br><span class="text-gray-400 text-sm">Trial: ₹{{ "%.0f"|format(plan.price_trial) }}</span>
+            {% endif %}
+          </div>
+          <div class="flex flex-col gap-2">
+            {% if plan.available_for_trial %}
+            <a href="{{ url_for('main.trial_request', plan_id=plan.id) }}" class="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm">Try 1 Day</a>
+            {% endif %}
+            <a href="{{ url_for('main.meal_plans') }}?type={{ plan.tag.lower().replace(' ', '-') }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm">View Plan</a>
+          </div>
+        </div>
+        {% if plan.is_popular %}
+        <div class="absolute top-4 right-4">
+          <span class="bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold">POPULAR</span>
+        </div>
+        {% endif %}
+        {% if plan.is_vegetarian %}
+        <div class="absolute top-4 left-4">
+          <span class="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-bold">VEG</span>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    
+    <div class="text-center mt-12">
+      <a href="{{ url_for('main.meal_plans') }}" class="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors">
+        View All Meal Plans
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-20 bg-black">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">How It Works</h2>
+      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Getting started with HealthyRizz is simple. Follow these easy steps to begin your healthy journey.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <!-- Step 1 -->
+      <div class="text-center">
+        <div class="step-number mx-auto">1</div>
+        <h3 class="text-xl font-bold text-white mb-3">Choose Your Meal Plan</h3>
+        <p class="text-gray-300">Select based on your health goal - Weight Loss, PCOD/PCOS, Diabetes, or Clean Eating.</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="text-center">
+        <div class="step-number mx-auto">2</div>
+        <h3 class="text-xl font-bold text-white mb-3">We Cook Fresh Daily</h3>
+        <p class="text-gray-300">100% clean meals, made-to-order with fresh ingredients and zero compromise on quality.</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="text-center">
+        <div class="step-number mx-auto">3</div>
+        <h3 class="text-xl font-bold text-white mb-3">Delivery at Your Doorstep</h3>
+        <p class="text-gray-300">Fresh, sealed, and delivered on time to your doorstep in Ludhiana.</p>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="text-center">
+        <div class="step-number mx-auto">4</div>
+        <h3 class="text-xl font-bold text-white mb-3">Eat, Track, & Feel Great</h3>
+        <p class="text-gray-300">Enjoy food that fuels your body and helps you achieve your health goals.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Customer Testimonials Section -->
+<section class="py-20 bg-black">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">What Our Customers Say</h2>
+      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Real stories from real people who have transformed their health with HealthyRizz.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Testimonial 1 -->
+      <div class="testimonial-card">
+        <div class="flex items-center mb-4">
+          <div class="flex text-yellow-400">
+            ⭐⭐⭐⭐⭐
+          </div>
+        </div>
+        <p class="text-gray-300 mb-6">"Lost 5kg in 4 weeks and didn't miss junk food at all! The meals are so delicious and filling. HealthyRizz has completely changed my relationship with food."</p>
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold mr-4">S</div>
+          <div>
+            <h4 class="text-white font-semibold">Simran</h4>
+            <p class="text-gray-400 text-sm">Ludhiana</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Testimonial 2 -->
+      <div class="testimonial-card">
+        <div class="flex items-center mb-4">
+          <div class="flex text-yellow-400">
+            ⭐⭐⭐⭐⭐
+          </div>
+        </div>
+        <p class="text-gray-300 mb-6">"Perfect meals for my PCOD journey. The hormone-balancing plan has helped me feel so much better. The nutritionist-curated meals are exactly what I needed."</p>
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold mr-4">P</div>
+          <div>
+            <h4 class="text-white font-semibold">Priya</h4>
+            <p class="text-gray-400 text-sm">Ludhiana</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Testimonial 3 -->
+      <div class="testimonial-card">
+        <div class="flex items-center mb-4">
+          <div class="flex text-yellow-400">
+            ⭐⭐⭐⭐⭐
+          </div>
+        </div>
+        <p class="text-gray-300 mb-6">"Tasty, fresh, and filling. The diabetic-friendly meals have helped me maintain stable sugar levels. Highly recommend HealthyRizz for anyone serious about their health!"</p>
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold mr-4">R</div>
+          <div>
+            <h4 class="text-white font-semibold">Rahul</h4>
+            <p class="text-gray-400 text-sm">Ludhiana</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# --- Team Section --- #}
+<section class="py-16 bg-black">
+  <div class="container mx-auto px-4">
+    <h2 class="text-3xl font-bold text-center mb-10 text-white">Our Team</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+      {% for member in team_members %}
+      <div class="bg-gray-900 rounded-lg shadow-lg p-6 flex flex-col items-center border border-gray-700">
+        <img src="{{ member.image_url or '/static/images/default-avatar.png' }}" alt="{{ member.name }}" class="w-28 h-28 rounded-full object-cover mb-4 border-4 border-primary">
+        <h3 class="text-xl font-semibold text-white">{{ member.name }}</h3>
+        <p class="text-gray-300 text-center mt-2">{{ member.position }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% include 'components/faq.html' %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+<script src="{{ url_for('static', filename='js/video-player.js') }}"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Typing animation for HealthyRizz
+    new Typed('#typed-text', {
+      strings: [
+        "Fresh, Healthy Meals",
+        "Nutritionist-Curated Plans", 
+        "Delivered to Your Doorstep",
+        "Transform Your Health Journey"
+      ],
+      typeSpeed: 50,
+      backSpeed: 30,
+      backDelay: 2000,
+      loop: true
+    });
+    
+    // Hero image slider
+    const slides = document.querySelectorAll('.hero-slide');
+    let idx = 0;
+    setInterval(() => {
+      slides.forEach((img, i) => img.style.opacity = (i === idx) ? '1' : '0');
+      idx = (idx + 1) % slides.length;
+    }, 4000);
+
+    // Update progress dots
+    function updateProgressDots() {
+      const dots = document.querySelectorAll('.progress-dot');
+      dots.forEach((dot, index) => {
+        if (videoCarousel && index === videoCarousel.getCurrentSlide()) {
+          dot.classList.add('bg-primary');
+          dot.classList.remove('bg-gray-600');
+        } else {
+          dot.classList.add('bg-gray-600');
+          dot.classList.remove('bg-primary');
+        }
+      });
+    }
+
+    // Update dots when carousel changes
+    if (window.videoCarousel) {
+      const originalUpdateCarousel = videoCarousel.updateCarousel;
+      videoCarousel.updateCarousel = function() {
+        originalUpdateCarousel.call(this);
+        updateProgressDots();
+      };
+    }
+
+    // Initialize progress dots
+    setTimeout(updateProgressDots, 100);
+  });
+</script>
+{% endblock %} 

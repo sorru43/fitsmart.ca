@@ -1,0 +1,133 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Trial Requests - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-white">Trial Requests</h1>
+        
+        <!-- Status Filter -->
+        <div class="flex space-x-2">
+            <a href="{{ url_for('admin.admin_trial_requests', status='all') }}" 
+               class="px-4 py-2 rounded-lg {% if status == 'all' %}bg-primary text-white{% else %}bg-dark-lighter text-gray-300 hover:bg-dark-lightest{% endif %}">
+                All
+            </a>
+            <a href="{{ url_for('admin.admin_trial_requests', status='pending') }}" 
+               class="px-4 py-2 rounded-lg {% if status == 'pending' %}bg-primary text-white{% else %}bg-dark-lighter text-gray-300 hover:bg-dark-lightest{% endif %}">
+                Pending
+            </a>
+            <a href="{{ url_for('admin.admin_trial_requests', status='approved') }}" 
+               class="px-4 py-2 rounded-lg {% if status == 'approved' %}bg-primary text-white{% else %}bg-dark-lighter text-gray-300 hover:bg-dark-lightest{% endif %}">
+                Approved
+            </a>
+            <a href="{{ url_for('admin.admin_trial_requests', status='rejected') }}" 
+               class="px-4 py-2 rounded-lg {% if status == 'rejected' %}bg-primary text-white{% else %}bg-dark-lighter text-gray-300 hover:bg-dark-lightest{% endif %}">
+                Rejected
+            </a>
+            <a href="{{ url_for('admin.admin_trial_requests', status='completed') }}" 
+               class="px-4 py-2 rounded-lg {% if status == 'completed' %}bg-primary text-white{% else %}bg-dark-lighter text-gray-300 hover:bg-dark-lightest{% endif %}">
+                Completed
+            </a>
+        </div>
+    </div>
+
+    <!-- Trial Requests Table -->
+    <div class="bg-dark-lighter shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-700">
+            <thead class="bg-dark">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Meal Plan</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Preferred Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Created</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-dark-lighter divide-y divide-gray-700">
+                {% for request in trial_requests.items %}
+                <tr class="hover:bg-dark-lightest">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-white">{{ request.name }}</div>
+                        <div class="text-sm text-gray-400">{{ request.email }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-white">{{ request.meal_plan.name }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-white">{{ request.preferred_date.strftime('%Y-%m-%d') }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if request.status == 'pending' %}bg-yellow-900 text-yellow-200
+                            {% elif request.status == 'approved' %}bg-green-900 text-green-200
+                            {% elif request.status == 'rejected' %}bg-red-900 text-red-200
+                            {% else %}bg-blue-900 text-blue-200{% endif %}">
+                            {{ request.status|title }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                        {{ request.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="{{ url_for('admin.admin_trial_request_detail', request_id=request.id) }}" 
+                           class="text-primary hover:text-primary-light">
+                            View Details
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-400">
+                        No trial requests found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if trial_requests.pages > 1 %}
+    <div class="mt-4 flex justify-center">
+        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {% if trial_requests.has_prev %}
+            <a href="{{ url_for('admin.admin_trial_requests', page=trial_requests.prev_num, status=status) }}" 
+               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-700 bg-dark-lighter text-sm font-medium text-gray-300 hover:bg-dark-lightest">
+                <span class="sr-only">Previous</span>
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+
+            {% for page_num in trial_requests.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                {% if page_num %}
+                    {% if page_num == trial_requests.page %}
+                    <span class="relative inline-flex items-center px-4 py-2 border border-primary bg-primary text-sm font-medium text-white">
+                        {{ page_num }}
+                    </span>
+                    {% else %}
+                    <a href="{{ url_for('admin.admin_trial_requests', page=page_num, status=status) }}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-700 bg-dark-lighter text-sm font-medium text-gray-300 hover:bg-dark-lightest">
+                        {{ page_num }}
+                    </a>
+                    {% endif %}
+                {% else %}
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-700 bg-dark-lighter text-sm font-medium text-gray-300">
+                        ...
+                    </span>
+                {% endif %}
+            {% endfor %}
+
+            {% if trial_requests.has_next %}
+            <a href="{{ url_for('admin.admin_trial_requests', page=trial_requests.next_num, status=status) }}" 
+               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-700 bg-dark-lighter text-sm font-medium text-gray-300 hover:bg-dark-lightest">
+                <span class="sr-only">Next</span>
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

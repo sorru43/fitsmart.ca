@@ -1,0 +1,138 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Edit User - {{ user.username }} - HealthyRizz{% endblock %}
+{% block page_title %}Edit User{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Back button and actions -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <a href="{{ url_for('admin.admin_view_user', user_id=user.id) }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+                <i class="fas fa-arrow-left mr-2"></i>Back to User Details
+            </a>
+        </div>
+        <div class="flex space-x-2">
+            <button type="submit" form="editUserForm" class="bg-primary text-white px-4 py-2 rounded hover:bg-green-600 transition">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+        </div>
+    </div>
+    
+    <!-- Main content - Edit User Form -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-lg font-semibold text-black mb-4">Edit User Information</h2>
+        
+        <form id="editUserForm" method="post" action="{{ url_for('admin.admin_edit_user', user_id=user.id) }}">
+            <input type="hidden" name="action" value="update_user">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Basic Information -->
+                <div>
+                    <h3 class="text-md font-medium text-black mb-3">Account Details</h3>
+                    
+                    <div class="mb-4">
+                        <label for="username" class="block text-sm font-medium text-black mb-1">Username</label>
+                        <input type="text" id="username" name="username" value="{{ user.username }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-black mb-1">Email Address</label>
+                        <input type="email" id="email" name="email" value="{{ user.email }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="phone" class="block text-sm font-medium text-black mb-1">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" value="{{ user.phone or '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="password" class="block text-sm font-medium text-black mb-1">New Password (leave blank to keep current)</label>
+                        <input type="password" id="password" name="password"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="is_active" name="is_active" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" {% if user.is_active %}checked{% endif %}>
+                            <label for="is_active" class="ml-2 block text-sm text-black">Active Account</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="email_verified" name="email_verified" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" {% if user.email_verified %}checked{% endif %}>
+                            <label for="email_verified" class="ml-2 block text-sm text-black">Email Verified</label>
+                        </div>
+                    </div>
+                    
+                    {% if not user.is_admin %}
+                    <div class="mb-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="make_admin" name="make_admin" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="make_admin" class="ml-2 block text-sm text-black">Make Admin</label>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Caution: This gives full admin access to the platform.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Address Information -->
+                <div>
+                    <h3 class="text-md font-medium text-black mb-3">Delivery Address</h3>
+                    
+                    <div class="mb-4">
+                        <label for="address_line1" class="block text-sm font-medium text-black mb-1">Address Line 1</label>
+                        <input type="text" id="address_line1" name="address_line1" value="{{ user.address_line1 or '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="address_line2" class="block text-sm font-medium text-black mb-1">Address Line 2</label>
+                        <input type="text" id="address_line2" name="address_line2" value="{{ user.address_line2 or '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="city" class="block text-sm font-medium text-black mb-1">City</label>
+                        <input type="text" id="city" name="city" value="{{ user.city or '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="province" class="block text-sm font-medium text-black mb-1">Province/State</label>
+                        <input type="text" id="province" name="province" value="{{ user.province or '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="postal_code" class="block text-sm font-medium text-black mb-1">Postal/ZIP Code</label>
+                        <input type="text" id="postal_code" name="postal_code" value="{{ user.postal_code or '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="country" class="block text-sm font-medium text-black mb-1">Country</label>
+                        <input type="text" id="country" name="country" value="{{ user.country or 'Canada' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Admin Notes -->
+            <div class="mt-6">
+                <h3 class="text-md font-medium text-black mb-3">Admin Notes</h3>
+                <div class="mb-4">
+                    <label for="admin_notes" class="block text-sm font-medium text-black mb-1">Private Notes</label>
+                    <textarea id="admin_notes" name="admin_notes" rows="4" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black"
+                        placeholder="Add private notes about this user...">{{ user.admin_notes or '' }}</textarea>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

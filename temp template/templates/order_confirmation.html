@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmation - Fit Smart{% endblock %}
+
+{% block content %}
+<div class="bg-black py-8">
+    <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-gray-900 rounded-lg shadow-md overflow-hidden">
+                <div class="p-6">
+                    <div class="text-center mb-8">
+                        <i class="fas fa-check-circle text-green-500 text-5xl mb-4"></i>
+                        <h1 class="text-3xl font-bold text-white mb-2">Order Confirmed!</h1>
+                        <p class="text-gray-400">Thank you for choosing Fit Smart. Your order has been successfully placed.</p>
+                    </div>
+                    
+                    <div class="border-t border-gray-700 pt-6">
+                        <h2 class="text-xl font-bold mb-4 text-white">Order Details</h2>
+                        
+                        <div class="space-y-4">
+                            <div class="flex justify-between text-white">
+                                <span>Order Number:</span>
+                                <span class="font-mono">#{{ order.id }}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-white">
+                                <span>Order Date:</span>
+                                <span>{{ order.created_at.strftime('%d/%m/%Y %I:%M %p') }}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-white">
+                                <span>Plan:</span>
+                                <span>{{ order.plan.name }}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-white">
+                                <span>Frequency:</span>
+                                <span>{{ order.frequency|title }}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-gray-400">
+                                <span>Subtotal:</span>
+                                <span>₹{{ order.amount }}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-gray-400">
+                                <span>GST (5%):</span>
+                                <span>₹{{ order.gst_amount }}</span>
+                            </div>
+                            
+                            {% if order.coupon_code %}
+                            <div class="flex justify-between text-green-500">
+                                <span>Coupon Applied:</span>
+                                <span>{{ order.coupon_code }}</span>
+                            </div>
+                            
+                            <div class="flex justify-between text-green-500">
+                                <span>Discount:</span>
+                                <span>-₹{{ order.discount_amount }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="flex justify-between text-white font-bold border-t border-gray-700 pt-4">
+                                <span>Total Amount:</span>
+                                <span>₹{{ order.total_amount }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-700 pt-6 mt-6">
+                        <h2 class="text-xl font-bold mb-4 text-white">Delivery Details</h2>
+                        
+                        <div class="space-y-4">
+                            <div class="text-white">
+                                <p class="font-semibold">{{ order.customer_name }}</p>
+                                <p>{{ order.customer_address }}</p>
+                                <p>{{ order.customer_city }}, {{ order.customer_state }} - {{ order.customer_pincode }}</p>
+                                <p>Phone: {{ order.customer_phone }}</p>
+                                {% if order.delivery_instructions %}
+                                <p class="mt-2 text-gray-400">
+                                    <span class="font-semibold">Delivery Instructions:</span><br>
+                                    {{ order.delivery_instructions }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-700 pt-6 mt-6">
+                        <h2 class="text-xl font-bold mb-4 text-white">What's Next?</h2>
+                        
+                        <div class="space-y-4 text-gray-400">
+                            <p>
+                                <i class="fas fa-envelope text-primary mr-2"></i>
+                                A confirmation email has been sent to {{ order.customer_email }}
+                            </p>
+                            <p>
+                                <i class="fas fa-truck text-primary mr-2"></i>
+                                Your first delivery will be scheduled within 2-3 business days
+                            </p>
+                            <p>
+                                <i class="fas fa-phone text-primary mr-2"></i>
+                                Our delivery team will contact you before delivery
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex justify-center space-x-4">
+                        <a href="{{ url_for('index') }}" class="bg-primary hover:bg-green-600 text-white font-bold py-2 px-6 rounded-md transition">
+                            Return to Home
+                        </a>
+                        <a href="{{ url_for('orders') }}" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-md transition">
+                            View All Orders
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

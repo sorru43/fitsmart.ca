@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Shipping & Delivery Policy - HealthyRizz{% endblock %}
+
+{% block content %}
+<main class="bg-gray-900 py-16 md:py-20">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto bg-darker rounded-lg shadow-lg p-8 md:p-12 border border-gray-700">
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-6 text-center">
+                <i class="fas fa-truck text-primary mr-3"></i>Shipping & Delivery Policy
+            </h1>
+            
+            <div class="prose prose-lg text-gray-300 mx-auto">
+                <p class="text-lg mb-6">At HealthyRizz, we ensure fresh, healthy meals are delivered to your doorstep with care and precision. This policy outlines our delivery standards, areas, and procedures.</p>
+                
+                <h3 class="text-xl font-semibold text-white mt-8 mb-4">
+                    <i class="fas fa-map-marker-alt text-primary mr-2"></i>Delivery Areas
+                </h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <h4 class="text-lg font-medium text-white mb-3">Primary Delivery Zones:</h4>
+                    <ul class="list-disc pl-6 mb-4 space-y-2">
+                        <li><strong>Ludhiana City:</strong> All major areas including Civil Lines, Model Town, Sarabha Nagar, BRS Nagar, Dugri, Pakhowal Road</li>
+                        <li><strong>Industrial Areas:</strong> Focal Point, Industrial Area A, Industrial Area B</li>
+                        <li><strong>Residential Colonies:</strong> All major residential societies and apartments</li>
+                        <li><strong>Educational Institutions:</strong> Universities, colleges, and schools</li>
+                    </ul>
+                    <p class="text-sm text-gray-400">Don't see your area? <a href="{{ url_for('main.contact') }}" class="text-primary hover:underline">Contact us</a> to check availability.</p>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-8 mb-4">
+                    <i class="fas fa-clock text-primary mr-2"></i>Delivery Schedule
+                </h3>
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gray-800 rounded-lg p-6">
+                        <h4 class="text-lg font-medium text-white mb-3">Morning Delivery</h4>
+                        <ul class="space-y-2 text-gray-300">
+                            <li><i class="fas fa-sun text-primary mr-2"></i>6:00 AM - 9:00 AM</li>
+                            <li><i class="fas fa-utensils text-primary mr-2"></i>Breakfast</li>
+                            <li><i class="fas fa-check text-primary mr-2"></i>Fresh from kitchen</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-6">
+                        <h4 class="text-lg font-medium text-white mb-3">Evening Delivery</h4>
+                        <ul class="space-y-2 text-gray-300">
+                            <li><i class="fas fa-moon text-primary mr-2"></i>5:00 PM - 8:00 PM</li>
+                            <li><i class="fas fa-utensils text-primary mr-2"></i>Dinner</li>
+                            <li><i class="fas fa-check text-primary mr-2"></i>Prepared fresh daily</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-8 mb-4">
+                    <i class="fas fa-shipping-fast text-primary mr-2"></i>Delivery Process
+                </h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-calendar text-white"></i>
+                            </div>
+                            <h5 class="font-medium text-white mb-2">1. Flexible Scheduling</h5>
+                            <p class="text-sm text-gray-300">Choose your preferred delivery days and times</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-utensils text-white"></i>
+                            </div>
+                            <h5 class="font-medium text-white mb-2">2. Fresh Preparation</h5>
+                            <p class="text-sm text-gray-300">Meals prepared fresh using quality ingredients</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-truck text-white"></i>
+                            </div>
+                            <h5 class="font-medium text-white mb-2">3. Safe Delivery</h5>
+                            <p class="text-sm text-gray-300">Delivered in insulated containers to maintain freshness</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg">
+                        <h5 class="text-white font-medium mb-2">
+                            <i class="fas fa-info-circle text-blue-400 mr-2"></i>Meal Skipping
+                        </h5>
+                        <p class="text-gray-300 text-sm">
+                            If you don't want delivery for a particular day, you can easily skip it through your account dashboard. 
+                            No need to call us - just log in and manage your delivery schedule anytime.
+                        </p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-8 mb-4">
+                    <i class="fas fa-dollar-sign text-primary mr-2"></i>Delivery Charges
+                </h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-medium text-white mb-3">Subscription Delivery</h4>
+                            <ul class="space-y-2 text-gray-300">
+                                <li><i class="fas fa-check text-primary mr-2"></i>Free delivery included in all subscriptions</li>
+                                <li><i class="fas fa-check text-primary mr-2"></i>No additional delivery charges</li>
+                                <li><i class="fas fa-check text-primary mr-2"></i>Regular scheduled deliveries</li>
+                                <li><i class="fas fa-check text-primary mr-2"></i>Flexible delivery schedules</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-medium text-white mb-3">Trial Orders</h4>
+                            <ul class="space-y-2 text-gray-300">
+                                <li><i class="fas fa-star text-primary mr-2"></i>Free delivery for trial orders</li>
+                                <li><i class="fas fa-clock text-primary mr-2"></i>Same-day delivery available</li>
+                                <li><i class="fas fa-gift text-primary mr-2"></i>Special trial pricing</li>
+                                <li><i class="fas fa-arrow-right text-primary mr-2"></i>Easy upgrade to subscription</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-primary bg-opacity-10 border border-primary rounded-lg">
+                        <h5 class="text-white font-medium mb-2">
+                            <i class="fas fa-info-circle text-primary mr-2"></i>Subscription Benefits
+                        </h5>
+                        <p class="text-gray-300 text-sm">
+                            All our meal plans are subscription-based, which means delivery is always included at no extra cost. 
+                            You can choose weekly or monthly subscriptions with flexible delivery schedules tailored to your needs.
+                        </p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-8 mb-4">
+                    <i class="fas fa-box text-primary mr-2"></i>Packaging & Quality
+                </h3>
+                <ul class="list-disc pl-6 mb-6 space-y-2">
+                    <li><strong>Insulated Containers:</strong> Maintain optimal temperature during transit</li>
+                    <li><strong>Eco-friendly Packaging:</strong> Biodegradable materials used</li>
+                    <li><strong>Hygienic Seals:</strong> Tamper-evident packaging for food safety</li>
+                    <li><strong>Clear Labeling:</strong> Ingredients, nutritional info, and expiry dates</li>
+                </ul>
+
+                <h3 class="text-xl font-semibold text-white mt-8 mb-4">
+                    <i class="fas fa-user-check text-primary mr-2"></i>Delivery Instructions
+                </h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <h4 class="text-lg font-medium text-white mb-3">For Customers:</h4>
+                    <ul class="list-disc pl-6 mb-4 space-y-2">
+                        <li>Please provide accurate delivery address and contact number</li>
+                        <li>Keep someone available at the delivery address during the scheduled time</li>
+                        <li>Check the package for any damage before accepting</li>
+                        <li>Store meals in refrigerator immediately upon delivery</li>
+                        <li>Consume within the recommended time frame</li>
+                    </ul>
+                    
+                    <h4 class="text-lg font-medium text-white mb-3">Special Instructions:</h4>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>For office deliveries, please specify building and floor details</li>
+                        <li>For gated communities, provide security guard instructions</li>
+                        <li>For dietary restrictions, mention during order placement</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-8 mb-4">
+                    <i class="fas fa-exclamation-triangle text-primary mr-2"></i>Delivery Issues
+                </h3>
+                <div class="bg-red-900 bg-opacity-20 border border-red-700 rounded-lg p-6 mb-6">
+                    <h4 class="text-lg font-medium text-white mb-3">What to do if:</h4>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-clock text-red-400 mr-3 mt-1"></i>
+                            <div>
+                                <strong class="text-white">Delivery is delayed:</strong>
+                                <span class="text-gray-300">Contact us immediately. We'll provide updates and compensation if needed.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-box-open text-red-400 mr-3 mt-1"></i>
+                            <div>
+                                <strong class="text-white">Package is damaged:</strong>
+                                <span class="text-gray-300">Do not accept damaged packages. We'll arrange a replacement.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-thermometer-half text-red-400 mr-3 mt-1"></i>
+                            <div>
+                                <strong class="text-white">Food temperature issues:</strong>
+                                <span class="text-gray-300">If food isn't at proper temperature, contact us for replacement.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-user-times text-red-400 mr-3 mt-1"></i>
+                            <div>
+                                <strong class="text-white">No one available:</strong>
+                                <span class="text-gray-300">We'll attempt delivery twice. After that, a re-delivery fee applies.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-8 mb-4">
+                    <i class="fas fa-undo text-primary mr-2"></i>Returns & Refunds
+                </h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li><strong>Quality Issues:</strong> Full refund or replacement for quality problems</li>
+                        <li><strong>Wrong Items:</strong> Immediate replacement with correct items</li>
+                        <li><strong>Allergies/Intolerances:</strong> Full refund if dietary requirements not met</li>
+                        <li><strong>Delivery Problems:</strong> Refund of delivery charges for service failures</li>
+                        <li><strong>Time Frame:</strong> Report issues within 2 hours of delivery</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-8 mb-4">
+                    <i class="fas fa-phone text-primary mr-2"></i>Contact Information
+                </h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-medium text-white mb-3">Customer Support</h4>
+                            <ul class="space-y-2 text-gray-300">
+                                <li><i class="fas fa-phone text-primary mr-2"></i>+91 98765 43210</li>
+                                <li><i class="fas fa-envelope text-primary mr-2"></i>delivery@healthyrizz.in</li>
+                                <li><i class="fas fa-clock text-primary mr-2"></i>7:00 AM - 10:00 PM</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-medium text-white mb-3">Emergency Contact</h4>
+                            <ul class="space-y-2 text-gray-300">
+                                <li><i class="fas fa-phone text-primary mr-2"></i>+91 98765 43211</li>
+                                <li><i class="fas fa-exclamation text-primary mr-2"></i>24/7 Support</li>
+                                <li><i class="fas fa-whatsapp text-primary mr-2"></i>WhatsApp Support</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-primary bg-opacity-10 border border-primary rounded-lg p-6 mt-8">
+                    <h3 class="text-xl font-semibold text-white mb-3">
+                        <i class="fas fa-info-circle text-primary mr-2"></i>Important Notes
+                    </h3>
+                    <ul class="list-disc pl-6 space-y-2 text-gray-300">
+                        <li>Delivery times may vary during peak hours and holidays</li>
+                        <li>We reserve the right to refuse delivery to unsafe areas</li>
+                        <li>Weather conditions may affect delivery schedules</li>
+                        <li>Special dietary requests must be made 24 hours in advance</li>
+                        <li>Bulk orders require 48-hour advance notice</li>
+                    </ul>
+                </div>
+
+                <p class="text-sm text-gray-400 mt-8 text-center">Last updated: {{ now.strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %} 

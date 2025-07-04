@@ -1,0 +1,294 @@
+/* Subscription page styles with dark theme for HealthyRizz */
+
+/* Subscription card */
+.subscription-card {
+    background-color: #151515;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.subscription-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(55, 151, 119, 0.2);
+    border-color: #379777;
+}
+
+.subscription-header {
+    border-bottom: 1px solid #333333;
+    background-color: #1E1E1E;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+}
+
+.subscription-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: rgba(55, 151, 119, 0.2);
+    color: #379777;
+    border: 1px solid #379777;
+}
+
+.status-paused {
+    background-color: rgba(55, 151, 119, 0.2);
+    color: #379777;
+    border: 1px solid #379777;
+}
+
+.status-cancelled {
+    background-color: rgba(55, 151, 119, 0.2);
+    color: #379777;
+    border: 1px solid #379777;
+}
+
+.status-expired {
+    background-color: rgba(100, 100, 100, 0.2);
+    color: #999999;
+    border: 1px solid #999999;
+}
+
+.subscription-body {
+    padding: 20px;
+}
+
+.meal-plan-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 10px;
+}
+
+.subscription-detail {
+    color: #CCCCCC;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.subscription-detail span:first-child {
+    color: #999999;
+}
+
+.subscription-footer {
+    border-top: 1px solid #333333;
+    padding: 15px 20px;
+    background-color: #1A1A1A;
+    border-radius: 0 0 8px 8px;
+}
+
+/* Action buttons */
+.subscription-action {
+    background-color: #252525;
+    color: #FFFFFF;
+    border: 1px solid #444444;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-right: 5px;
+    transition: all 0.2s ease;
+}
+
+.subscription-action:hover {
+    background-color: #333333;
+    border-color: #555555;
+}
+
+.subscription-action-primary {
+    background-color: #379777;
+    color: #FFFFFF;
+    border: none;
+}
+
+.subscription-action-primary:hover {
+    background-color: #2D7D65;
+}
+
+.subscription-action-warning {
+    background-color: rgba(55, 151, 119, 0.2);
+    color: #379777;
+    border: 1px solid #379777;
+}
+
+.subscription-action-warning:hover {
+    background-color: rgba(55, 151, 119, 0.3);
+}
+
+.subscription-action-danger {
+    background-color: rgba(55, 151, 119, 0.2);
+    color: #379777;
+    border: 1px solid #379777;
+}
+
+.subscription-action-danger:hover {
+    background-color: rgba(55, 151, 119, 0.3);
+}
+
+/* Delivery calendar */
+.delivery-calendar {
+    background-color: #151515;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.calendar-header {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin-bottom: 15px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.calendar-day {
+    background-color: #1A1A1A;
+    border: 1px solid #333333;
+    border-radius: 4px;
+    padding: 8px 0;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-day:hover {
+    background-color: #252525;
+}
+
+.calendar-day-name {
+    font-size: 0.7rem;
+    color: #999999;
+    margin-bottom: 3px;
+}
+
+.calendar-day-number {
+    font-size: 0.9rem;
+    color: #FFFFFF;
+}
+
+.calendar-day.delivery-day {
+    background-color: rgba(55, 151, 119, 0.2);
+    border-color: #379777;
+}
+
+.calendar-day.delivery-day:hover {
+    background-color: rgba(55, 151, 119, 0.3);
+}
+
+.calendar-day.skipped-day {
+    background-color: rgba(55, 151, 119, 0.1);
+    border-color: #379777;
+    text-decoration: line-through;
+}
+
+.calendar-day.skipped-day:hover {
+    background-color: rgba(55, 151, 119, 0.2);
+}
+
+.calendar-actions {
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* Skipped deliveries */
+.skipped-deliveries {
+    margin-top: 20px;
+}
+
+.skipped-delivery-item {
+    background-color: #1A1A1A;
+    border: 1px solid #333333;
+    border-radius: 6px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.skipped-delivery-date {
+    color: #CCCCCC;
+}
+
+/* Payment history */
+.payment-history-item {
+    background-color: #1A1A1A;
+    border: 1px solid #333333;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.payment-date {
+    font-size: 0.8rem;
+    color: #999999;
+}
+
+.payment-amount {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin: 5px 0;
+}
+
+.payment-method {
+    font-size: 0.8rem;
+    color: #CCCCCC;
+}
+
+.payment-status {
+    float: right;
+    font-size: 0.8rem;
+}
+
+.payment-status-success {
+    color: #379777;
+}
+
+.payment-status-failed {
+    color: #379777;
+}
+
+.payment-status-pending {
+    color: #379777;
+}
+
+/* No subscriptions state */
+.no-subscriptions {
+    background-color: #151515;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.no-subscriptions-icon {
+    font-size: 3rem;
+    color: #379777;
+    margin-bottom: 20px;
+}
+
+.no-subscriptions-message {
+    font-size: 1.2rem;
+    color: #FFFFFF;
+    margin-bottom: 15px;
+}
+
+.no-subscriptions-desc {
+    color: #CCCCCC;
+    margin-bottom: 25px;
+}
+

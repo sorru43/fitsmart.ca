@@ -1,0 +1,311 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}User Details - {{ user.username }} - HealthyRizz{% endblock %}
+{% block page_title %}User Details{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Back button and actions -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <a href="{{ url_for('admin.admin_users') }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Users
+            </a>
+        </div>
+        <div class="flex space-x-2">
+            <a href="{{ url_for('admin.admin_edit_user', user_id=user.id) }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                <i class="fas fa-edit mr-2"></i>Edit User
+            </a>
+            {% if not user.is_admin %}
+            <button id="deleteUserBtn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition">
+                <i class="fas fa-trash-alt mr-2"></i>Delete User
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Main content - User Information -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex items-center mb-6">
+            <div class="mr-6 bg-primary rounded-full w-16 h-16 flex items-center justify-center text-white text-2xl font-bold">
+                {{ user.username[0].upper() }}
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-black">{{ user.username }}</h1>
+                <p class="text-gray-600">
+                    <span class="inline-block mr-3">
+                        <i class="fas fa-envelope mr-1"></i>{{ user.email }}
+                    </span>
+                    {% if user.phone %}
+                    <span class="inline-block">
+                        <i class="fas fa-phone mr-1"></i>{{ user.phone }}
+                    </span>
+                    {% endif %}
+                </p>
+                <div class="mt-2">
+                    {% if user.is_admin %}
+                    <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                        Admin
+                    </span>
+                    {% else %}
+                    <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                        User
+                    </span>
+                    {% endif %}
+                    
+                    <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 ml-2">
+                        Joined {{ user.created_at.strftime('%b %d, %Y') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- User Details -->
+            <div>
+                <h2 class="text-lg font-semibold text-black mb-3">Account Details</h2>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">User ID</p>
+                            <p class="font-medium text-black">{{ user.id }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Status</p>
+                            <p class="font-medium text-black">{% if user.is_active %}Active{% else %}Inactive{% endif %}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Email Verified</p>
+                            <p class="font-medium text-black">{% if user.email_verified %}Yes{% else %}No{% endif %}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Last Login</p>
+                            <p class="font-medium text-black">{{ user.last_login.strftime('%b %d, %Y %H:%M') if user.last_login else 'Never' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Address Information -->
+            <div>
+                <h2 class="text-lg font-semibold text-black mb-3">Delivery Address</h2>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    {% if user.address_line1 %}
+                    <address class="not-italic">
+                        {{ user.address_line1 }}<br>
+                        {% if user.address_line2 %}{{ user.address_line2 }}<br>{% endif %}
+                        {{ user.city }}, {{ user.province }}<br>
+                        {{ user.postal_code }}<br>
+                        {{ user.country }}
+                    </address>
+                    {% else %}
+                    <p class="text-gray-500">No address information provided</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Subscription Information -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-lg font-semibold text-black mb-4">Subscriptions</h2>
+        
+        {% if user.subscriptions %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-black uppercase tracking-wider">Plan</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-black uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-black uppercase tracking-wider">Start Date</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-black uppercase tracking-wider">Next Delivery</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-black uppercase tracking-wider">Price</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-black uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for sub in user.subscriptions %}
+                    <tr>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="text-sm font-medium text-black">{{ sub.meal_plan.name }}</div>
+                            <div class="text-xs text-gray-500">{{ sub.meals_per_week }} meals/week</div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            {% if sub.status == 'active' %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Active
+                            </span>
+                            {% elif sub.status == 'paused' %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                Paused
+                            </span>
+                            {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                Cancelled
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="text-sm text-black">{{ sub.start_date.strftime('%b %d, %Y') }}</div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="text-sm text-black">{{ sub.next_delivery_date.strftime('%b %d, %Y') if sub.next_delivery_date else 'N/A' }}</div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="text-sm text-black">${{ '%.2f'|format(sub.price) }}</div>
+                            {% if sub.discount_percent %}
+                            <div class="text-xs text-green-600">{{ sub.discount_percent }}% off</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-2">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-500">This user has no active subscriptions</p>
+        {% endif %}
+    </div>
+    
+    <!-- Order History -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-lg font-semibold text-black mb-4">Order History</h2>
+        
+        {% if user.orders %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-black uppercase tracking-wider">Order ID</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-black uppercase tracking-wider">Date</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-black uppercase tracking-wider">Items</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-black uppercase tracking-wider">Total</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-black uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-black uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for order in user.orders %}
+                    <tr>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="text-sm font-medium text-black">{{ order.id }}</div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="text-sm text-black">{{ order.created_at.strftime('%b %d, %Y') }}</div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="text-sm text-black">{{ order.items|length }} items</div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="text-sm text-black">${{ '%.2f'|format(order.total) }}</div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            {% if order.status == 'completed' %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Completed
+                            </span>
+                            {% elif order.status == 'processing' %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                Processing
+                            </span>
+                            {% elif order.status == 'cancelled' %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                Cancelled
+                            </span>
+                            {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                {{ order.status|capitalize }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-blue-600 hover:text-blue-900">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-500">This user has not placed any orders</p>
+        {% endif %}
+    </div>
+    
+    <!-- Notes and Additional Information -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-semibold text-black mb-4">Admin Notes</h2>
+        
+        {% if user.admin_notes %}
+        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+            <p class="text-black whitespace-pre-line">{{ user.admin_notes }}</p>
+            <p class="text-xs text-gray-500 mt-2">Last updated: {{ user.notes_updated_at.strftime('%b %d, %Y %H:%M') if user.notes_updated_at else 'N/A' }}</p>
+        </div>
+        {% else %}
+        <p class="text-gray-500 mb-4">No admin notes for this user</p>
+        {% endif %}
+        
+        <form method="post" action="{{ url_for('admin.admin_edit_user', user_id=user.id) }}">
+            <input type="hidden" name="action" value="update_notes">
+            <div class="mb-4">
+                <label for="admin_notes" class="block text-sm font-medium text-black mb-1">Add/Edit Notes</label>
+                <textarea id="admin_notes" name="admin_notes" rows="4" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-black"
+                    placeholder="Add private notes about this user...">{{ user.admin_notes }}</textarea>
+            </div>
+            <div>
+                <button type="submit" class="bg-primary text-white px-4 py-2 rounded hover:bg-green-600 transition">
+                    <i class="fas fa-save mr-2"></i>Save Notes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete User Confirmation Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg max-w-md w-full p-6">
+        <h3 class="text-lg font-bold text-black mb-4">Confirm Deletion</h3>
+        <p class="text-black mb-6">Are you sure you want to delete user <span class="font-semibold">{{ user.username }}</span>? This action cannot be undone.</p>
+        <div class="flex justify-end space-x-3">
+            <button id="cancelDelete" class="px-4 py-2 border border-gray-300 rounded text-black hover:bg-gray-100 transition">
+                Cancel
+            </button>
+            <form method="post" action="{{ url_for('admin.admin_edit_user', user_id=user.id) }}">
+                <input type="hidden" name="action" value="delete_user">
+                <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">
+                    Delete User
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Delete user modal functionality
+    const deleteUserBtn = document.getElementById('deleteUserBtn');
+    const deleteModal = document.getElementById('deleteModal');
+    const cancelDelete = document.getElementById('cancelDelete');
+    
+    if (deleteUserBtn) {
+        deleteUserBtn.addEventListener('click', function() {
+            deleteModal.classList.remove('hidden');
+        });
+    }
+    
+    if (cancelDelete) {
+        cancelDelete.addEventListener('click', function() {
+            deleteModal.classList.add('hidden');
+        });
+    }
+</script>
+{% endblock %}

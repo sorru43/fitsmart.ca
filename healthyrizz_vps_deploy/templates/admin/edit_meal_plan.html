@@ -1,0 +1,169 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Edit Meal Plan - Fit Smart Admin{% endblock %}
+
+{% block page_title %}Edit Meal Plan{% endblock %}
+
+{% block admin_content %}
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex items-center mb-6">
+        <a href="{{ url_for('admin.admin_meal_plans') }}" class="text-black hover:text-gray-700 mr-4">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h2 class="text-xl font-bold text-black">Edit Meal Plan</h2>
+    </div>
+    
+    <form method="POST" action="{{ url_for('admin.admin_edit_meal_plan', id=meal_plan.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <!-- Basic Information -->
+            <div class="md:col-span-2">
+                <h3 class="text-lg font-medium border-b border-gray-200 pb-2 mb-4 text-white">Basic Information</h3>
+            </div>
+            
+            <!-- Plan Name -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-white mb-1">Plan Name <span class="text-red-500">*</span></label>
+                <input type="text" id="name" name="name" value="{{ meal_plan.name }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
+                    placeholder="e.g. Balanced Lifestyle">
+            </div>
+            
+            <!-- Tag -->
+            <div>
+                <label for="tag" class="block text-sm font-medium text-white mb-1">Tag</label>
+                <select id="tag" name="tag" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white">
+                    <option value="">Select a tag</option>
+                    <option value="Balanced" {% if meal_plan.tag == 'Balanced' %}selected{% endif %}>Balanced</option>
+                    <option value="High Protein" {% if meal_plan.tag == 'High Protein' %}selected{% endif %}>High Protein</option>
+                    <option value="Low Carb" {% if meal_plan.tag == 'Low Carb' %}selected{% endif %}>Low Carb</option>
+                    <option value="Vegetarian" {% if meal_plan.tag == 'Vegetarian' %}selected{% endif %}>Vegetarian</option>
+                </select>
+                <p class="mt-1 text-sm text-white">Category tag that will be displayed on the meal plan card</p>
+            </div>
+            
+            <!-- Description -->
+            <div class="md:col-span-2">
+                <label for="description" class="block text-sm font-medium text-white mb-1">Description <span class="text-red-500">*</span></label>
+                <textarea id="description" name="description" required rows="4"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
+                    placeholder="Describe this meal plan...">{{ meal_plan.description }}</textarea>
+            </div>
+            
+            <!-- Image URL -->
+            <div class="md:col-span-2">
+                <label for="image_url" class="block text-sm font-medium text-white mb-1">Image URL</label>
+                <input type="url" id="image_url" name="image_url" value="{{ meal_plan.image_url }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
+                    placeholder="https://example.com/image.jpg">
+                <p class="mt-1 text-sm text-white">URL for the meal plan's featured image</p>
+            </div>
+            
+            <!-- Pricing Information -->
+            <div class="md:col-span-2">
+                <h3 class="text-lg font-medium border-b border-gray-200 pb-2 mb-4 mt-4 text-white">Pricing Information</h3>
+            </div>
+            
+            <!-- Weekly Price -->
+            <div>
+                <label for="price_weekly" class="block text-sm font-medium text-white mb-1">Weekly Price (₹) <span class="text-red-500">*</span></label>
+                <input type="number" step="0.01" id="price_weekly" name="price_weekly" value="{{ meal_plan.price_weekly }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
+                    placeholder="e.g. 999.99">
+            </div>
+            
+            <!-- Monthly Price -->
+            <div>
+                <label for="price_monthly" class="block text-sm font-medium text-white mb-1">Monthly Price (₹) <span class="text-red-500">*</span></label>
+                <input type="number" step="0.01" id="price_monthly" name="price_monthly" value="{{ meal_plan.price_monthly }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
+                    placeholder="e.g. 3499.99">
+            </div>
+            
+            <!-- Trial Price -->
+            <div>
+                <label for="price_trial" class="block text-sm font-medium text-white mb-1">Trial Price (₹) <span class="text-red-500">*</span></label>
+                <input type="number" step="0.01" id="price_trial" name="price_trial" value="{{ meal_plan.price_trial }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
+                    placeholder="e.g. 499.99">
+            </div>
+            
+            <!-- Nutritional Information -->
+            <div class="md:col-span-2">
+                <h3 class="text-lg font-medium border-b border-gray-200 pb-2 mb-4 mt-4 text-white">Nutritional Information</h3>
+            </div>
+            
+            <!-- Calories -->
+            <div>
+                <label for="calories" class="block text-sm font-medium text-white mb-1">Calories <span class="text-red-500">*</span></label>
+                <input type="text" id="calories" name="calories" value="{{ meal_plan.calories }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
+                    placeholder="e.g. 1800-2200">
+                <p class="mt-1 text-sm text-white">Range or exact value of calories per day</p>
+            </div>
+            
+            <!-- Protein -->
+            <div>
+                <label for="protein" class="block text-sm font-medium text-white mb-1">Protein <span class="text-red-500">*</span></label>
+                <input type="text" id="protein" name="protein" value="{{ meal_plan.protein }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
+                    placeholder="e.g. 100-120g">
+                <p class="mt-1 text-sm text-white">Range or exact value of protein per day</p>
+            </div>
+            
+            <!-- Fat -->
+            <div>
+                <label for="fat" class="block text-sm font-medium text-white mb-1">Fat <span class="text-red-500">*</span></label>
+                <input type="text" id="fat" name="fat" value="{{ meal_plan.fat }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
+                    placeholder="e.g. 60-70g">
+                <p class="mt-1 text-sm text-white">Range or exact value of fat per day</p>
+            </div>
+            
+            <!-- Carbs -->
+            <div>
+                <label for="carbs" class="block text-sm font-medium text-white mb-1">Carbohydrates <span class="text-red-500">*</span></label>
+                <input type="text" id="carbs" name="carbs" value="{{ meal_plan.carbs }}" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
+                    placeholder="e.g. 150-200g">
+                <p class="mt-1 text-sm text-white">Range or exact value of carbohydrates per day</p>
+            </div>
+            
+            <!-- Additional Options -->
+            <div class="md:col-span-2">
+                <h3 class="text-lg font-medium border-b border-gray-200 pb-2 mb-4 mt-4 text-white">Additional Options</h3>
+            </div>
+            
+            <!-- Active Status -->
+            <div class="md:col-span-2">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="is_active" name="is_active" value="true" {% if meal_plan.is_active %}checked{% endif %}
+                            class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <label for="is_active" class="ml-2 block text-sm text-white">Active</label>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" id="available_for_trial" name="available_for_trial" value="true" {% if meal_plan.available_for_trial %}checked{% endif %}
+                            class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <label for="available_for_trial" class="ml-2 block text-sm text-white">Available for Trial</label>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" id="is_popular" name="is_popular" value="true" {% if meal_plan.is_popular %}checked{% endif %}
+                            class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <label for="is_popular" class="ml-2 block text-sm text-white">Popular Plan</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="md:col-span-2 mt-6">
+                <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

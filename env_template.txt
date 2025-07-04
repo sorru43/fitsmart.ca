@@ -1,0 +1,93 @@
+# HealthyRizz Environment Configuration
+# Copy this file to .env and fill in your actual values
+
+# =====================================
+# CRITICAL SECURITY SETTINGS
+# =====================================
+
+# Flask Secret Key (Generate with: python -c "import secrets; print(secrets.token_hex(32))")
+SECRET_KEY=your-secret-key-here-replace-with-32-character-random-string
+
+# CSRF Protection Key (Generate with: python -c "import secrets; print(secrets.token_hex(32))")
+WTF_CSRF_SECRET_KEY=your-csrf-secret-key-here-replace-with-32-character-random-string
+
+# =====================================
+# APPLICATION SETTINGS
+# =====================================
+
+# Environment (production/development)
+FLASK_ENV=development
+DEBUG=False
+
+# Database Configuration
+DATABASE_URL=sqlite:///healthyrizz.db
+
+# =====================================
+# EMAIL CONFIGURATION
+# =====================================
+
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-specific-password
+MAIL_DEFAULT_SENDER=your-email@gmail.com
+
+# =====================================
+# PAYMENT SYSTEM (RAZORPAY)
+# =====================================
+
+RAZORPAY_KEY_ID=your-razorpay-key-id
+RAZORPAY_KEY_SECRET=your-razorpay-key-secret
+RAZORPAY_WEBHOOK_SECRET=your-webhook-secret
+
+# =====================================
+# REDIS & CACHING
+# =====================================
+
+REDIS_URL=redis://localhost:6379/0
+RATELIMIT_STORAGE_URL=redis://localhost:6379/1
+
+# =====================================
+# SECURITY SETTINGS
+# =====================================
+
+# Set to True in production with HTTPS
+SESSION_COOKIE_SECURE=False
+WTF_CSRF_SSL_STRICT=False
+
+# Session timeout (in seconds)
+PERMANENT_SESSION_LIFETIME=1800
+
+# =====================================
+# SMS NOTIFICATIONS (TWILIO)
+# =====================================
+
+TWILIO_ACCOUNT_SID=your-twilio-account-sid
+TWILIO_AUTH_TOKEN=your-twilio-auth-token
+TWILIO_PHONE_NUMBER=your-twilio-phone-number
+
+# =====================================
+# EMAIL SERVICE (SENDGRID)
+# =====================================
+
+SENDGRID_API_KEY=your-sendgrid-api-key
+
+# =====================================
+# FILE UPLOAD SETTINGS
+# =====================================
+
+MAX_CONTENT_LENGTH=16777216
+UPLOAD_FOLDER=static/uploads
+
+# =====================================
+# PRODUCTION SETTINGS
+# =====================================
+
+# Domain configuration (for production)
+DOMAIN_NAME=yourdomain.com
+BASE_URL=https://yourdomain.com
+
+# SSL/TLS Settings (for production)
+SESSION_COOKIE_SECURE=True
+WTF_CSRF_SSL_STRICT=True 

@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block title %}Nutrition & Lifestyle Calculator - Fit Smart{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styling for the calculator page */
+    .calculator-container {
+        background-color: var(--color-darker);
+        border: 1px solid var(--color-gray-800);
+    }
+    
+    .form-input,
+    .form-select {
+        background-color: var(--color-dark) !important;
+        border: 1px solid var(--color-gray-700) !important;
+        color: var(--color-light) !important;
+        border-radius: 0.5rem;
+        padding: 0.625rem 1rem;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .form-input:focus,
+    .form-select:focus {
+        border-color: var(--color-primary) !important;
+        box-shadow: 0 0 0 2px rgba(0, 145, 58, 0.25);
+        outline: none;
+    }
+    
+    .form-radio,
+    .form-checkbox {
+        color: var(--color-primary);
+        border-color: var(--color-gray-700);
+    }
+    
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        display: block;
+        color: var(--color-light);
+    }
+    
+    .form-section {
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--color-gray-800);
+    }
+    
+    .form-section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--color-light);
+        display: flex;
+        align-items: center;
+    }
+    
+    .form-section-title i {
+        color: var(--color-primary);
+        margin-right: 0.5rem;
+    }
+    
+    .form-tip {
+        font-size: 0.875rem;
+        color: var(--color-gray-400);
+        margin-top: 0.25rem;
+    }
+    
+    .form-range {
+        -webkit-appearance: none;
+        margin: 0.5rem 0;
+        width: 100%;
+        background: transparent;
+    }
+    
+    .form-range::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 0.5rem;
+        cursor: pointer;
+        background: var(--color-gray-700);
+        border-radius: 0.25rem;
+    }
+    
+    .form-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 1.25rem;
+        width: 1.25rem;
+        border-radius: 50%;
+        background: var(--color-primary);
+        cursor: pointer;
+        margin-top: -0.375rem;
+    }
+    
+    .form-range:focus {
+        outline: none;
+    }
+    
+    .form-range:focus::-webkit-slider-runnable-track {
+        background: var(--color-gray-600);
+    }
+    
+    @media (max-width: 640px) {
+        .form-group-row {
+            flex-direction: column;
+        }
+        
+        .form-group-row > div {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        
+        .calculator-container {
+            padding: 1.25rem;
+        }
+        
+        .form-grid {
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="bg-darkest py-12 md:py-16">
+    <div class="container mx-auto px-4 sm:px-6">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold text-light mb-3 md:mb-4 text-center">Meal Plan Calculator</h1>
+            <p class="text-lg text-gray-300 text-center mb-8 md:mb-10">Find your perfect meal plan based on your lifestyle and goals</p>
+            
+            <div class="calculator-container rounded-xl shadow-lg p-4 sm:p-6 md:p-8">
+                <form id="calculatorForm" action="{{ url_for('calculate_meal_plan') }}" method="post" class="space-y-8">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    
+                    <!-- Personal Details Section -->
+                    <div class="form-section">
+                        <h2 class="form-section-title">
+                            <i class="fas fa-user-circle"></i>
+                            Personal Details
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 form-grid">
+                            <!-- Age -->
+                            <div>
+                                <label for="age" class="form-label">Age</label>
+                                <input type="number" id="age" name="age" min="15" max="100" required
+                                    class="form-input min-h-[44px]">
+                                <p class="form-tip">Your age helps us calculate your optimal caloric needs</p>
+                            </div>
+                            
+                            <!-- Gender -->
+                            <div>
+                                <label class="form-label">Gender</label>
+                                <div class="flex flex-wrap gap-4 mt-2">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="gender" value="male" required class="form-radio text-primary">
+                                        <span class="ml-2 text-gray-200">Male</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="gender" value="female" required class="form-radio text-primary">
+                                        <span class="ml-2 text-gray-200">Female</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Height -->
+                            <div>
+                                <label for="height" class="form-label">Height (cm)</label>
+                                <input type="number" id="height" name="height" min="120" max="220" required
+                                    class="form-input min-h-[44px]">
+                            </div>
+                            
+                            <!-- Weight -->
+                            <div>
+                                <label for="weight" class="form-label">Weight (kg)</label>
+                                <input type="number" id="weight" name="weight" min="40" max="200" required
+                                    class="form-input min-h-[44px]">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lifestyle Section -->
+                    <div class="form-section">
+                        <h2 class="form-section-title">
+                            <i class="fas fa-running"></i>
+                            Lifestyle
+                        </h2>
+                        
+                        <!-- Activity Level -->
+                        <div class="mb-5">
+                            <label class="form-label">Activity Level</label>
+                            <select id="activity_level" name="activity_level" required
+                                class="form-select min-h-[44px]">
+                                <option value="">Select your activity level</option>
+                                <option value="sedentary">Sedentary (office job, little exercise)</option>
+                                <option value="light">Lightly Active (light exercise 1-3 days/week)</option>
+                                <option value="moderate">Moderately Active (moderate exercise 3-5 days/week)</option>
+                                <option value="active">Very Active (hard exercise 6-7 days/week)</option>
+                                <option value="extreme">Extremely Active (physical job or twice daily training)</option>
+                            </select>
+                            <p class="form-tip">Your activity level helps determine your daily calorie needs</p>
+                        </div>
+                        
+                        <!-- Sleep -->
+                        <div class="mb-5">
+                            <label for="sleep" class="form-label">Average Sleep per Night (hours)</label>
+                            <input type="number" id="sleep" name="sleep" min="4" max="12" step="0.5" required
+                                class="form-input min-h-[44px]">
+                            <p class="form-tip">Sleep affects metabolism and recovery</p>
+                        </div>
+                        
+                        <!-- Stress Level -->
+                        <div>
+                            <label class="form-label">Stress Level</label>
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs text-gray-400">Low</span>
+                                <input type="range" id="stress" name="stress" min="1" max="5" value="3" 
+                                    class="form-range">
+                                <span class="text-xs text-gray-400">High</span>
+                            </div>
+                            <p class="form-tip">Stress levels can impact digestion and metabolism</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Goals Section -->
+                    <div class="form-section">
+                        <h2 class="form-section-title">
+                            <i class="fas fa-bullseye"></i>
+                            Goals & Preferences
+                        </h2>
+                        
+                        <!-- Goal -->
+                        <div class="mb-5">
+                            <label class="form-label">Primary Goal</label>
+                            <select id="goal" name="goal" required
+                                class="form-select min-h-[44px]">
+                                <option value="">Select your primary goal</option>
+                                <option value="lose_weight">Lose Weight</option>
+                                <option value="maintain">Maintain Weight</option>
+                                <option value="gain_muscle">Gain Muscle</option>
+                                <option value="improve_health">Improve Overall Health</option>
+                                <option value="increase_energy">Increase Energy Levels</option>
+                            </select>
+                            <p class="form-tip">Your goal determines the macronutrient balance of your meal plan</p>
+                        </div>
+                        
+                        <!-- Diet Preference -->
+                        <div class="mb-5">
+                            <label class="form-label">Diet Preference</label>
+                            <select id="diet_preference" name="diet_preference" required
+                                class="form-select min-h-[44px]">
+                                <option value="">Select your diet preference</option>
+                                <option value="regular">Regular (Includes Meat)</option>
+                                <option value="vegetarian">Vegetarian</option>
+                                <option value="low_carb">Low Carb</option>
+                                <option value="high_protein">High Protein</option>
+                                <option value="balanced">Balanced</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Breakfast -->
+                        <div>
+                            <label class="form-label">Include Breakfast?</label>
+                            <div class="flex flex-wrap gap-4 mt-2">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="breakfast" value="yes" required class="form-radio text-primary">
+                                    <span class="ml-2 text-gray-200">Yes</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="breakfast" value="no" required class="form-radio text-primary">
+                                    <span class="ml-2 text-gray-200">No</span>
+                                </label>
+                            </div>
+                            <p class="form-tip">Breakfast can jumpstart your metabolism for the day</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Health Concerns -->
+                    <div class="form-section border-b-0 pb-0 mb-0">
+                        <h2 class="form-section-title">
+                            <i class="fas fa-heartbeat"></i>
+                            Health Concerns
+                        </h2>
+                        <p class="form-tip mb-4">Select any health conditions that apply to you:</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <label class="inline-flex items-center p-3 rounded-md border border-gray-700 hover:border-primary hover:bg-dark transition-colors duration-200">
+                                <input type="checkbox" name="health_concerns" value="heart_disease" class="form-checkbox text-primary">
+                                <span class="ml-2 text-gray-200">Heart Disease</span>
+                            </label>
+                            <label class="inline-flex items-center p-3 rounded-md border border-gray-700 hover:border-primary hover:bg-dark transition-colors duration-200">
+                                <input type="checkbox" name="health_concerns" value="diabetes" class="form-checkbox text-primary">
+                                <span class="ml-2 text-gray-200">Diabetes</span>
+                            </label>
+                            <label class="inline-flex items-center p-3 rounded-md border border-gray-700 hover:border-primary hover:bg-dark transition-colors duration-200">
+                                <input type="checkbox" name="health_concerns" value="high_blood_pressure" class="form-checkbox text-primary">
+                                <span class="ml-2 text-gray-200">High Blood Pressure</span>
+                            </label>
+                            <label class="inline-flex items-center p-3 rounded-md border border-gray-700 hover:border-primary hover:bg-dark transition-colors duration-200">
+                                <input type="checkbox" name="health_concerns" value="high_cholesterol" class="form-checkbox text-primary">
+                                <span class="ml-2 text-gray-200">High Cholesterol</span>
+                            </label>
+                            <label class="inline-flex items-center p-3 rounded-md border border-gray-700 hover:border-primary hover:bg-dark transition-colors duration-200">
+                                <input type="checkbox" name="health_concerns" value="digestive_issues" class="form-checkbox text-primary">
+                                <span class="ml-2 text-gray-200">Digestive Issues</span>
+                            </label>
+                            <label class="inline-flex items-center p-3 rounded-md border border-gray-700 hover:border-primary hover:bg-dark transition-colors duration-200">
+                                <input type="checkbox" name="health_concerns" value="food_allergies" class="form-checkbox text-primary">
+                                <span class="ml-2 text-gray-200">Food Allergies</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center pt-8">
+                        <button type="submit" class="py-4 px-10 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg transition duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center min-h-[52px]">
+                            <i class="fas fa-calculator mr-2"></i>
+                            <span>Calculate My Meal Plan</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="mt-10 text-center">
+                <p class="text-sm text-gray-400 max-w-2xl mx-auto">
+                    This calculator provides general recommendations based on the information you provide. 
+                    For personalized nutritional advice, we recommend consulting with a healthcare professional or registered dietitian.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get form elements
+        const form = document.getElementById('calculatorForm');
+        const heightInput = document.getElementById('height');
+        const weightInput = document.getElementById('weight');
+        const ageInput = document.getElementById('age');
+        const activitySelect = document.getElementById('activity_level');
+        const sleepInput = document.getElementById('sleep');
+        const stressRange = document.getElementById('stress');
+        const formInputs = form.querySelectorAll('input, select');
+        
+        // Add animations and interactivity to form inputs
+        formInputs.forEach(input => {
+            // Add focus effects to enhance input experience
+            input.addEventListener('focus', function() {
+                this.closest('div').classList.add('pulse-focus');
+                
+                // For checkbox and radio inputs, find their parent label
+                if (this.type === 'checkbox' || this.type === 'radio') {
+                    this.closest('label').classList.add('border-primary');
+                }
+            });
+            
+            input.addEventListener('blur', function() {
+                this.closest('div').classList.remove('pulse-focus');
+                
+                // For checkbox and radio inputs, reset their parent label unless checked
+                if ((this.type === 'checkbox' || this.type === 'radio') && !this.checked) {
+                    this.closest('label').classList.remove('border-primary');
+                }
+            });
+            
+            // Keep checkbox/radio parent highlighted when selected
+            if (input.type === 'checkbox' || input.type === 'radio') {
+                input.addEventListener('change', function() {
+                    if (this.checked) {
+                        this.closest('label').classList.add('border-primary', 'bg-dark');
+                    } else {
+                        this.closest('label').classList.remove('border-primary', 'bg-dark');
+                    }
+                });
+            }
+        });
+        
+        // Calculate and display BMI when height or weight changes
+        function calculateBMI() {
+            if (heightInput.value && weightInput.value) {
+                const heightM = parseInt(heightInput.value) / 100;
+                const weight = parseInt(weightInput.value);
+                const bmi = weight / (heightM * heightM);
+                
+                // Find or create BMI display element
+                let bmiDisplay = document.getElementById('bmi-display');
+                if (!bmiDisplay) {
+                    bmiDisplay = document.createElement('p');
+                    bmiDisplay.id = 'bmi-display';
+                    bmiDisplay.className = 'form-tip mt-2 text-center';
+                    weightInput.parentElement.appendChild(bmiDisplay);
+                }
+                
+                // Display BMI with interpretation
+                let bmiCategory = '';
+                if (bmi < 18.5) bmiCategory = 'underweight';
+                else if (bmi < 25) bmiCategory = 'healthy weight';
+                else if (bmi < 30) bmiCategory = 'overweight';
+                else bmiCategory = 'obese';
+                
+                bmiDisplay.innerHTML = `BMI: <span class="font-bold text-primary">${bmi.toFixed(1)}</span> (${bmiCategory})`;
+            }
+        }
+        
+        // Add input event listeners for reactive calculations
+        heightInput.addEventListener('input', calculateBMI);
+        weightInput.addEventListener('input', calculateBMI);
+        
+        // Add smooth form animation and validation
+        form.addEventListener('submit', function(e) {
+            let isValid = form.checkValidity();
+            
+            if (!isValid) {
+                e.preventDefault();
+                
+                // Find first invalid input and scroll to it
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Add shake animation to indicate error
+                    firstInvalid.classList.add('shake-error');
+                    setTimeout(() => {
+                        firstInvalid.classList.remove('shake-error');
+                    }, 600);
+                }
+            } else {
+                // Add loading state to submit button
+                const submitButton = form.querySelector('button[type="submit"]');
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i><span>Processing...</span>';
+                submitButton.disabled = true;
+            }
+        });
+        
+        // Add CSS for animations
+        const style = document.createElement('style');
+        style.textContent = `
+            .pulse-focus {
+                animation: pulse-focus 1.5s infinite;
+            }
+            
+            @keyframes pulse-focus {
+                0% { box-shadow: 0 0 0 0 rgba(0, 145, 58, 0.2); }
+                70% { box-shadow: 0 0 0 6px rgba(0, 145, 58, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(0, 145, 58, 0); }
+            }
+            
+            .shake-error {
+                animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+                transform: translate3d(0, 0, 0);
+            }
+            
+            @keyframes shake {
+                10%, 90% { transform: translate3d(-1px, 0, 0); }
+                20%, 80% { transform: translate3d(2px, 0, 0); }
+                30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+                40%, 60% { transform: translate3d(3px, 0, 0); }
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

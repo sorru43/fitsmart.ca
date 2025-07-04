@@ -1,0 +1,237 @@
+/* Custom Tailwind CSS configuration */
+
+/* Custom colors to match the new dark theme configuration */
+:root {
+    --color-primary: #379777; /* Green */
+    --color-primary-dark: #2D7D65; /* Darker green */
+    --color-primary-light: #4CAF50; /* Lighter green */
+    --color-dark: #151515; /* Dark gray */
+    --color-darker: #0A0A0A; /* Darker gray */
+    --color-darkest: #000000; /* Black */
+    --color-light: #FFFFFF; /* White */
+    --color-gray-100: #F5F5F5;
+    --color-gray-200: #EEEEEE;
+    --color-gray-300: #E0E0E0;
+    --color-gray-400: #BDBDBD;
+    --color-gray-500: #9E9E9E;
+    --color-gray-600: #757575;
+    --color-gray-700: #616161;
+    --color-gray-800: #424242;
+    --color-gray-900: #212121;
+    --color-secondary: #F4CE14; /* Yellow */
+    --color-accent1: #3B82F6;
+    --color-accent2: #8B5CF6;
+    --color-accent3: #EC4899;
+    --color-accent4: #F59E0B;
+    --color-accent5: #10B981;
+    --color-neutral1: #1A1A1A; /* Dark gray for sections on black */
+    --color-neutral2: #CCCCCC; /* Light gray for secondary text */
+    --color-cream: #FFFFFF; /* Changed to white */
+    --color-beige: #F5F7F8; /* Light gray/white */
+    --color-warm-beige: #E0E0E0;
+    --color-neon-green: #39FF14; /* Brighter neon green */
+    --color-neon-green-dark: #32CC11; /* Darker neon green */
+    --color-neon-green-light: #5FFF33; /* Lighter neon green */
+}
+
+/* Promotional Banner */
+.promo-banner {
+    background-color: var(--color-primary);
+    color: var(--color-light);
+}
+
+/* Neon Green Classes */
+.text-neon-green {
+    color: var(--color-neon-green);
+    text-shadow: 0 0 5px var(--color-neon-green),
+                 0 0 10px var(--color-neon-green);
+}
+
+.bg-neon-green {
+    background-color: var(--color-neon-green);
+    box-shadow: 0 0 5px var(--color-neon-green),
+                0 0 10px var(--color-neon-green);
+}
+
+.border-neon-green {
+    border-color: var(--color-neon-green);
+    box-shadow: 0 0 5px var(--color-neon-green);
+}
+
+.hover\:bg-neon-green:hover {
+    background-color: var(--color-neon-green-dark);
+}
+
+.hover\:text-neon-green:hover {
+    color: var(--color-neon-green-light);
+}
+
+.hover\:border-neon-green:hover {
+    border-color: var(--color-neon-green-light);
+}
+
+/* Custom color classes */
+.bg-primary {
+    background-color: var(--color-primary);
+}
+.bg-secondary {
+    background-color: var(--color-secondary);
+}
+.bg-dark {
+    background-color: var(--color-dark);
+}
+.bg-darker {
+    background-color: var(--color-darker);
+}
+.bg-darkest {
+    background-color: var(--color-darkest);
+}
+.bg-light {
+    background-color: var(--color-light);
+}
+
+.text-primary {
+    color: var(--color-primary);
+}
+.text-secondary {
+    color: var(--color-secondary);
+}
+.text-light {
+    color: var(--color-light);
+}
+.text-gray-100 {
+    color: var(--color-gray-100);
+}
+.text-gray-200 {
+    color: var(--color-gray-200);
+}
+.text-gray-300 {
+    color: var(--color-gray-300);
+}
+.text-gray-400 {
+    color: var(--color-gray-400);
+}
+.text-gray-500 {
+    color: var(--color-gray-500);
+}
+.text-dark {
+    color: var(--color-dark);
+}
+
+.border-primary {
+    border-color: var(--color-primary);
+}
+.border-secondary {
+    border-color: var(--color-secondary);
+}
+
+/* Hover variants */
+.hover\:bg-primary:hover {
+    background-color: var(--color-primary-dark);
+}
+.hover\:bg-green-600:hover {
+    background-color: #2D7D65; /* Slightly darker green for hover */
+}
+.hover\:text-primary:hover {
+    color: var(--color-primary-light);
+}
+.hover\:border-primary:hover {
+    border-color: var(--color-primary);
+}
+
+/* Focus variants */
+.focus\:ring-primary:focus {
+    --tw-ring-color: var(--color-primary);
+    --tw-ring-opacity: 0.5;
+}
+.focus\:border-primary:focus {
+    border-color: var(--color-primary);
+}
+
+/* Additional custom styles from your current configuration can be added here */
+
+/* Cream and beige color classes */
+.bg-cream {
+    background-color: var(--color-cream);
+}
+.bg-beige {
+    background-color: var(--color-beige);
+}
+.bg-warm-beige {
+    background-color: var(--color-warm-beige);
+}
+
+.text-cream {
+    color: var(--color-cream);
+}
+.text-beige {
+    color: var(--color-beige);
+}
+.text-warm-beige {
+    color: var(--color-warm-beige);
+}
+
+.border-cream {
+    border-color: var(--color-cream);
+}
+.border-beige {
+    border-color: var(--color-beige);
+}
+.border-warm-beige {
+    border-color: var(--color-warm-beige);
+}
+
+/* Hover variants */
+.hover\:bg-cream:hover {
+    background-color: var(--color-cream);
+}
+.hover\:bg-beige:hover {
+    background-color: var(--color-beige);
+}
+.hover\:bg-warm-beige:hover {
+    background-color: var(--color-warm-beige);
+}
+
+.hover\:text-cream:hover {
+    color: var(--color-cream);
+}
+.hover\:text-beige:hover {
+    color: var(--color-beige);
+}
+.hover\:text-warm-beige:hover {
+    color: var(--color-warm-beige);
+}
+
+/* Dark theme form styles */
+.dark-theme input,
+.dark-theme select,
+.dark-theme textarea {
+    background-color: var(--color-dark);
+    color: var(--color-light);
+    border-color: var(--color-gray-700);
+}
+
+.dark-theme input:focus,
+.dark-theme select:focus,
+.dark-theme textarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 145, 58, 0.25);
+}
+
+.dark-theme ::placeholder {
+    color: var(--color-gray-500);
+}
+
+/* Dark theme navigation */
+.dark-theme .nav-link {
+    color: var(--color-light);
+}
+
+.dark-theme .nav-link:hover {
+    color: var(--color-primary-light);
+}
+
+.dark-theme .nav-link.active {
+    color: var(--color-primary);
+    border-bottom: 2px solid var(--color-primary);
+}

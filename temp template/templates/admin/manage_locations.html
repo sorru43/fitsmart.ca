@@ -1,0 +1,216 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold mb-6">Manage Delivery Locations</h2>
+        
+        <!-- Add New Province Form -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold mb-4">Add New Province</h3>
+            <form id="addProvinceForm" class="space-y-4">
+                <div>
+                    <label for="province_code" class="block text-sm font-medium text-gray-700 mb-1">Province Code</label>
+                    <select id="province_code" name="province_code" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                        <option value="">Select Province</option>
+                        <option value="AB">Alberta</option>
+                        <option value="BC">British Columbia</option>
+                        <option value="MB">Manitoba</option>
+                        <option value="NB">New Brunswick</option>
+                        <option value="NL">Newfoundland and Labrador</option>
+                        <option value="NS">Nova Scotia</option>
+                        <option value="ON">Ontario</option>
+                        <option value="PE">Prince Edward Island</option>
+                        <option value="QC">Quebec</option>
+                        <option value="SK">Saskatchewan</option>
+                        <option value="NT">Northwest Territories</option>
+                        <option value="NU">Nunavut</option>
+                        <option value="YT">Yukon</option>
+                    </select>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-md transition">
+                        Add Province
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Add Cities Form -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold mb-4">Add Cities to Province</h3>
+            <form id="addCitiesForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="selected_province" class="block text-sm font-medium text-gray-700 mb-1">Select Province</label>
+                        <select id="selected_province" name="province_code" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                            <option value="">Select Province</option>
+                            {% for province in provinces %}
+                            <option value="{{ province.code }}">{{ province.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="cities" class="block text-sm font-medium text-gray-700 mb-1">Cities (comma-separated)</label>
+                        <input type="text" id="cities" name="cities" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="e.g. Toronto, Ottawa, Hamilton" required>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-primary hover:bg-green-600 text-white px-6 py-2 rounded-md transition">
+                        Add Cities
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Existing Provinces and Cities -->
+        <div>
+            <h3 class="text-lg font-semibold mb-4">Existing Locations</h3>
+            <div id="provincesList" class="space-y-4">
+                {% for province in provinces %}
+                <div class="border rounded-lg p-4" data-province-code="{{ province.code }}">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="text-lg font-medium">{{ province.name }}</h4>
+                        <div class="space-x-2">
+                            <button class="delete-province-btn text-red-600 hover:text-red-800" data-province-code="{{ province.code }}">
+                                <i class="fas fa-trash"></i> Delete Province
+                            </button>
+                        </div>
+                    </div>
+                    <div class="cities-list mt-2">
+                        <div class="flex flex-wrap gap-2">
+                            {% for city in province.cities %}
+                            <span class="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center">
+                                {{ city.name }}
+                                <button class="delete-city-btn ml-2 text-red-600 hover:text-red-800" data-city-id="{{ city.id }}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add Province Form Handler
+    const addProvinceForm = document.getElementById('addProvinceForm');
+    if (addProvinceForm) {
+        addProvinceForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch('/admin/add-province', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error adding province');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the province');
+            });
+        });
+    }
+
+    // Add Cities Form Handler
+    const addCitiesForm = document.getElementById('addCitiesForm');
+    if (addCitiesForm) {
+        addCitiesForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch('/admin/edit-province', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error adding cities');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while adding cities');
+            });
+        });
+    }
+
+    // Delete Province Button Handlers
+    document.querySelectorAll('.delete-province-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this province and all its cities?')) {
+                const provinceCode = this.dataset.provinceCode;
+                
+                fetch(`/admin/delete-province/${provinceCode}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Error deleting province');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the province');
+                });
+            }
+        });
+    });
+
+    // Delete City Button Handlers
+    document.querySelectorAll('.delete-city-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this city?')) {
+                const cityId = this.dataset.cityId;
+                
+                fetch(`/admin/delete-city/${cityId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Error deleting city');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while deleting the city');
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

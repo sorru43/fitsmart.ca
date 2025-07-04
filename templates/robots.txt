@@ -1,0 +1,230 @@
+# HealthyRizz Robots.txt - Secure Configuration
+# Allow Google, Bing, and AI crawlers while protecting sensitive areas
+
+User-agent: *
+Allow: /
+
+# Allow Google crawlers specifically
+User-agent: Googlebot
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+Allow: /about/
+Allow: /contact/
+Allow: /privacy-policy/
+Allow: /terms-of-service/
+Allow: /shipping-policy/
+
+# Allow Bing crawlers
+User-agent: Bingbot
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+
+# Allow ChatGPT and AI crawlers
+User-agent: GPTBot
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+Allow: /about/
+Allow: /contact/
+Allow: /privacy-policy/
+Allow: /terms-of-service/
+Allow: /shipping-policy/
+
+User-agent: ChatGPT-User
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+Allow: /about/
+Allow: /contact/
+Allow: /privacy-policy/
+Allow: /terms-of-service/
+Allow: /shipping-policy/
+
+User-agent: CCBot
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+
+User-agent: anthropic-ai
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+
+User-agent: Claude-Web
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+
+# Allow other major search engines
+User-agent: Slurp
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+
+User-agent: DuckDuckBot
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+
+User-agent: Baiduspider
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+
+User-agent: YandexBot
+Allow: /
+Allow: /blog/
+Allow: /meal-plans/
+Allow: /meal-calculator/
+
+# Block malicious and unwanted crawlers
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: Ezooms
+Disallow: /
+
+User-agent: Screaming Frog SEO Spider
+Disallow: /
+
+User-agent: LinkpadBot
+Disallow: /
+
+User-agent: MegaIndex.ru
+Disallow: /
+
+User-agent: ZoominfoBot
+Disallow: /
+
+User-agent: Sogou
+Disallow: /
+
+User-agent: 360Spider
+Disallow: /
+
+User-agent: YisouSpider
+Disallow: /
+
+# Block aggressive scrapers
+User-agent: Scrapy
+Disallow: /
+
+User-agent: Wget
+Disallow: /
+
+User-agent: curl
+Disallow: /
+
+User-agent: Python-requests
+Disallow: /
+
+# Protect sensitive areas for ALL crawlers
+Disallow: /admin/
+Disallow: /login/
+Disallow: /register/
+Disallow: /logout/
+Disallow: /profile/
+Disallow: /checkout/
+Disallow: /payment/
+Disallow: /api/
+Disallow: /static/uploads/
+Disallow: /static/videos/
+Disallow: /instance/
+Disallow: /migrations/
+Disallow: /venv/
+Disallow: /temp/
+Disallow: /backup/
+Disallow: /logs/
+Disallow: /config/
+Disallow: /database/
+Disallow: /deployment_scripts/
+Disallow: /docs/
+Disallow: /scripts/
+Disallow: /utils/
+Disallow: /routes/
+Disallow: /forms/
+Disallow: /models/
+Disallow: /templates/
+Disallow: /healthyrizz/
+Disallow: /healthyrizz_vps_deploy/
+Disallow: /temp template/
+Disallow: /backup_*/
+Disallow: /*.py
+Disallow: /*.pyc
+Disallow: /*.log
+Disallow: /*.sql
+Disallow: /*.db
+Disallow: /*.sqlite
+Disallow: /*.env
+Disallow: /*.ini
+Disallow: /*.cfg
+Disallow: /*.ps1
+Disallow: /*.sh
+Disallow: /*.md
+Disallow: /*.txt
+Disallow: /*.json
+Disallow: /*.xml
+Disallow: /*.yml
+Disallow: /*.yaml
+
+# Block access to sensitive files
+Disallow: /robots.txt
+Disallow: /manifest.json
+Disallow: /service-worker.js
+Disallow: /favicon.ico
+Disallow: /apple-touch-icon.png
+
+# Allow sitemaps
+Allow: /sitemap.xml
+Allow: /amp-sitemap.xml
+
+# Sitemap URLs
+Sitemap: https://healthyrizz.in/sitemap.xml
+Sitemap: https://healthyrizz.in/amp-sitemap.xml
+
+Disallow: /android-chrome-*.png
+
+# Allow access to public assets
+Allow: /static/css/
+Allow: /static/js/
+Allow: /static/images/
+Allow: /static/fonts/
+Allow: /static/favicon.ico
+Allow: /static/manifest.json
+Allow: /static/service-worker.js
+
+# Crawl delay for all bots (be respectful)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://healthyrizz.in/sitemap.xml
+
+# Additional security headers (handled by web server)
+# X-Robots-Tag: noindex, nofollow (for sensitive pages)
+# X-Frame-Options: DENY
+# X-Content-Type-Options: nosniff
+# Referrer-Policy: strict-origin-when-cross-origin 

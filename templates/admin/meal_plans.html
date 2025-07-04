@@ -1,0 +1,97 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Meal Plans Management - HealthyRizz{% endblock %}
+
+{% block page_title %}Meal Plans{% endblock %}
+
+{% block admin_content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-2xl font-bold text-white mb-8">Meal Plans Management</h1>
+
+    <div class="bg-dark-lighter rounded-lg shadow-md p-6">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead class="bg-dark-lightest">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Plan Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Calories</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Protein</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Weekly Price</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Monthly Price</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Trial Available</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-dark-lighter divide-y divide-gray-700">
+                    {% for meal_plan in meal_plans %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
+                                        <span class="text-white font-medium">{{ meal_plan.name[0].upper() }}</span>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-white">{{ meal_plan.name }}</div>
+                                    <div class="text-sm text-gray-400">{{ meal_plan.tag or 'No tag' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ meal_plan.calories }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ meal_plan.protein }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">₹{{ "%.2f"|format(meal_plan.price_weekly) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">₹{{ "%.2f"|format(meal_plan.price_monthly) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if meal_plan.is_active %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                            {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if meal_plan.available_for_trial %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Yes</span>
+                            {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">No</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+function toggleMealPlanStatus(mealPlanId) {
+    if (confirm('Are you sure you want to change this meal plan\'s status?')) {
+        fetch('/admin/toggle-meal-plan-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                meal_plan_id: mealPlanId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating meal plan status: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating meal plan status');
+        });
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

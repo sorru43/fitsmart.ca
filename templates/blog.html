@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Blog - HealthyRizz{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blog.css') }}">
+<style>
+  .blog-page {
+    background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+    min-height: 100vh;
+  }
+  
+  .blog-header {
+    background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(26,26,26,0.9) 100%);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  
+  .blog-card {
+    background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .blog-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+  }
+  
+  .featured-post {
+    background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  }
+  
+  .category-badge {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .read-more-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .read-more-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+  }
+  
+  .newsletter-section {
+    background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+    border-top: 1px solid rgba(59, 130, 246, 0.2);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blog-page">
+  <div class="container mx-auto px-4 py-12">
+    
+    <!-- Header -->
+    <header class="blog-header text-center mb-16 p-8 rounded-2xl">
+      <h1 class="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+        HealthyRizz Blog
+      </h1>
+      <p class="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+        Your daily dose of health, wellness, and delicious recipes. Discover expert nutrition tips, 
+        workout routines, and mouthwatering meal plans.
+      </p>
+    </header>
+
+    <!-- Featured Post -->
+    {% if posts and posts[0].is_featured %}
+    <div class="mb-16 featured-post rounded-2xl shadow-2xl overflow-hidden md:flex">
+      <div class="md:w-1/2">
+        {% if posts[0].featured_image %}
+          <img src="{{ posts[0].featured_image }}" alt="{{ posts[0].title }}" class="h-full w-full object-cover">
+        {% else %}
+          <div class="h-full w-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+            <i class="fas fa-image text-6xl text-gray-600"></i>
+          </div>
+        {% endif %}
+      </div>
+      <div class="md:w-1/2 p-10">
+        <span class="category-badge mb-4 inline-block">{{ posts[0].category }}</span>
+        <h2 class="text-4xl font-bold mb-6 text-white leading-tight">{{ posts[0].title }}</h2>
+        <p class="text-gray-300 mb-8 text-lg leading-relaxed">{{ posts[0].summary }}</p>
+        <a href="{{ url_for('main.blog_post', slug=posts[0].slug) }}" class="read-more-btn inline-flex items-center">
+          Read Full Article
+          <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Blog Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {% for post in posts %}
+        <a href="{{ url_for('main.blog_post', slug=post.slug) }}" class="block group">
+          <div class="blog-card rounded-xl overflow-hidden h-full flex flex-col">
+            {% if post.featured_image %}
+              <div class="h-56 w-full overflow-hidden">
+                <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110">
+              </div>
+            {% else %}
+              <div class="h-56 w-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                <i class="fas fa-image text-4xl text-gray-600"></i>
+              </div>
+            {% endif %}
+            <div class="p-8 flex-1 flex flex-col">
+              <span class="category-badge mb-4 self-start">{{ post.category }}</span>
+              <h3 class="text-2xl font-bold mb-4 text-white group-hover:text-blue-400 transition-colors duration-300 leading-tight">
+                {{ post.title }}
+              </h3>
+              <p class="text-gray-400 text-base mb-6 flex-1 leading-relaxed">{{ post.summary }}</p>
+              <div class="flex items-center text-sm text-gray-500 mt-auto pt-4 border-t border-gray-800">
+                {% if post.author %}
+                  <span class="text-gray-400">{{ post.author.name }}</span>
+                  <span class="mx-2 text-gray-600">&bull;</span>
+                {% endif %}
+                <span class="text-gray-400">
+                  {{ post.published_date.strftime('%B %d, %Y') if post.published_date else post.created_at.strftime('%B %d, %Y') }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </a>
+      {% else %}
+        <div class="col-span-full text-center py-20">
+          <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-12 border border-gray-700">
+            <i class="fas fa-newspaper text-6xl text-gray-600 mb-6"></i>
+            <h3 class="text-2xl font-bold text-white mb-4">No blog posts found</h3>
+            <p class="text-gray-400 text-lg">Check back soon for updates from our nutrition and fitness experts!</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Newsletter Section -->
+<section class="newsletter-section py-16">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-6 text-white">Stay Updated with HealthyRizz</h2>
+            <p class="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
+                Get the latest nutrition tips, exclusive recipes, and special offers delivered directly to your inbox. 
+                Join thousands of health enthusiasts on their wellness journey.
+            </p>
+            <form action="{{ url_for('main.subscribe_newsletter') }}" method="post" class="flex flex-col md:flex-row justify-center gap-4 max-w-md mx-auto">
+                <input type="email" name="email" placeholder="Enter your email address" 
+                       class="px-6 py-4 w-full rounded-xl border border-gray-700 bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300" 
+                       required>
+                <button type="submit" class="read-more-btn px-8 py-4 whitespace-nowrap">
+                    Subscribe
+                </button>
+            </form>
+            <p class="text-sm text-gray-500 mt-6">🔒 We respect your privacy and will never share your information.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth scroll animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all blog cards
+    document.querySelectorAll('.blog-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+});
+</script>
+{% endblock %}
