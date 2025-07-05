@@ -1,38 +1,47 @@
 #!/usr/bin/env python3
 """
-Simple startup script for HealthyRizz to test fixes
+Simple Flask Application Starter for Windows
 """
 
-import sys
 import os
-sys.path.append('.')
+import sys
 
-def start_app():
-    """Start the HealthyRizz application"""
-    print("🚀 Starting HealthyRizz Application...")
-    print("=" * 50)
+def main():
+    print("🏥 HealthyRizz - Simple Startup")
+    print("=" * 40)
+    
+    # Set environment variables
+    os.environ['FLASK_ENV'] = 'development'
+    os.environ['FLASK_DEBUG'] = '1'
+    
+    print("📍 Starting Flask Development Server...")
+    print("📍 Application will be available at: http://localhost:8000")
+    print("📍 Meal plans: http://localhost:8000/meal-plans")
+    print("📍 Admin panel: http://localhost:8000/admin/dashboard")
+    print("\n⏹️  Press Ctrl+C to stop the server")
+    print("=" * 40)
     
     try:
-        from main import app
+        # Import and start the app
+        from app import create_app
+        app = create_app()
         
-        print("✅ App imported successfully")
-        print("✅ Starting on http://127.0.0.1:5001")
-        print("=" * 50)
-        print("📋 Admin Panel Test Instructions:")
-        print("   1. Open http://127.0.0.1:5001 in your browser")
-        print("   2. Click 'Login' and use: admin@healthyrizz.in / admin123")
-        print("   3. After login, click 'Admin Dashboard' from profile menu")
-        print("   4. Test all admin tabs to verify they work")
-        print("=" * 50)
+        # Run the app
+        app.run(
+            host='0.0.0.0',
+            port=8000,
+            debug=True,
+            use_reloader=False  # Disable reloader to avoid issues
+        )
         
-        # Start the application
-        app.run(host='127.0.0.1', port=5001, debug=True)
-        
+    except ImportError as e:
+        print(f"❌ Import error: {e}")
+        print("Make sure all dependencies are installed:")
+        print("pip install flask flask-sqlalchemy flask-login flask-wtf")
     except Exception as e:
-        print(f"❌ Error starting application: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+        print(f"❌ Error starting application: {e}")
+    except KeyboardInterrupt:
+        print("\n🛑 Application stopped by user")
 
-if __name__ == '__main__':
-    start_app() 
+if __name__ == "__main__":
+    main() 

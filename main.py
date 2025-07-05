@@ -670,128 +670,55 @@ def subscribe(plan_id):
 @login_required
 @csrf.exempt
 def checkout(plan_id):
-    # Get the meal plan
-    meal_plan = MealPlan.query.get_or_404(plan_id)
-    
-    # Get user's delivery location
-    delivery_location = DeliveryLocation.query.filter_by(user_id=current_user.id).first()
-    
-    # Calculate prices with GST
-    weekly_price = meal_plan.price_weekly
-    monthly_price = meal_plan.price_monthly
-    gst_rate = 0.05  # 5% GST
-    
-    weekly_gst = weekly_price * gst_rate
-    monthly_gst = monthly_price * gst_rate
-    
-    weekly_total = weekly_price + weekly_gst
-    monthly_total = monthly_price + monthly_gst
-    
-    return render_template('checkout.html', 
-                         meal_plan=meal_plan,
-                         delivery_location=delivery_location,
-                         weekly_price=weekly_price,
-                         monthly_price=monthly_price,
-                         weekly_gst=weekly_gst,
-                         monthly_gst=monthly_gst,
-                         weekly_total=weekly_total,
-                         monthly_total=monthly_total)
-
-@app.route('/process_checkout', methods=['POST'])
-@login_required
-def process_checkout():
-    """Process checkout form and create Razorpay order"""
+    """Subscribe to a meal plan with proper total calculation and location dropdown"""
     try:
-        # Get form data
-        plan_id = request.form.get('plan_id')
-        frequency = request.form.get('frequency')
-        customer_name = request.form.get('customer_name')
-        customer_email = request.form.get('customer_email')
-        customer_phone = request.form.get('customer_phone')
-        customer_address = request.form.get('customer_address')
-        customer_city = request.form.get('customer_city')
-        customer_state = request.form.get('customer_state')
-        customer_pincode = request.form.get('customer_pincode')
-        vegetarian_days = request.form.get('vegetarian_days', '')
-        applied_coupon_code = request.form.get('applied_coupon_code')
-        coupon_discount = request.form.get('coupon_discount', '0')
-        
-        # Validate required fields
-        if not all([plan_id, frequency, customer_name, customer_email, customer_phone, 
-                   customer_address, customer_city, customer_state, customer_pincode]):
-            return jsonify({
-                'success': False,
-                'error': 'Please fill in all required fields.'
-            }), 400
-        
         # Get meal plan
         meal_plan = MealPlan.query.get_or_404(plan_id)
         
-        # Calculate price with GST
-        base_price = float(meal_plan.price_weekly if frequency == 'weekly' else meal_plan.price_monthly)
-        gst_amount = base_price * 0.05  # 5% GST
-        subtotal = base_price + gst_amount
+        # Get frequency from query params (default to weekly)
+        frequency = request.args.get('frequency', 'weekly')
         
-        # Apply coupon discount if provided
-        discount_amount = float(coupon_discount) if coupon_discount else 0
-        total_price = max(0, subtotal - discount_amount)
+        # Calculate prices properly
+        if frequency == 'weekly':
+            base_price = float(meal_plan.price_weekly)
+        else:
+            base_price = float(meal_plan.price_monthly)
         
-        # Create Razorpay order
-        order_data = {
-            'id': f'order_{datetime.now().strftime("%Y%m%d%H%M%S")}',
-            'amount': int(total_price * 100),  # Convert to paise
-            'currency': 'INR',
-            'receipt': f"receipt_{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            'notes': {
-                'plan_id': plan_id,
-                'frequency': frequency,
-                'vegetarian_days': vegetarian_days,
-                'customer_name': customer_name,
-                'customer_email': customer_email,
-                'customer_phone': customer_phone,
-                'customer_address': customer_address,
-                'customer_city': customer_city,
-                'customer_state': customer_state,
-                'customer_pincode': customer_pincode,
-                'applied_coupon': applied_coupon_code,
-                'coupon_discount': str(discount_amount)
+        # Calculate GST (5%)
+        gst_amount = base_price * 0.05
+        total_amount = base_price + gst_amount
+        
+        # Get all active delivery locations for dropdown
+        delivery_locations = DeliveryLocation.query.filter_by(is_active=True).order_by(DeliveryLocation.city).all()
+        
+        # Get user data if logged in
+        user_data = None
+        if current_user.is_authenticated:
+            user_data = {
+                'name': current_user.name,
+                'email': current_user.email,
+                'phone': current_user.phone,
+                'address': current_user.address,
+                'city': current_user.city,
+                'state': current_user.state,
+                'postal_code': current_user.postal_code
             }
-        }
         
-        # Store order data in session
-        session['razorpay_order'] = {
-            'order_id': order_data['id'],
-            'amount': order_data['amount'],
-            'currency': order_data['currency'],
-            'receipt': order_data['receipt'],
-            'notes': order_data['notes']
-        }
-        
-        # Return Razorpay order details for client-side integration
-        return jsonify({
-            'success': True,
-            'key': app.config.get('RAZORPAY_KEY_ID', 'rzp_test_default_key_id'),
-            'order_id': order_data['id'],
-            'amount': order_data['amount'],
-            'currency': order_data['currency'],
-            'name': 'HealthyRizz',
-            'description': f'{meal_plan.name} - {frequency.title()} Plan',
-            'prefill': {
-                'name': customer_name,
-                'email': customer_email,
-                'contact': customer_phone
-            },
-            'theme': {
-                'color': '#3399cc'
-            }
-        })
-        
+        return render_template('checkout.html',
+                             meal_plan=meal_plan,
+                             frequency=frequency,
+                             base_price=base_price,
+                             gst_amount=gst_amount,
+                             total_amount=total_amount,
+                             delivery_locations=delivery_locations,
+                             user_data=user_data)
+                             
     except Exception as e:
-        app.logger.error(f"Error processing checkout: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': 'An error occurred while processing your order. Please try again.'
-        }), 500
+        app.logger.error(f"Error in checkout route: {str(e)}")
+        flash('An error occurred while loading the checkout page.', 'error')
+        return redirect(url_for('meal_plans'))
+
+
 
 @app.route('/verify_payment', methods=['POST'])
 @login_required

@@ -37,30 +37,17 @@
                                    value="{{ user_data.phone if user_data else '' }}">
                         </div>
                         
-                        <!-- Cascading Location Dropdowns -->
                         <div>
-                            <label class="block text-sm font-medium mb-2 text-white">State *</label>
-                            <select name="customer_state" id="state-select" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600">
-                                <option value="">Select State</option>
-                                {% for state in states %}
-                                <option value="{{ state.name }}" {% if user_data and user_data.state == state.name %}selected{% endif %}>
-                                    {{ state.name }}
+                            <label class="block text-sm font-medium mb-2 text-white">Delivery Location *</label>
+                            <select name="delivery_location_id" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600">
+                                <option value="">Select your delivery location</option>
+                                {% for location in delivery_locations %}
+                                <option value="{{ location.id }}" 
+                                        data-city="{{ location.city }}" 
+                                        data-province="{{ location.province }}">
+                                    {{ location.city }}, {{ location.province }}
                                 </option>
                                 {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">City *</label>
-                            <select name="customer_city" id="city-select" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" disabled>
-                                <option value="">Select City</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">Area *</label>
-                            <select name="customer_area" id="area-select" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" disabled>
-                                <option value="">Select Area</option>
                             </select>
                         </div>
                         
@@ -139,91 +126,13 @@
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-// Cascading dropdown functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const stateSelect = document.getElementById('state-select');
-    const citySelect = document.getElementById('city-select');
-    const areaSelect = document.getElementById('area-select');
-    
-    // State change handler
-    stateSelect.addEventListener('change', function() {
-        const selectedState = this.value;
-        
-        // Reset city and area dropdowns
-        citySelect.innerHTML = '<option value="">Select City</option>';
-        areaSelect.innerHTML = '<option value="">Select Area</option>';
-        citySelect.disabled = !selectedState;
-        areaSelect.disabled = true;
-        
-        if (selectedState) {
-            // Fetch cities for selected state
-            fetch(`/get-delivery-cities?state=${encodeURIComponent(selectedState)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.cities.length > 0) {
-                        data.cities.forEach(city => {
-                            const option = document.createElement('option');
-                            option.value = city.name;
-                            option.textContent = city.name;
-                            citySelect.appendChild(option);
-                        });
-                        citySelect.disabled = false;
-                    } else {
-                        citySelect.innerHTML = '<option value="">No cities available</option>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching cities:', error);
-                    citySelect.innerHTML = '<option value="">Error loading cities</option>';
-                });
-        }
-    });
-    
-    // City change handler
-    citySelect.addEventListener('change', function() {
-        const selectedCity = this.value;
-        const selectedState = stateSelect.value;
-        
-        // Reset area dropdown
-        areaSelect.innerHTML = '<option value="">Select Area</option>';
-        areaSelect.disabled = !selectedCity;
-        
-        if (selectedCity) {
-            // Fetch areas for selected city
-            fetch(`/get-delivery-areas?state=${encodeURIComponent(selectedState)}&city=${encodeURIComponent(selectedCity)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.areas.length > 0) {
-                        data.areas.forEach(area => {
-                            const option = document.createElement('option');
-                            option.value = area.name;
-                            option.textContent = area.name;
-                            areaSelect.appendChild(option);
-                        });
-                        areaSelect.disabled = false;
-                    } else {
-                        areaSelect.innerHTML = '<option value="">No areas available</option>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching areas:', error);
-                    areaSelect.innerHTML = '<option value="">Error loading areas</option>';
-                });
-        }
-    });
-});
-
-// Form submission handler
 document.getElementById('checkout-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
     // Validate location selection
-    const stateSelect = document.getElementById('state-select');
-    const citySelect = document.getElementById('city-select');
-    const areaSelect = document.getElementById('area-select');
-    
-    if (!stateSelect.value || !citySelect.value || !areaSelect.value) {
-        alert('Please select State, City, and Area');
+    const locationSelect = document.querySelector('select[name="delivery_location_id"]');
+    if (!locationSelect.value) {
+        alert('Please select a delivery location');
         return;
     }
     
@@ -232,6 +141,11 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
     button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
     
     const formData = new FormData(this);
+    
+    // Add location details to form data
+    const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+    formData.append('customer_city', selectedOption.dataset.city);
+    formData.append('customer_state', selectedOption.dataset.province);
     
     fetch(this.action, {
         method: 'POST',
@@ -310,6 +224,15 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
         button.disabled = false;
         button.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Proceed to Payment (Rs. {{ "%.2f"|format(total_amount) }})';
     });
+});
+
+// Auto-fill city and state when location is selected
+document.querySelector('select[name="delivery_location_id"]').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    if (selectedOption.value) {
+        // You can auto-fill other fields if needed
+        console.log('Selected location:', selectedOption.dataset.city, selectedOption.dataset.province);
+    }
 });
 </script>
 {% endblock %}
