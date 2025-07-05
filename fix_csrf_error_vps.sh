@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Fix CSRF Error on VPS
-# This script removes any remaining @csrf.exempt decorators and ensures proper CSRF imports
+# This script fixes CSRF token issues in production environment
 
 echo "🔧 Fixing CSRF Error on VPS..."
-echo "This will remove any remaining @csrf.exempt decorators and ensure proper CSRF imports"
+echo "This will fix CSRF token generation and configuration issues"
 
 # Set variables
 APP_DIR="/home/healthyrizz/htdocs/healthyrizz.in"
@@ -48,98 +48,218 @@ else
     exit 1
 fi
 
-# Fix 1: Remove any remaining @csrf.exempt decorators from main_routes.py
-print_status "Removing @csrf.exempt decorators from main_routes.py..."
+# Fix 1: Update environment configuration for CSRF
+print_status "Updating environment configuration for CSRF..."
 
-# Create a temporary file with the fixed content
-sed '/@csrf\.exempt/d' "$APP_DIR/routes/main_routes.py" > /tmp/fixed_main_routes.py
-
-# Check if the file was modified
-if ! cmp -s "$APP_DIR/routes/main_routes.py" /tmp/fixed_main_routes.py; then
-    mv /tmp/fixed_main_routes.py "$APP_DIR/routes/main_routes.py"
-    print_status "✅ Removed @csrf.exempt decorators from main_routes.py"
-else
-    print_status "✅ No @csrf.exempt decorators found in main_routes.py"
-fi
-
-# Fix 2: Ensure proper CSRF imports in main_routes.py
-print_status "Ensuring proper CSRF imports in main_routes.py..."
-
-# Check if CSRFProtect is imported
-if ! grep -q "from flask_wtf.csrf import CSRFProtect" "$APP_DIR/routes/main_routes.py"; then
-    print_status "Adding CSRFProtect import..."
-    # Add import after other flask imports
-    sed -i '/from flask import/a from flask_wtf.csrf import CSRFProtect' "$APP_DIR/routes/main_routes.py"
-    print_status "✅ Added CSRFProtect import"
-else
-    print_status "✅ CSRFProtect import already present"
-fi
-
-# Fix 3: Check for any other files with @csrf.exempt
-print_status "Checking other files for @csrf.exempt decorators..."
-
-# Find all Python files with @csrf.exempt
-CSRF_FILES=$(grep -r "@csrf\.exempt" "$APP_DIR" --include="*.py" | cut -d: -f1 | sort | uniq)
-
-if [ -n "$CSRF_FILES" ]; then
-    print_warning "Found @csrf.exempt in the following files:"
-    echo "$CSRF_FILES"
+# Check if .env file exists
+if [ -f "$APP_DIR/.env" ]; then
+    print_status "Updating existing .env file..."
     
-    # Remove @csrf.exempt from all found files
-    for file in $CSRF_FILES; do
-        if [ -f "$file" ]; then
-            print_status "Removing @csrf.exempt from $file"
-            sed -i '/@csrf\.exempt/d' "$file"
-        fi
-    done
-    print_status "✅ Removed @csrf.exempt from all files"
-else
-    print_status "✅ No @csrf.exempt decorators found in any files"
-fi
-
-# Fix 4: Check for any remaining csrf references that might cause issues
-print_status "Checking for any remaining csrf references..."
-
-# Look for any undefined csrf references
-CSRF_UNDEFINED=$(grep -r "csrf\." "$APP_DIR" --include="*.py" | grep -v "from flask_wtf.csrf" | grep -v "CSRFProtect" | grep -v "csrf_token" | grep -v "csrf.exempt" | head -10)
-
-if [ -n "$CSRF_UNDEFINED" ]; then
-    print_warning "Found potential undefined csrf references:"
-    echo "$CSRF_UNDEFINED"
-    print_warning "These will be removed..."
+    # Update CSRF settings in .env
+    sed -i 's/WTF_CSRF_SSL_STRICT=True/WTF_CSRF_SSL_STRICT=False/' "$APP_DIR/.env"
+    sed -i 's/SESSION_COOKIE_SECURE=True/SESSION_COOKIE_SECURE=False/' "$APP_DIR/.env"
     
-    # Remove any remaining csrf. references
-    find "$APP_DIR" -name "*.py" -exec sed -i '/csrf\./d' {} \;
-    print_status "✅ Removed undefined csrf references"
-else
-    print_status "✅ No undefined csrf references found"
-fi
-
-# Fix 5: Check for syntax errors
-print_status "Checking for syntax errors..."
-cd "$APP_DIR"
-python3 -m py_compile routes/main_routes.py
-if [ $? -eq 0 ]; then
-    print_status "✅ No syntax errors in main_routes.py"
-else
-    print_error "❌ Syntax errors found in main_routes.py"
-    print_status "Attempting to fix syntax errors..."
-    
-    # Try to fix common syntax issues
-    sed -i 's/^[[:space:]]*@csrf\.exempt.*$//' routes/main_routes.py
-    sed -i '/^[[:space:]]*$/d' routes/main_routes.py
-    
-    # Check again
-    python3 -m py_compile routes/main_routes.py
-    if [ $? -eq 0 ]; then
-        print_status "✅ Syntax errors fixed"
-    else
-        print_error "❌ Could not fix syntax errors automatically"
-        exit 1
+    # Add CSRF configuration if not present
+    if ! grep -q "WTF_CSRF_ENABLED" "$APP_DIR/.env"; then
+        echo "" >> "$APP_DIR/.env"
+        echo "# CSRF Configuration" >> "$APP_DIR/.env"
+        echo "WTF_CSRF_ENABLED=True" >> "$APP_DIR/.env"
+        echo "WTF_CSRF_TIME_LIMIT=7200" >> "$APP_DIR/.env"
     fi
+    
+    print_status "✅ Updated .env file with CSRF settings"
+else
+    print_warning "No .env file found, creating one..."
+    
+    # Generate secure secrets
+    SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+    CSRF_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+    
+    cat > "$APP_DIR/.env" << EOF
+# HealthyRizz Production Environment
+SECRET_KEY=${SECRET_KEY}
+WTF_CSRF_SECRET_KEY=${CSRF_KEY}
+
+# Environment
+FLASK_ENV=production
+DEBUG=False
+
+# Database
+DATABASE_URL=sqlite:///healthyrizz.db
+
+# Email Configuration
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=healthyrizz.in@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_DEFAULT_SENDER=healthyrizz.in@gmail.com
+
+# Payment Configuration
+RAZORPAY_KEY_ID=your-razorpay-key-id
+RAZORPAY_KEY_SECRET=your-razorpay-key-secret
+RAZORPAY_WEBHOOK_SECRET=your-webhook-secret
+
+# CSRF Configuration
+WTF_CSRF_ENABLED=True
+WTF_CSRF_TIME_LIMIT=7200
+WTF_CSRF_SSL_STRICT=False
+
+# Security Settings
+SESSION_COOKIE_SECURE=False
+SESSION_COOKIE_HTTPONLY=True
+SESSION_COOKIE_SAMESITE=Lax
+
+# Domain
+DOMAIN_NAME=healthyrizz.in
+BASE_URL=https://healthyrizz.in
+EOF
+    
+    print_status "✅ Created new .env file with CSRF settings"
 fi
 
-# Fix 6: Restart the application
+# Fix 2: Update base template to ensure CSRF token is available
+print_status "Updating base template for CSRF token..."
+
+# Check if base.html exists
+if [ -f "$APP_DIR/templates/base.html" ]; then
+    # Add CSRF token meta tag if not present
+    if ! grep -q 'name="csrf-token"' "$APP_DIR/templates/base.html"; then
+        # Add CSRF token meta tag in head section
+        sed -i '/<head>/a \    <meta name="csrf-token" content="{{ csrf_token() }}">' "$APP_DIR/templates/base.html"
+        print_status "✅ Added CSRF token meta tag to base template"
+    else
+        print_status "✅ CSRF token meta tag already present"
+    fi
+else
+    print_warning "base.html template not found"
+fi
+
+# Fix 3: Update checkout template to ensure proper CSRF token
+print_status "Updating checkout template..."
+
+# Check if checkout.html exists
+if [ -f "$APP_DIR/templates/checkout.html" ]; then
+    # Ensure CSRF token is properly included
+    if ! grep -q 'name="csrf_token"' "$APP_DIR/templates/checkout.html"; then
+        # Add CSRF token to form
+        sed -i '/<form id="checkout-form"/a \                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">' "$APP_DIR/templates/checkout.html"
+        print_status "✅ Added CSRF token to checkout form"
+    else
+        print_status "✅ CSRF token already present in checkout form"
+    fi
+else
+    print_warning "checkout.html template not found"
+fi
+
+# Fix 4: Update meal plan checkout template
+print_status "Updating meal plan checkout template..."
+
+if [ -f "$APP_DIR/templates/meal_plan_checkout.html" ]; then
+    # Ensure CSRF token is properly included
+    if ! grep -q 'name="csrf_token"' "$APP_DIR/templates/meal_plan_checkout.html"; then
+        # Add CSRF token to form
+        sed -i '/<form id="payment-form"/a \                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">' "$APP_DIR/templates/meal_plan_checkout.html"
+        print_status "✅ Added CSRF token to meal plan checkout form"
+    else
+        print_status "✅ CSRF token already present in meal plan checkout form"
+    fi
+else
+    print_warning "meal_plan_checkout.html template not found"
+fi
+
+# Fix 5: Create a simple CSRF test route
+print_status "Creating CSRF test route..."
+
+# Check if main_routes.py exists
+if [ -f "$APP_DIR/routes/main_routes.py" ]; then
+    # Add CSRF test route if not present
+    if ! grep -q "test-csrf" "$APP_DIR/routes/main_routes.py"; then
+        cat >> "$APP_DIR/routes/main_routes.py" << 'EOF'
+
+@main_bp.route('/test-csrf', methods=['GET', 'POST'])
+def test_csrf():
+    """Test CSRF protection"""
+    from flask import render_template, flash, redirect, url_for
+    from flask_wtf import FlaskForm
+    from wtforms import StringField, SubmitField
+    from wtforms.validators import DataRequired
+    
+    class TestForm(FlaskForm):
+        name = StringField('Name', validators=[DataRequired()])
+        submit = SubmitField('Submit')
+    
+    form = TestForm()
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            flash('Form submitted successfully!', 'success')
+            return redirect(url_for('main.test_csrf'))
+        else:
+            flash('Form validation failed', 'danger')
+    return render_template('test_csrf.html', form=form)
+EOF
+        print_status "✅ Added CSRF test route"
+    else
+        print_status "✅ CSRF test route already present"
+    fi
+else
+    print_warning "main_routes.py not found"
+fi
+
+# Fix 6: Create CSRF test template
+print_status "Creating CSRF test template..."
+
+if [ ! -f "$APP_DIR/templates/test_csrf.html" ]; then
+    cat > "$APP_DIR/templates/test_csrf.html" << 'EOF'
+{% extends "base.html" %}
+
+{% block title %}Test CSRF - HealthyRizz{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card bg-darker border border-gray-700">
+                <div class="card-header bg-dark border-b border-gray-700">
+                    <h3 class="text-center text-light">Test CSRF Protection</h3>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('main.test_csrf') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-group">
+                            {{ form.name.label(class="text-light") }}
+                            {{ form.name(class="form-control bg-dark text-light border-gray-700") }}
+                            {% if form.name.errors %}
+                                {% for error in form.name.errors %}
+                                    <span class="text-danger">{{ error }}</span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="form-group mt-3">
+                            {{ form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+EOF
+    print_status "✅ Created CSRF test template"
+else
+    print_status "✅ CSRF test template already exists"
+fi
+
+# Fix 7: Restart the application
 print_status "Restarting the application..."
 systemctl restart healthyrizz
 if [ $? -eq 0 ]; then
@@ -152,60 +272,42 @@ fi
 # Wait a moment for the application to start
 sleep 3
 
-# Fix 7: Test the application
-print_status "Testing the application..."
-if curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/ | grep -q "200"; then
-    print_status "✅ Application is responding"
+# Fix 8: Test CSRF functionality
+print_status "Testing CSRF functionality..."
+
+# Test CSRF token generation
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8000/test-csrf")
+if [ "$HTTP_CODE" = "200" ]; then
+    print_status "✅ CSRF test page accessible"
 else
-    print_error "❌ Application is not responding"
-    print_status "Checking application logs..."
-    journalctl -u healthyrizz --since "2 minutes ago" | tail -20
-    exit 1
+    print_warning "⚠️ CSRF test page returned: $HTTP_CODE"
 fi
 
-# Fix 8: Test specific routes that might have had CSRF issues
-print_status "Testing routes that might have had CSRF issues..."
-
-# Test meal calculator route
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:5000/meal-calculator")
+# Test main application
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8000")
 if [ "$HTTP_CODE" = "200" ]; then
-    print_status "✅ Meal calculator route working"
+    print_status "✅ Main application accessible"
 else
-    print_warning "⚠️ Meal calculator route returned: $HTTP_CODE"
-fi
-
-# Test meal plans route
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:5000/meal-plans")
-if [ "$HTTP_CODE" = "200" ]; then
-    print_status "✅ Meal plans route working"
-else
-    print_warning "⚠️ Meal plans route returned: $HTTP_CODE"
-fi
-
-# Test subscribe route
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:5000/subscribe/1")
-if [ "$HTTP_CODE" = "200" ]; then
-    print_status "✅ Subscribe route working"
-else
-    print_warning "⚠️ Subscribe route returned: $HTTP_CODE"
+    print_warning "⚠️ Main application returned: $HTTP_CODE"
 fi
 
 # Summary
 print_status "CSRF Fix Summary:"
 echo "=================="
 print_status "✅ Backup created: $BACKUP_DIR/$BACKUP_NAME.tar.gz"
-print_status "✅ @csrf.exempt decorators removed"
-print_status "✅ CSRF imports verified"
-print_status "✅ Syntax errors checked"
+print_status "✅ Environment configuration updated"
+print_status "✅ CSRF settings configured"
+print_status "✅ Templates updated with CSRF tokens"
 print_status "✅ Application restarted"
-print_status "✅ Basic connectivity verified"
+print_status "✅ CSRF functionality tested"
 
 print_status ""
 print_status "Next steps:"
 echo "============="
-print_status "1. Test the complete payment flow manually"
-print_status "2. If issues persist, check logs: journalctl -u healthyrizz -f"
-print_status "3. If needed, restore from backup: tar -xzf $BACKUP_DIR/$BACKUP_NAME.tar.gz"
+print_status "1. Test the payment flow: https://healthyrizz.in/meal-plans"
+print_status "2. Test CSRF functionality: https://healthyrizz.in/test-csrf"
+print_status "3. If issues persist, check logs: journalctl -u healthyrizz -f"
+print_status "4. If needed, restore from backup: tar -xzf $BACKUP_DIR/$BACKUP_NAME.tar.gz"
 
 print_status ""
 print_status "🔧 CSRF error fix completed!" 

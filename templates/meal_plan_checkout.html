@@ -64,6 +64,7 @@
                             <h2 class="text-xl font-bold mb-4 text-white">Delivery Information</h2>
                             
                             <form id="payment-form" action="{{ url_for('main.process_meal_plan_checkout', plan_id=plan.id) }}" method="POST" class="space-y-4"
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                   data-weekly-price="{{ plan.price_weekly }}"
                                   data-monthly-price="{{ plan.price_monthly }}"
                                   data-plan-id="{{ plan.id }}">
