@@ -548,7 +548,6 @@ class Subscription(db.Model):
     frequency = db.Column(Enum(SubscriptionFrequency), nullable=False)
     stripe_subscription_id = db.Column(db.String(100), unique=True)
     stripe_customer_id = db.Column(db.String(100))
-    order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=True)  # Link to order for payment tracking
     start_date = db.Column(db.DateTime, nullable=False, default=datetime.now)
     current_period_start = db.Column(db.DateTime)
     current_period_end = db.Column(db.DateTime)
@@ -818,33 +817,18 @@ class Customer(db.Model):
     phone = db.Column(db.String(20))
     address = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<Customer {self.name} - {self.email}>'
+    orders = db.relationship('Order', backref='customer', lazy=True)
 
 class Order(db.Model):
     """Order model for tracking customer orders"""
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', backref=db.backref('orders', lazy=True))
-    meal_plan_id = db.Column(db.Integer, db.ForeignKey('meal_plan.id'), nullable=False)
-    meal_plan = db.relationship('MealPlan', backref=db.backref('orders', lazy=True))
-    amount = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(20), default='pending')  # pending, confirmed, cancelled, failed
-    payment_status = db.Column(db.String(20), default='pending')  # pending, captured, failed, refunded
-    payment_id = db.Column(db.String(100), nullable=True)  # Razorpay payment ID
-    order_id = db.Column(db.String(100), nullable=True)  # Razorpay order ID
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    total_amount = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(20), default='pending')
     delivery_address = db.Column(db.Text)
     delivery_instructions = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
     items = db.relationship('OrderItem', backref='order', lazy=True)
-    subscriptions = db.relationship('Subscription', backref='order', lazy=True)
-    
-    def __repr__(self):
-        return f'<Order {self.id} - {self.user.email if self.user else "Unknown"} - {self.amount}>'
 
 class OrderItem(db.Model):
     """Order item model for tracking individual items in orders"""

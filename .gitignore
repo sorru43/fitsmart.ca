@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 # Environment variables
 .env
@@ -67,3 +68,75 @@ ENV/
 static/uploads/
 uploads/
 healthyrizz
+=======
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+
+# Secret files
+secrets.txt
+config_secrets.py
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Session files
+flask_session/
+
+# Log files
+*.log
+logs/
+
+# Backup files
+*.bak
+*.backup
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Testing
+.coverage
+.pytest_cache/
+
+# Uploads
+static/uploads/
+uploads/
+*.zip
+healthyrizz final.zip
+>>>>>>> da9beb4a134114daa324f4302a540e40b1b947a9

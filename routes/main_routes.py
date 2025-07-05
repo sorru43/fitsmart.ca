@@ -1,6 +1,3 @@
-"""
-Main routes for the application
-"""
 from flask import Blueprint, render_template, request, jsonify, current_app, session, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,67 +13,34 @@ from utils.decorators import admin_required
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
-from utils.payment_utils import create_razorpay_order, verify_payment_signature
-from utils.email_utils import send_email
-from utils.coupon_utils import validate_coupon, apply_coupon_discount
-from utils.location_utils import get_delivery_locations
-from utils.subscription_utils import create_subscription, update_subscription_status
-from utils.order_utils import create_order, process_payment
-from utils.user_utils import get_user_profile, update_user_profile
-from utils.meal_utils import get_meal_plans, get_meal_plan_details
-from utils.blog_utils import get_blog_posts, get_blog_post_details
-from utils.admin_utils import get_admin_stats, get_daily_orders
-from utils.notification_utils import send_notification
-from utils.analytics_utils import track_event
-from utils.security_utils import generate_csrf_token, validate_csrf_token
-from utils.validation_utils import validate_email, validate_phone, validate_address
-from utils.formatting_utils import format_currency, format_date, format_time
-from utils.error_utils import handle_error, log_error
-from utils.config_utils import get_config, set_config
-from utils.cache_utils import cache_get, cache_set, cache_delete
-from utils.file_utils import save_file, delete_file, get_file_url
-from utils.image_utils import resize_image, optimize_image
-from utils.pdf_utils import generate_pdf, generate_invoice
-from utils.excel_utils import export_to_excel, import_from_excel
-from utils.backup_utils import create_backup, restore_backup
-from utils.monitoring_utils import check_health, get_metrics
-from utils.logging_utils import setup_logging, log_info, log_error, log_warning
-from utils.testing_utils import run_tests, generate_test_data
-from utils.deployment_utils import deploy_app, rollback_app
-from utils.maintenance_utils import cleanup_old_data, optimize_database
-from utils.reporting_utils import generate_report, send_report
-from utils.integration_utils import sync_data, webhook_handler
-from utils.automation_utils import schedule_task, run_scheduled_tasks
-from utils.api_utils import api_response, api_error
-from utils.webhook_utils import verify_webhook_signature, process_webhook
-from utils.payment_utils import process_razorpay_payment, verify_razorpay_signature
-from utils.subscription_utils import create_subscription_from_order, update_subscription_dates
-from utils.order_utils import create_order_from_payment, update_order_status
-from utils.user_utils import create_user_from_payment, update_user_from_payment
-from utils.email_utils import send_order_confirmation, send_payment_confirmation
-from utils.notification_utils import send_order_notification, send_payment_notification
-from utils.analytics_utils import track_order, track_payment
-from utils.security_utils import validate_payment_data, sanitize_user_input
-from utils.validation_utils import validate_order_data, validate_payment_data
-from utils.formatting_utils import format_order_number, format_payment_id
-from utils.error_utils import handle_payment_error, handle_order_error
-from utils.config_utils import get_payment_config, get_order_config
-from utils.cache_utils import cache_order_data, cache_payment_data
-from utils.file_utils import save_order_document, save_payment_receipt
-from utils.image_utils import generate_qr_code, generate_barcode
-from utils.pdf_utils import generate_order_pdf, generate_invoice_pdf
-from utils.excel_utils import export_orders, export_payments
-from utils.backup_utils import backup_orders, backup_payments
-from utils.monitoring_utils import monitor_orders, monitor_payments
-from utils.logging_utils import log_order_event, log_payment_event
-from utils.testing_utils import test_order_flow, test_payment_flow
-from utils.deployment_utils import deploy_order_system, deploy_payment_system
-from utils.maintenance_utils import cleanup_old_orders, cleanup_old_payments
-from utils.reporting_utils import generate_order_report, generate_payment_report
-from utils.integration_utils import sync_orders, sync_payments
-from utils.automation_utils import automate_order_processing, automate_payment_processing
-from utils.api_utils import order_api_response, payment_api_response
-from utils.webhook_utils import order_webhook_handler, payment_webhook_handler
+from forms.auth_forms import LoginForm, RegisterForm
+from utils.token_utils import generate_password_reset_token
+from utils.email_utils import send_password_reset_email, send_contact_notification
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+from urllib.parse import urlparse
+from routes.admin_routes import admin_required
+import random
+import json
+from werkzeug.security import generate_password_hash, check_password_hash
+from forms.auth_forms import RegistrationForm, WaterReminderForm
+from forms.checkout_forms import CheckoutForm
+from forms import GeneralContactForm, CorporateInquiryForm
+from utils.auth_utils import send_verification_email
+from utils.encryption_helper import encrypt_sensitive_data, decrypt_sensitive_data
+# from utils.report_utils import get_order_completion_notifications  # Temporarily disabled due to fpdf2 import issues
+from utils.notifications import send_push_notification_to_all_users, send_push_notification_to_user
+from datetime import datetime, timedelta, date, time as dt_time
+import subprocess
+import sys
+import os
+import time
+import secrets
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import and_
+import hmac
+import hashlib
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -729,25 +693,22 @@ def profile():
     current_app.logger.info(f"📄 PROFILE PAGE ACCESSED by {current_user.email}")
     
     try:
-        # Import SubscriptionStatus enum
-        from database.models import SubscriptionStatus
-        
         # Get user's active subscriptions
         active_subscriptions = Subscription.query.filter(
             Subscription.user_id == current_user.id,
-            Subscription.status == SubscriptionStatus.ACTIVE
+            Subscription.status == 'active'
         ).all()
         
         # Get user's paused subscriptions
         paused_subscriptions = Subscription.query.filter(
             Subscription.user_id == current_user.id,
-            Subscription.status == SubscriptionStatus.PAUSED
+            Subscription.status == 'paused'
         ).all()
         
         # Get user's canceled subscriptions
         canceled_subscriptions = Subscription.query.filter(
             Subscription.user_id == current_user.id,
-            Subscription.status == SubscriptionStatus.CANCELED
+            Subscription.status == 'cancelled'
         ).all()
         
         # Get user's order history (all orders) - SIMPLIFIED QUERY
@@ -805,7 +766,7 @@ def profile():
                     current_app.logger.warning(f"Error processing payment history for order {order.id}: {str(e)}")
         
         # Calculate total spent
-        total_spent = sum(order.amount for order in orders if order.payment_status == 'captured')
+        total_spent = sum(order.amount for order in orders if order.payment_status == 'completed')
         
         # Get subscription statistics
         total_subscriptions = len(active_subscriptions) + len(paused_subscriptions) + len(canceled_subscriptions)

@@ -12,7 +12,7 @@ from database.models import User, SiteSetting, Banner, Subscription, Order
 from flask_wtf.csrf import CSRFError
 from routes.main_routes import main_bp
 from routes.admin_routes import admin_bp
-# from routes.admin_orders import admin_orders_bp  # Temporarily disabled due to import issues
+from routes.admin_orders import admin_orders_bp
 from routes_pwa import pwa_bp  # Import PWA blueprint
 from commands import init_app as init_commands
 from config import Config
@@ -132,10 +132,10 @@ def create_app(config_class=Config):
         """Inject CSRF token function into template context"""
         try:
             from flask_wtf.csrf import generate_csrf
-            return {'csrf_token': generate_csrf()}
+            return {'csrf_token': generate_csrf}
         except Exception as e:
             app.logger.error(f"Error injecting CSRF token: {str(e)}")
-            return {'csrf_token': 'dummy-csrf-token'}
+            return {'csrf_token': lambda: 'dummy-csrf-token'}
 
     # Add custom filters
     app.jinja_env.filters['timeago'] = timeago
@@ -149,7 +149,7 @@ def create_app(config_class=Config):
     # Register blueprints
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
-    # app.register_blueprint(admin_orders_bp)  # Temporarily disabled due to import issues
+    app.register_blueprint(admin_orders_bp)
     app.register_blueprint(pwa_bp)  # Register PWA blueprint
     
     # Add direct favicon route as fallback
@@ -406,6 +406,7 @@ If you did not make this request, simply ignore this email.
 
     return app
 
-if __name__ == "__main__":
-    app = create_app()
+app = create_app()
+
+if __name__ == '__main__':
     app.run(debug=True)

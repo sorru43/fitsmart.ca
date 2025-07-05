@@ -61,7 +61,7 @@ def get_daily_orders(date=None):
                 # Check if delivery is skipped for this date
                 skipped_delivery = SkippedDelivery.query.filter_by(
                     subscription_id=subscription.id,
-                    delivery_date=date
+                    skip_date=date
                 ).first()
                 
                 if skipped_delivery:
