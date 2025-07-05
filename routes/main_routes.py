@@ -30,6 +30,7 @@ from forms.checkout_forms import CheckoutForm
 from forms import GeneralContactForm, CorporateInquiryForm
 from utils.auth_utils import send_verification_email
 from utils.encryption_helper import encrypt_sensitive_data, decrypt_sensitive_data
+from utils.razorpay_utils import get_razorpay_key, create_razorpay_order
 # from utils.report_utils import get_order_completion_notifications  # Temporarily disabled due to fpdf2 import issues
 from utils.notifications import send_push_notification_to_all_users, send_push_notification_to_user
 from datetime import datetime, timedelta, date, time as dt_time
@@ -1414,35 +1415,23 @@ def forgot_password():
 
 @main_bp.route('/subscribe/<int:plan_id>')
 def subscribe(plan_id):
-    """Subscribe to a meal plan with new smart logic"""
+    """Subscribe to a meal plan with proper total calculation and cascading location dropdowns"""
     meal_plan = MealPlan.query.get_or_404(plan_id)
-    
-    # Get breakfast option from URL params
-    with_breakfast = request.args.get('with_breakfast', 'true').lower() == 'true'
-    
-    # Get frequency from URL params or default to weekly
     frequency = request.args.get('frequency', 'weekly')
+    if frequency == 'weekly':
+        base_price = float(meal_plan.price_weekly)
+    else:
+        base_price = float(meal_plan.price_monthly)
+    gst_amount = base_price * 0.05
+    total_amount = base_price + gst_amount
     
-    # Calculate prices with GST
-    base_price = float(meal_plan.price_weekly if frequency == 'weekly' else meal_plan.price_monthly)
-    gst_rate = 0.05
-    gst_amount = base_price * gst_rate
-    total_price = base_price + gst_amount
-
-    # Always calculate both weekly and monthly GST/total for template
-    weekly_gst = float(meal_plan.price_weekly) * gst_rate
-    weekly_total = float(meal_plan.price_weekly) + weekly_gst
-    monthly_gst = float(meal_plan.price_monthly) * gst_rate
-    monthly_total = float(meal_plan.price_monthly) + monthly_gst
-
-    # Create form for checkout
-    form = CheckoutForm()
-
-    # Get current user data for pre-filling if logged in
+    # Get all states for the cascading dropdown
+    states = State.query.order_by(State.name).all()
+    
     user_data = None
     if current_user.is_authenticated:
         user_data = {
-            'name': current_user.name or current_user.username,
+            'name': current_user.name or getattr(current_user, 'username', ''),
             'email': current_user.email,
             'phone': current_user.phone,
             'address': current_user.address,
@@ -1450,28 +1439,22 @@ def subscribe(plan_id):
             'state': current_user.state,
             'postal_code': current_user.postal_code
         }
-
-    return render_template('checkout.html', 
-                         meal_plan=meal_plan,
-                         form=form,
-                         frequency=frequency,
-                         with_breakfast=with_breakfast,
-                         base_price=base_price,
-                         gst_amount=gst_amount,
-                         total_price=total_price,
-                         weekly_gst=weekly_gst,
-                         weekly_total=weekly_total,
-                         monthly_gst=monthly_gst,
-                         monthly_total=monthly_total,
-                         user_data=user_data)
+    return render_template(
+        'checkout.html',
+        meal_plan=meal_plan,
+        frequency=frequency,
+        base_price=base_price,
+        gst_amount=gst_amount,
+        total_amount=total_amount,
+        states=states,
+        user_data=user_data
+    )
 
 @main_bp.route('/admin/daily-meal-prep')
 @login_required
 @admin_required
 def daily_meal_prep():
     """Admin view for daily meal preparation planning"""
-    from datetime import date, timedelta
-    import json
     
     # Get date from query params or use today
     date_str = request.args.get('date')
@@ -2627,3 +2610,6 @@ def signup_complete(order_id):
         current_app.logger.error(f"Error in signup_complete: {str(e)}")
         flash('An error occurred. Please contact support.', 'error')
         return redirect(url_for('main.meal_plans'))
+
+
+
