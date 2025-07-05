@@ -11,6 +11,7 @@ import json
 import logging
 from utils.decorators import admin_required
 from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 from forms.auth_forms import LoginForm, RegisterForm
@@ -458,7 +459,6 @@ def amp_blog_post(slug):
         return render_template('404.html'), 404
 
 @main_bp.route('/calculate-meal', methods=['POST'])
-@csrf.exempt  # Exempt from CSRF for AJAX requests
 def calculate_meal():
     """Calculate meal plan macros and return JSON response for AJAX requests"""
     current_app.logger.info("Meal calculator endpoint called")
@@ -806,7 +806,6 @@ def profile():
 
 @main_bp.route('/profile/update', methods=['POST'])
 @login_required
-@csrf.exempt  # Exempt from CSRF for AJAX requests
 def update_profile():
     """Handle profile updates"""
     try:
@@ -1650,7 +1649,6 @@ def trial_request(plan_id):
     return render_template('trial_request.html', meal_plan=meal_plan, form=form)
 
 @main_bp.route('/process_checkout', methods=['POST'])
-@csrf.exempt  # Exempt from CSRF for AJAX requests
 def process_checkout():
     """Process the checkout form and create Razorpay order"""
     try:
@@ -1774,7 +1772,6 @@ def process_checkout():
         }), 500
 
 @main_bp.route('/verify_payment', methods=['POST'])
-@csrf.exempt  # Exempt from CSRF for AJAX requests
 def verify_payment():
     """Verify Razorpay payment and create subscription"""
     try:
@@ -2202,7 +2199,6 @@ def shipping_delivery_policy():
     return render_template('shipping_delivery_policy.html')
 
 @main_bp.route('/check-location', methods=['POST'])
-@csrf.exempt  # Exempt from CSRF for AJAX requests
 def check_location():
     """Check if a location is available for delivery"""
     try:
@@ -2326,7 +2322,6 @@ def get_delivery_areas():
         })
 
 @main_bp.route('/validate_coupon', methods=['POST'])
-@csrf.exempt  # Exempt from CSRF for AJAX requests
 def validate_coupon():
     """Validate coupon code and return discount information"""
     try:
@@ -2445,7 +2440,6 @@ def pwa_diagnostic():
     return send_file('pwa_diagnostic.html', mimetype='text/html') 
 
 @main_bp.route('/webhook/razorpay', methods=['POST'])
-@csrf.exempt  # Webhooks should be CSRF-exempt
 def razorpay_webhook():
     import hmac
     import hashlib
