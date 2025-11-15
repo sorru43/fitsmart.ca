@@ -5348,7 +5348,9 @@ def admin_daily_orders():
                 ).first()
                 
                 if skipped_delivery:
-                    # Add to skipped orders
+                    # Add to skipped orders with skip_type information
+                    skip_type = getattr(skipped_delivery, 'skip_type', 'regular')
+                    skip_notes = getattr(skipped_delivery, 'notes', '')
                     skipped_order = {
                         'subscription_id': subscription.id,
                         'user_name': subscription.user.name,
@@ -5365,8 +5367,11 @@ def admin_daily_orders():
                         'includes_dinner': subscription.meal_plan.includes_dinner,
                         'includes_snacks': subscription.meal_plan.includes_snacks,
                         'skip_reason': getattr(skipped_delivery, 'reason', 'user_request'),
+                        'skip_type': skip_type,  # 'regular', 'donation', 'no_delivery'
+                        'skip_notes': skip_notes,
                         'skip_date': skipped_delivery.created_at,
-                        'type': 'skipped'
+                        'type': 'skipped',
+                        'available_for_donation': skip_type in ['donation', 'regular']  # Both can be donated
                     }
                     skipped_orders.append(skipped_order)
                 else:
@@ -5460,6 +5465,122 @@ def admin_daily_orders():
     except Exception as e:
         current_app.logger.error(f"Error loading daily orders: {str(e)}")
         flash('Error loading daily orders', 'error')
+        return redirect(url_for('admin.admin_dashboard'))
+
+@admin_bp.route('/donation-meals')
+@login_required
+@admin_required
+def admin_donation_meals():
+    """Admin view for tracking meals available for donation"""
+    from datetime import datetime, date, timedelta
+    from database.models import SkippedDelivery, Subscription, User, MealPlan
+    
+    # Get date range from query params
+    date_from_str = request.args.get('date_from')
+    date_to_str = request.args.get('date_to')
+    
+    if date_from_str:
+        try:
+            date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+        except ValueError:
+            date_from = date.today()
+    else:
+        date_from = date.today()
+    
+    if date_to_str:
+        try:
+            date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+        except ValueError:
+            date_to = date.today() + timedelta(days=7)
+    else:
+        date_to = date.today() + timedelta(days=7)
+    
+    try:
+        # Get all skipped deliveries in date range that are available for donation
+        skipped_deliveries = SkippedDelivery.query.filter(
+            SkippedDelivery.delivery_date >= date_from,
+            SkippedDelivery.delivery_date <= date_to
+        ).order_by(SkippedDelivery.delivery_date.asc()).all()
+        
+        donation_meals = []
+        regular_skips = []
+        no_delivery = []
+        
+        for skipped in skipped_deliveries:
+            subscription = Subscription.query.get(skipped.subscription_id)
+            if not subscription:
+                continue
+            
+            user = subscription.user
+            meal_plan = subscription.meal_plan
+            
+            # Count meals
+            meal_count = 0
+            if meal_plan.includes_breakfast:
+                meal_count += 1
+            if meal_plan.includes_lunch:
+                meal_count += 1
+            if meal_plan.includes_dinner:
+                meal_count += 1
+            if meal_plan.includes_snacks:
+                meal_count += 1
+            
+            skip_type = getattr(skipped, 'skip_type', 'regular')
+            skip_notes = getattr(skipped, 'notes', '')
+            
+            meal_info = {
+                'id': skipped.id,
+                'subscription_id': subscription.id,
+                'user_name': user.name,
+                'user_email': user.email,
+                'user_phone': user.phone,
+                'meal_plan_name': meal_plan.name,
+                'meal_consumption_date': skipped.delivery_date,
+                'actual_delivery_date': skipped.delivery_date - timedelta(days=1),  # Evening before
+                'meal_count': meal_count,
+                'is_vegetarian': meal_plan.is_vegetarian,
+                'includes_breakfast': meal_plan.includes_breakfast,
+                'includes_lunch': meal_plan.includes_lunch,
+                'includes_dinner': meal_plan.includes_dinner,
+                'includes_snacks': meal_plan.includes_snacks,
+                'skip_type': skip_type,
+                'skip_notes': skip_notes,
+                'cancelled_at': skipped.created_at,
+                'delivery_address': subscription.delivery_address,
+                'delivery_city': subscription.delivery_city,
+                'delivery_province': subscription.delivery_province,
+                'delivery_postal_code': subscription.delivery_postal_code
+            }
+            
+            if skip_type == 'donation':
+                donation_meals.append(meal_info)
+            elif skip_type == 'no_delivery':
+                no_delivery.append(meal_info)
+            else:
+                regular_skips.append(meal_info)
+        
+        # Calculate statistics
+        total_donation_meals = len(donation_meals)
+        total_regular_skips = len(regular_skips)
+        total_no_delivery = len(no_delivery)
+        total_meals_for_donation = sum(m['meal_count'] for m in donation_meals)
+        
+        return render_template('admin/donation_meals.html',
+                              donation_meals=donation_meals,
+                              regular_skips=regular_skips,
+                              no_delivery=no_delivery,
+                              date_from=date_from,
+                              date_to=date_to,
+                              stats={
+                                  'total_donation_meals': total_donation_meals,
+                                  'total_regular_skips': total_regular_skips,
+                                  'total_no_delivery': total_no_delivery,
+                                  'total_meals_for_donation': total_meals_for_donation
+                              })
+                              
+    except Exception as e:
+        current_app.logger.error(f"Error loading donation meals: {str(e)}")
+        flash('Error loading donation meals', 'error')
         return redirect(url_for('admin.admin_dashboard'))
 
 @admin_bp.route('/daily-orders/update-status', methods=['POST'])

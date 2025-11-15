@@ -116,6 +116,18 @@ class Config:
     # Timezone configuration - Eastern Time (ET)
     TIMEZONE = 'America/Toronto'
     TIMEZONE_OFFSET = '-05:00'  # EST is UTC-5:00 (or EDT UTC-4:00)
+    
+    # Delivery Model Configuration (Canada)
+    # Meals are delivered in the evening (one day before) for next-day consumption
+    # Example: Meals for Wednesday are delivered Tuesday evening
+    DELIVERY_MODEL = 'evening_before'  # 'evening_before' or 'same_day'
+    DELIVERY_EVENING_START = '18:00'  # 6:00 PM - Start of evening delivery window
+    DELIVERY_EVENING_END = '22:00'    # 10:00 PM - End of evening delivery window
+    # Skip meal cutoff: Must skip by same day (meal consumption date) at 10:00 AM
+    # Example: To skip Wednesday meals, must skip by Wednesday 10:00 AM
+    # After 10 AM: Can mark for donation/no delivery to save delivery resources
+    SKIP_MEAL_CUTOFF_TIME = '10:00'  # 10:00 AM cutoff time (same day)
+    SKIP_MEAL_CUTOFF_DAYS_BEFORE = 0  # 0 = same day cutoff
 
 
 # CSRF Configuration

@@ -337,8 +337,20 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-white">{{ item.meal_plan_name }}</div>
-                            <div class="text-sm text-gray-300">
-                                {% if item.skip_type == 'customer_skipped' %}
+                            <div class="text-sm text-gray-300 mt-1">
+                                {% if item.skip_type == 'donation' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    🎁 Available for Donation
+                                </span>
+                                {% elif item.skip_type == 'no_delivery' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    ⚠️ No Delivery
+                                </span>
+                                {% elif item.skip_type == 'regular' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    ✓ Regular Skip
+                                </span>
+                                {% elif item.skip_type == 'customer_skipped' %}
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                     Customer Skipped
                                 </span>
@@ -355,15 +367,29 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-white">
-                                {% if item.skip_type == 'customer_skipped' %}
+                                {% if item.skip_type == 'donation' %}
+                                <span class="text-green-400 font-semibold">🎁 Donation</span>
+                                {% elif item.skip_type == 'no_delivery' %}
+                                <span class="text-yellow-400">⚠️ No Delivery</span>
+                                {% elif item.skip_type == 'regular' %}
+                                <span class="text-blue-400">✓ Regular Skip</span>
+                                {% elif item.skip_type == 'customer_skipped' %}
                                 <span class="text-orange-400">Customer Skipped</span>
                                 {% else %}
                                 <span class="text-red-400">Admin Cancelled</span>
                                 {% endif %}
                             </div>
+                            {% if item.skip_date %}
+                            <div class="text-xs text-gray-400 mt-1">
+                                Cancelled: {{ item.skip_date.strftime('%Y-%m-%d %H:%M') }}
+                            </div>
+                            {% endif %}
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm text-gray-300">{{ item.notes }}</div>
+                            <div class="text-sm text-gray-300">{{ item.notes or item.skip_notes or 'No notes' }}</div>
+                            {% if item.available_for_donation %}
+                            <div class="text-xs text-green-400 mt-1">✓ Available for donation</div>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

@@ -186,6 +186,8 @@ def get_skipped_deliveries(date):
             if not user or not meal_plan:
                 continue
                 
+            skip_type = getattr(skipped_delivery, 'skip_type', 'regular')
+            skip_notes = getattr(skipped_delivery, 'notes', '')
             skipped.append({
                 'subscription_id': subscription.id,
                 'user_id': user.id,
@@ -195,8 +197,11 @@ def get_skipped_deliveries(date):
                 'meal_plan_name': meal_plan.name,
                 'delivery_date': date,
                 'delivery_id': None,  # No delivery record for skipped meals
-                'notes': f'Skipped by customer on {skipped_delivery.created_at.strftime("%Y-%m-%d %H:%M")}',
-                'skip_type': 'customer_skipped',
+                'notes': skip_notes or f'Skipped by customer on {skipped_delivery.created_at.strftime("%Y-%m-%d %H:%M")}',
+                'skip_type': skip_type,  # 'regular', 'donation', 'no_delivery'
+                'skip_type_display': 'Regular Skip' if skip_type == 'regular' else 'Donation' if skip_type == 'donation' else 'No Delivery',
+                'available_for_donation': skip_type in ['donation', 'regular'],
+                'skip_date': skipped_delivery.created_at,
                 'delivery_address': subscription.delivery_address,
                 'delivery_city': subscription.delivery_city,
                 'delivery_state': subscription.delivery_province,

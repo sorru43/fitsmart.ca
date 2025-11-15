@@ -1,0 +1,284 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Donation Meals - Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-white mb-2">🎁 Donation Meals Tracking</h1>
+        <p class="text-gray-400">Track meals available for donation and coordinate distribution</p>
+    </div>
+    
+    <!-- Date Range Filter -->
+    <div class="bg-dark rounded-lg shadow-md p-6 mb-6">
+        <form method="GET" action="{{ url_for('admin.admin_donation_meals') }}" class="flex flex-wrap gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">From Date</label>
+                <input type="date" name="date_from" value="{{ date_from.strftime('%Y-%m-%d') }}" 
+                       class="px-4 py-2 bg-dark-lighter border border-gray-600 rounded-lg text-white">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">To Date</label>
+                <input type="date" name="date_to" value="{{ date_to.strftime('%Y-%m-%d') }}" 
+                       class="px-4 py-2 bg-dark-lighter border border-gray-600 rounded-lg text-white">
+            </div>
+            <div>
+                <button type="submit" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition">
+                    Filter
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-dark rounded-lg shadow-md p-6">
+            <div class="text-3xl font-bold text-green-400 mb-2">{{ stats.total_donation_meals }}</div>
+            <div class="text-sm text-gray-400">Donation Meals</div>
+        </div>
+        <div class="bg-dark rounded-lg shadow-md p-6">
+            <div class="text-3xl font-bold text-blue-400 mb-2">{{ stats.total_regular_skips }}</div>
+            <div class="text-sm text-gray-400">Regular Skips</div>
+        </div>
+        <div class="bg-dark rounded-lg shadow-md p-6">
+            <div class="text-3xl font-bold text-yellow-400 mb-2">{{ stats.total_no_delivery }}</div>
+            <div class="text-sm text-gray-400">No Delivery</div>
+        </div>
+        <div class="bg-dark rounded-lg shadow-md p-6">
+            <div class="text-3xl font-bold text-primary mb-2">{{ stats.total_meals_for_donation }}</div>
+            <div class="text-sm text-gray-400">Total Meals for Donation</div>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="mb-4 border-b border-gray-700">
+        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+            <li class="mr-2">
+                <button onclick="showTab('donation')" class="tab-button active inline-block p-4 border-b-2 border-primary text-primary">
+                    🎁 Donation Meals ({{ donation_meals|length }})
+                </button>
+            </li>
+            <li class="mr-2">
+                <button onclick="showTab('regular')" class="tab-button inline-block p-4 border-b-2 border-transparent hover:text-gray-300 hover:border-gray-600">
+                    ✓ Regular Skips ({{ regular_skips|length }})
+                </button>
+            </li>
+            <li>
+                <button onclick="showTab('no_delivery')" class="tab-button inline-block p-4 border-b-2 border-transparent hover:text-gray-300 hover:border-gray-600">
+                    ⚠️ No Delivery ({{ no_delivery|length }})
+                </button>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Donation Meals Tab -->
+    <div id="donation-tab" class="tab-content">
+        <div class="bg-dark rounded-lg shadow-md overflow-hidden">
+            <div class="bg-primary text-white p-4">
+                <h2 class="text-xl font-semibold">🎁 Meals Available for Donation</h2>
+                <p class="text-sm mt-1">These meals are ready for donation to those in need</p>
+            </div>
+            
+            {% if donation_meals %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-dark-lighter">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Customer</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Meal Plan</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Meals</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Cancelled At</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-dark divide-y divide-gray-700">
+                        {% for meal in donation_meals %}
+                        <tr class="hover:bg-dark-lighter">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-white">
+                                    {{ meal.meal_consumption_date.strftime('%B %d, %Y') }}
+                                </div>
+                                <div class="text-xs text-gray-400">
+                                    Delivered: {{ meal.actual_delivery_date.strftime('%b %d') }} evening
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-white">{{ meal.user_name }}</div>
+                                <div class="text-sm text-gray-300">{{ meal.user_email }}</div>
+                                <div class="text-sm text-gray-300">{{ meal.user_phone or 'N/A' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-white">{{ meal.meal_plan_name }}</div>
+                                {% if meal.is_vegetarian %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
+                                    Vegetarian
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-white font-semibold">{{ meal.meal_count }} meals</div>
+                                <div class="text-xs text-gray-400 mt-1">
+                                    {% if meal.includes_breakfast %}Breakfast{% endif %}
+                                    {% if meal.includes_lunch %}{% if meal.includes_breakfast %}, {% endif %}Lunch{% endif %}
+                                    {% if meal.includes_dinner %}{% if meal.includes_breakfast or meal.includes_lunch %}, {% endif %}Dinner{% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    🎁 Donation
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-300">
+                                    {{ meal.cancelled_at.strftime('%Y-%m-%d %H:%M') }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-300">{{ meal.skip_notes or 'No notes' }}</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <i class="fas fa-info-circle text-gray-400 text-4xl mb-3"></i>
+                <p class="text-gray-300">No donation meals found for the selected date range</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Regular Skips Tab -->
+    <div id="regular-tab" class="tab-content hidden">
+        <div class="bg-dark rounded-lg shadow-md overflow-hidden">
+            <div class="bg-blue-600 text-white p-4">
+                <h2 class="text-xl font-semibold">✓ Regular Skips (Before Cutoff)</h2>
+                <p class="text-sm mt-1">Meals skipped before 10 AM cutoff - not prepared</p>
+            </div>
+            
+            {% if regular_skips %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-dark-lighter">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Customer</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Meal Plan</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Skipped At</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-dark divide-y divide-gray-700">
+                        {% for meal in regular_skips %}
+                        <tr class="hover:bg-dark-lighter">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                {{ meal.meal_consumption_date.strftime('%B %d, %Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-white">{{ meal.user_name }}</div>
+                                <div class="text-sm text-gray-300">{{ meal.user_email }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                {{ meal.meal_plan_name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    ✓ Regular Skip
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {{ meal.cancelled_at.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-300">No regular skips found</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- No Delivery Tab -->
+    <div id="no_delivery-tab" class="tab-content hidden">
+        <div class="bg-dark rounded-lg shadow-md overflow-hidden">
+            <div class="bg-yellow-600 text-white p-4">
+                <h2 class="text-xl font-semibold">⚠️ No Delivery Requests</h2>
+                <p class="text-sm mt-1">Meals prepared but delivery cancelled - can be donated</p>
+            </div>
+            
+            {% if no_delivery %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-dark-lighter">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Customer</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Meal Plan</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Meals</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Cancelled At</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-dark divide-y divide-gray-700">
+                        {% for meal in no_delivery %}
+                        <tr class="hover:bg-dark-lighter">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                {{ meal.meal_consumption_date.strftime('%B %d, %Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-white">{{ meal.user_name }}</div>
+                                <div class="text-sm text-gray-300">{{ meal.user_email }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                {{ meal.meal_plan_name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                {{ meal.meal_count }} meals
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                {{ meal.cancelled_at.strftime('%Y-%m-%d %H:%M') }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-300">No no-delivery requests found</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active', 'border-primary', 'text-primary');
+        btn.classList.add('border-transparent');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabName + '-tab').classList.remove('hidden');
+    
+    // Add active class to clicked button
+    event.target.classList.add('active', 'border-primary', 'text-primary');
+    event.target.classList.remove('border-transparent');
+}
+</script>
+{% endblock %}
+

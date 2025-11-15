@@ -55,7 +55,9 @@ def admin_daily_orders():
                 ).first()
                 
                 if skipped_delivery:
-                    # Add to skipped orders
+                    # Add to skipped orders with skip_type information
+                    skip_type = getattr(skipped_delivery, 'skip_type', 'regular')
+                    skip_notes = getattr(skipped_delivery, 'notes', '')
                     skipped_order = {
                         'subscription_id': subscription.id,
                         'user_name': subscription.user.name,
@@ -72,8 +74,11 @@ def admin_daily_orders():
                         'includes_dinner': subscription.meal_plan.includes_dinner,
                         'includes_snacks': subscription.meal_plan.includes_snacks,
                         'skip_reason': getattr(skipped_delivery, 'reason', 'user_request'),
+                        'skip_type': skip_type,  # 'regular', 'donation', 'no_delivery'
+                        'skip_notes': skip_notes,
                         'skip_date': skipped_delivery.created_at,
-                        'type': 'skipped'
+                        'type': 'skipped',
+                        'available_for_donation': skip_type in ['donation', 'regular']  # Both can be donated
                     }
                     skipped_orders.append(skipped_order)
                 else:

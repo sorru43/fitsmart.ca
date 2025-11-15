@@ -832,6 +832,221 @@ The FitSmart Team
         return False
 
 # ============================================================================
+# MEAL CANCELLATION & DONATION NOTIFICATIONS
+# ============================================================================
+
+def send_meal_cancellation_notification(subscription, meal_consumption_date, skip_type):
+    """
+    Send email notification to admin about cancelled meal (available for donation)
+    
+    Args:
+        subscription: Subscription object
+        meal_consumption_date: Date when customer would consume meals
+        skip_type: 'donation' or 'no_delivery'
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        admin_email = os.getenv('ADMIN_EMAIL', 'admin@fitsmart.ca')
+        subject = f"🎁 Meal Cancelled - Available for Donation - {meal_consumption_date.strftime('%B %d, %Y')}"
+        
+        # Get actual delivery date (evening before)
+        from routes.subscription_management_routes import get_actual_delivery_date
+        actual_delivery_date = get_actual_delivery_date(meal_consumption_date)
+        
+        # Count meals
+        meal_count = 0
+        meal_details = []
+        if subscription.meal_plan.includes_breakfast:
+            meal_count += 1
+            meal_details.append("Breakfast")
+        if subscription.meal_plan.includes_lunch:
+            meal_count += 1
+            meal_details.append("Lunch")
+        if subscription.meal_plan.includes_dinner:
+            meal_count += 1
+            meal_details.append("Dinner")
+        if subscription.meal_plan.includes_snacks:
+            meal_count += 1
+            meal_details.append("Snacks")
+        
+        html_content = f"""
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: {'#10b981' if skip_type == 'donation' else '#f59e0b'}; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }}
+                .content {{ background: #f9f9f9; padding: 20px; border-radius: 8px; }}
+                .info-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }}
+                .info-section {{ background: #f5f5f5; padding: 15px; border-radius: 5px; }}
+                .donation-box {{ background: #d1fae5; border: 2px solid #10b981; padding: 15px; border-radius: 6px; margin: 20px 0; }}
+                .footer {{ text-align: center; color: #666; font-size: 14px; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>{'🎁 Meal Available for Donation' if skip_type == 'donation' else '⚠️ Meal Cancelled - No Delivery'}</h1>
+                <p>Meal Date: {meal_consumption_date.strftime('%B %d, %Y')}</p>
+            </div>
+            
+            <div class="content">
+                <div class="donation-box">
+                    <h2>{'✅ Meal Available for Donation' if skip_type == 'donation' else '⚠️ Delivery Cancelled'}</h2>
+                    <p><strong>Customer:</strong> {subscription.user.name} ({subscription.user.email})</p>
+                    <p><strong>Meal Plan:</strong> {subscription.meal_plan.name}</p>
+                    <p><strong>Meal Date:</strong> {meal_consumption_date.strftime('%B %d, %Y')} (delivered {actual_delivery_date.strftime('%B %d')} evening)</p>
+                    <p><strong>Meals Included:</strong> {', '.join(meal_details)} ({meal_count} meals)</p>
+                    <p><strong>Status:</strong> {'Available for donation to those in need' if skip_type == 'donation' else 'No delivery - meal prepared but not delivered'}</p>
+                    <p><strong>Note:</strong> Customer was charged (meal already prepared)</p>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-section">
+                        <h3>👤 Customer Information</h3>
+                        <p><strong>Name:</strong> {subscription.user.name}</p>
+                        <p><strong>Email:</strong> {subscription.user.email}</p>
+                        <p><strong>Phone:</strong> {subscription.user.phone or 'Not provided'}</p>
+                        <p><strong>Subscription ID:</strong> #{subscription.id}</p>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>🍽️ Meal Details</h3>
+                        <p><strong>Meal Plan:</strong> {subscription.meal_plan.name}</p>
+                        <p><strong>Meals:</strong> {', '.join(meal_details)}</p>
+                        <p><strong>Total Meals:</strong> {meal_count}</p>
+                        <p><strong>Vegetarian:</strong> {'Yes' if subscription.meal_plan.is_vegetarian else 'No'}</p>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📍 Delivery Address (Not Needed)</h3>
+                    <p>{subscription.delivery_address or 'N/A'}</p>
+                    <p>{subscription.delivery_city or ''}, {subscription.delivery_province or ''} {subscription.delivery_postal_code or ''}</p>
+                    <p class="text-muted"><em>Note: Delivery cancelled - address not needed</em></p>
+                </div>
+                
+                <div class="donation-box">
+                    <h3>{'🎁 Donation Action Required' if skip_type == 'donation' else '⚠️ Action Required'}</h3>
+                    <p><strong>Next Steps:</strong></p>
+                    <ul>
+                        {'<li>Meal is available for donation to those in need</li>' if skip_type == 'donation' else '<li>Meal was prepared but delivery cancelled</li>'}
+                        <li>Meal was already prepared (customer charged)</li>
+                        <li>View in admin panel: Daily Orders → Skipped Deliveries</li>
+                        <li>Coordinate donation pickup or distribution</li>
+                    </ul>
+                </div>
+                
+                <p>Best regards,<br>FitSmart System</p>
+            </div>
+            
+            <div class="footer">
+                <p>This is an automated notification from the FitSmart system.</p>
+                <p>&copy; {datetime.now().year} FitSmart. All rights reserved.</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_content = f"""
+Meal Cancellation Notification
+
+{'Meal Available for Donation' if skip_type == 'donation' else 'Meal Cancelled - No Delivery'}
+
+Customer: {subscription.user.name} ({subscription.user.email})
+Meal Plan: {subscription.meal_plan.name}
+Meal Date: {meal_consumption_date.strftime('%B %d, %Y')} (delivered {actual_delivery_date.strftime('%B %d')} evening)
+Meals Included: {', '.join(meal_details)} ({meal_count} meals)
+Status: {'Available for donation to those in need' if skip_type == 'donation' else 'No delivery - meal prepared but not delivered'}
+Note: Customer was charged (meal already prepared)
+
+Customer Information:
+- Name: {subscription.user.name}
+- Email: {subscription.user.email}
+- Phone: {subscription.user.phone or 'Not provided'}
+- Subscription ID: #{subscription.id}
+
+Meal Details:
+- Meal Plan: {subscription.meal_plan.name}
+- Meals: {', '.join(meal_details)}
+- Total Meals: {meal_count}
+- Vegetarian: {'Yes' if subscription.meal_plan.is_vegetarian else 'No'}
+
+Next Steps:
+- Meal is {'available for donation' if skip_type == 'donation' else 'prepared but delivery cancelled'}
+- Meal was already prepared (customer charged)
+- View in admin panel: Daily Orders → Skipped Deliveries
+- Coordinate donation pickup or distribution
+
+Best regards,
+FitSmart System
+        """
+        
+        return send_email(
+            to_email=admin_email,
+            from_email=os.getenv('MAIL_DEFAULT_SENDER', 'no-reply@fitsmart.ca'),
+            subject=subject,
+            html_content=html_content,
+            text_content=text_content
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to send meal cancellation notification: {str(e)}")
+        return False
+
+def send_meal_skip_notification(subscription, meal_consumption_date):
+    """
+    Send email notification to admin about regular skip (before cutoff)
+    
+    Args:
+        subscription: Subscription object
+        meal_consumption_date: Date when customer would consume meals
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        admin_email = os.getenv('ADMIN_EMAIL', 'admin@fitsmart.ca')
+        subject = f"✓ Meal Skipped (Regular) - {meal_consumption_date.strftime('%B %d, %Y')}"
+        
+        html_content = f"""
+        <html>
+        <body>
+            <h2>Meal Skipped (Regular Skip)</h2>
+            <p>Hello Admin,</p>
+            <p>A customer has skipped their meal delivery before the cutoff time.</p>
+            <p><strong>Customer:</strong> {subscription.user.name} ({subscription.user.email})</p>
+            <p><strong>Meal Plan:</strong> {subscription.meal_plan.name}</p>
+            <p><strong>Meal Date:</strong> {meal_consumption_date.strftime('%B %d, %Y')}</p>
+            <p><strong>Status:</strong> Regular skip (before cutoff) - Meal not prepared, subscription extended</p>
+            <p>Best regards,<br>FitSmart System</p>
+        </body>
+        </html>
+        """
+        
+        text_content = f"""
+Meal Skipped (Regular Skip)
+
+Customer: {subscription.user.name} ({subscription.user.email})
+Meal Plan: {subscription.meal_plan.name}
+Meal Date: {meal_consumption_date.strftime('%B %d, %Y')}
+Status: Regular skip (before cutoff) - Meal not prepared, subscription extended
+
+Best regards,
+FitSmart System
+        """
+        
+        return send_email(
+            to_email=admin_email,
+            from_email=os.getenv('MAIL_DEFAULT_SENDER', 'no-reply@fitsmart.ca'),
+            subject=subject,
+            html_content=html_content,
+            text_content=text_content
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to send meal skip notification: {str(e)}")
+        return False
+
+# ============================================================================
 # TESTING FUNCTIONS
 # ============================================================================
 

@@ -18,25 +18,85 @@ class MealType(Enum):
     DINNER = "dinner"
     ALL_DAY = "all_day"
 
-def get_cutoff_time_for_meal(meal_type, delivery_date):
+def get_cutoff_time_for_meal(meal_type, meal_consumption_date):
     """
-    Calculate cutoff time for skipping meals based on meal type and delivery date
-    Rule: Must skip 1 day before delivery day with specific times based on meal type
-    """
-    # Base rule: 1 day before delivery
-    cutoff_date = delivery_date - timedelta(days=1)
+    Calculate cutoff time for skipping meals based on meal type and meal consumption date
     
-    # Set cutoff time based on meal type
-    if meal_type == MealType.BREAKFAST:
-        cutoff_time = time(19, 0)  # 7:00 PM
-    elif meal_type == MealType.LUNCH:
-        cutoff_time = time(19, 0)  # 7:00 PM
-    elif meal_type == MealType.DINNER:
-        cutoff_time = time(19, 0)  # 7:00 PM
+    Canada Delivery Model: Meals are delivered in the evening (one day before) for next-day consumption
+    - Meal consumption date: When customer will eat the meals (e.g., Wednesday)
+    - Actual delivery date: Evening before (e.g., Tuesday evening)
+    - Cutoff: Must skip by same day (meal consumption date) at 10:00 AM
+    
+    Example:
+    - To skip Wednesday meals (delivered Tuesday evening), must skip by Wednesday 10:00 AM
+    - After 10 AM: Can mark for donation/no delivery to save delivery resources
+    """
+    from flask import current_app
+    
+    # Get delivery model from config
+    delivery_model = current_app.config.get('DELIVERY_MODEL', 'evening_before')
+    
+    if delivery_model == 'evening_before':
+        # Canada model: Same day cutoff at 10:00 AM
+        # Cutoff date: Same day as meal consumption date
+        cutoff_days_before = current_app.config.get('SKIP_MEAL_CUTOFF_DAYS_BEFORE', 0)
+        cutoff_date = meal_consumption_date - timedelta(days=cutoff_days_before)
+        
+        # Cutoff time: 10:00 AM (morning) - same day
+        cutoff_time_str = current_app.config.get('SKIP_MEAL_CUTOFF_TIME', '10:00')
+        cutoff_hour, cutoff_minute = map(int, cutoff_time_str.split(':'))
+        cutoff_time = time(cutoff_hour, cutoff_minute)
     else:
-        cutoff_time = time(19, 0)  # 7:00 PM (strictest for all-day plans)
+        # Legacy same-day delivery model: 1 day before at 7:00 PM
+        cutoff_date = meal_consumption_date - timedelta(days=1)
+        cutoff_time = time(19, 0)  # 7:00 PM
     
     return datetime.combine(cutoff_date, cutoff_time)
+
+def get_actual_delivery_date(meal_consumption_date):
+    """
+    Get the actual delivery date based on meal consumption date
+    
+    Canada Model: Meals are delivered in the evening one day before consumption
+    - Meal consumption date: Wednesday → Actual delivery: Tuesday evening
+    
+    Args:
+        meal_consumption_date: Date when customer will consume the meals
+        
+    Returns:
+        date: Actual delivery date (evening before)
+    """
+    from flask import current_app
+    delivery_model = current_app.config.get('DELIVERY_MODEL', 'evening_before')
+    
+    if delivery_model == 'evening_before':
+        # Deliver one day before meal consumption
+        return meal_consumption_date - timedelta(days=1)
+    else:
+        # Same-day delivery
+        return meal_consumption_date
+
+def get_meal_consumption_date(actual_delivery_date):
+    """
+    Get the meal consumption date from actual delivery date
+    
+    Canada Model: If delivered on Tuesday evening, meals are for Wednesday
+    
+    Args:
+        actual_delivery_date: Date when meals are actually delivered
+        
+    Returns:
+        date: Date when customer will consume the meals
+    """
+    from flask import current_app
+    delivery_model = current_app.config.get('DELIVERY_MODEL', 'evening_before')
+    
+    if delivery_model == 'evening_before':
+        # Meals delivered one day before are for next day
+        return actual_delivery_date + timedelta(days=1)
+    else:
+        # Same-day delivery
+        return actual_delivery_date
 
 def determine_meal_type_from_plan(meal_plan):
     """
@@ -58,36 +118,52 @@ def determine_meal_type_from_plan(meal_plan):
     else:
         return MealType.ALL_DAY  # Default
 
-def can_skip_delivery(subscription, delivery_date):
+def can_skip_delivery(subscription, meal_consumption_date):
     """
     Enhanced function to check if a delivery can be skipped based on timing rules
+    
+    Note: meal_consumption_date is when customer will consume meals (not actual delivery date)
+    In Canada model: Meals for Wednesday are delivered Tuesday evening
+    
+    Args:
+        subscription: Subscription object
+        meal_consumption_date: Date when customer will consume the meals (e.g., Wednesday)
+        
+    Returns:
+        tuple: (can_skip: bool, cutoff_datetime: datetime, meal_type: MealType, can_donate: bool)
     """
     now = datetime.now()
     
     # Convert string date to date object if needed
-    if isinstance(delivery_date, str):
-        delivery_date = datetime.strptime(delivery_date, '%Y-%m-%d').date()
+    if isinstance(meal_consumption_date, str):
+        meal_consumption_date = datetime.strptime(meal_consumption_date, '%Y-%m-%d').date()
     
     # Check if there's an active holiday that protects meals
     current_holiday = Holiday.get_current_holiday()
     if current_holiday and current_holiday.protect_meals:
         # If it's a holiday with meal protection, meals cannot be skipped
-        return False, None, None
+        return False, None, None, False
     
     # Determine meal type from subscription
     meal_type = determine_meal_type_from_plan(subscription.meal_plan)
     
-    # Calculate cutoff time
-    cutoff_datetime = get_cutoff_time_for_meal(meal_type, delivery_date)
+    # Calculate cutoff time (based on meal consumption date)
+    cutoff_datetime = get_cutoff_time_for_meal(meal_type, meal_consumption_date)
     
     # Check if we're before the cutoff
     can_skip = now <= cutoff_datetime
     
-    # Additional check: can't skip past deliveries
-    if delivery_date < now.date():
+    # Additional check: can't skip past meal consumption dates
+    if meal_consumption_date < now.date():
         can_skip = False
     
-    return can_skip, cutoff_datetime, meal_type
+    # Check if can mark for donation (after cutoff but same day)
+    can_donate = False
+    if not can_skip and meal_consumption_date == now.date():
+        # Same day but after cutoff - can mark for donation/no delivery
+        can_donate = True
+    
+    return can_skip, cutoff_datetime, meal_type, can_donate
 
 def calculate_skip_compensation(subscription, skipped_delivery_date):
     """
@@ -95,6 +171,85 @@ def calculate_skip_compensation(subscription, skipped_delivery_date):
     """
     from utils.meal_tracking import MealTracker
     return MealTracker.handle_skip_compensation(subscription, skipped_delivery_date)
+
+@subscription_mgmt_bp.route('/mark_donation/<int:subscription_id>', methods=['POST'])
+@login_required
+def mark_donation(subscription_id):
+    """Mark meals for donation/no delivery after cutoff time - saves delivery resources"""
+    try:
+        # Get subscription and verify ownership
+        subscription = Subscription.query.get_or_404(subscription_id)
+        if subscription.user_id != current_user.id:
+            flash('You can only manage your own subscriptions.', 'error')
+            return redirect(url_for('main.profile'))
+        
+        # Get meal consumption date from form
+        meal_date_str = request.form.get('delivery_date')
+        if not meal_date_str:
+            flash('Meal date is required.', 'error')
+            return redirect(url_for('main.profile'))
+        
+        # Convert to date object
+        try:
+            meal_consumption_date = datetime.strptime(meal_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid meal date format.', 'error')
+            return redirect(url_for('main.profile'))
+        
+        # Verify it's same day and after cutoff
+        now = datetime.now()
+        if meal_consumption_date != now.date():
+            flash('Donation option is only available for same-day meals after cutoff.', 'error')
+            return redirect(url_for('main.profile'))
+        
+        # Check if already marked
+        existing_skip = SkippedDelivery.query.filter_by(
+            subscription_id=subscription_id,
+            delivery_date=meal_consumption_date
+        ).first()
+        
+        if existing_skip:
+            if existing_skip.skip_type == 'donation':
+                flash('These meals are already marked for donation.', 'info')
+            else:
+                flash('These meals are already skipped.', 'warning')
+            return redirect(url_for('main.profile'))
+        
+        # Get skip type from form (donation or no_delivery)
+        skip_type = request.form.get('skip_type', 'donation')  # 'donation' or 'no_delivery'
+        
+        # Create skipped delivery record with donation flag
+        skipped = SkippedDelivery(
+            subscription_id=subscription_id,
+            delivery_date=meal_consumption_date,
+            skip_type=skip_type,
+            notes=f'Marked for {skip_type} after cutoff to save delivery resources'
+        )
+        
+        db.session.add(skipped)
+        db.session.commit()
+        
+        # Send email notification to admin about cancelled meal
+        try:
+            from utils.email_functions import send_meal_cancellation_notification
+            send_meal_cancellation_notification(subscription, meal_consumption_date, skip_type)
+        except Exception as e:
+            current_app.logger.error(f"Failed to send cancellation notification: {str(e)}")
+        
+        # Success message - clarify charges and donation
+        if skip_type == 'donation':
+            flash(f'✅ Delivery cancelled for {meal_consumption_date.strftime("%B %d")}. Your meal will be donated to those in need. Note: Your subscription will still be charged as meals were already prepared. Thank you for helping others!', 'success')
+        else:
+            flash(f'✅ Delivery cancelled for {meal_consumption_date.strftime("%B %d")}. Delivery resources saved. Note: Your subscription will still be charged as meals were already prepared.', 'success')
+        
+        current_app.logger.info(f"User {current_user.email} marked meals for {skip_type} on {meal_consumption_date}")
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error marking donation: {str(e)}")
+        flash('An error occurred while marking for donation.', 'error')
+    
+    return redirect(url_for('main.profile') + '#subscriptions')
 
 @subscription_mgmt_bp.route('/skip_delivery/<int:subscription_id>', methods=['POST'])
 @login_required
@@ -107,52 +262,61 @@ def skip_delivery(subscription_id):
             flash('You can only manage your own subscriptions.', 'error')
             return redirect(url_for('main.profile'))
         
-        # Get delivery date from form
-        delivery_date_str = request.form.get('delivery_date')
-        if not delivery_date_str:
-            flash('Delivery date is required.', 'error')
+        # Get meal consumption date from form (this is when customer will eat, not delivery date)
+        meal_date_str = request.form.get('delivery_date')  # Form field name kept for compatibility
+        if not meal_date_str:
+            flash('Meal date is required.', 'error')
             return redirect(url_for('main.profile'))
         
         # Convert to date object
         try:
-            delivery_date = datetime.strptime(delivery_date_str, '%Y-%m-%d').date()
+            meal_consumption_date = datetime.strptime(meal_date_str, '%Y-%m-%d').date()
         except ValueError:
-            flash('Invalid delivery date format.', 'error')
+            flash('Invalid meal date format.', 'error')
             return redirect(url_for('main.profile'))
         
         # Check if delivery can be skipped with enhanced logic
-        can_skip, cutoff_datetime, meal_type = can_skip_delivery(subscription, delivery_date)
+        # Note: meal_consumption_date is when customer will consume meals
+        can_skip, cutoff_datetime, meal_type, can_donate = can_skip_delivery(subscription, meal_consumption_date)
         
         if not can_skip:
             # Provide specific error message based on timing
             now = datetime.now()
-            if delivery_date < now.date():
-                flash('Cannot skip past deliveries.', 'error')
+            if meal_consumption_date < now.date():
+                flash('Cannot skip past meal dates.', 'error')
+                return redirect(url_for('main.profile'))
+            elif can_donate:
+                # After cutoff but same day - show helpful message about charges and donation
+                cutoff_str = cutoff_datetime.strftime('%I:%M %p')
+                flash(f'⚠️ Skip cutoff ({cutoff_str}) has passed. Your meal will still be charged, but you can cancel delivery. If you cancel, your meal will be donated to those in need and delivery resources will be saved. Would you like to proceed?', 'warning')
+                return redirect(url_for('main.profile') + f'#donate-{subscription_id}-{meal_consumption_date.strftime("%Y-%m-%d")}')
             else:
                 cutoff_str = cutoff_datetime.strftime('%B %d at %I:%M %p')
-                flash(f'Cannot skip this {meal_type.value} delivery. Cutoff time was {cutoff_str}.', 'error')
-            return redirect(url_for('main.profile'))
+                flash(f'Cannot skip meals for {meal_consumption_date.strftime("%B %d")}. Cutoff time was {cutoff_str}.', 'error')
+                return redirect(url_for('main.profile'))
         
-        # Check if delivery is already skipped
+        # Check if delivery is already skipped (using meal consumption date)
         existing_skip = SkippedDelivery.query.filter_by(
             subscription_id=subscription_id,
-            delivery_date=delivery_date
+            delivery_date=meal_consumption_date
         ).first()
         
         if existing_skip:
-            flash('This delivery is already skipped.', 'warning')
+            flash('These meals are already skipped.', 'warning')
             return redirect(url_for('main.profile'))
         
         # Calculate compensation
-        compensation = calculate_skip_compensation(subscription, delivery_date)
+        compensation = calculate_skip_compensation(subscription, meal_consumption_date)
         
-        # Create skipped delivery record
+        # Create skipped delivery record (delivery_date stores meal consumption date)
         skipped = SkippedDelivery(
             subscription_id=subscription_id,
-            delivery_date=delivery_date
+            delivery_date=meal_consumption_date,  # This is meal consumption date
+            skip_type='regular',  # Regular skip before cutoff
+            notes=f'Regular skip before cutoff - {compensation["description"]}'
         )
         
-        # Add enhanced fields if they exist
+        # Add enhanced fields if they exist (for backward compatibility)
         if hasattr(skipped, 'reason'):
             skipped.reason = 'user_request'
         if hasattr(skipped, 'meal_type'):
@@ -177,9 +341,10 @@ def skip_delivery(subscription_id):
         
         db.session.commit()
         
-        # Success message
-        flash(f'✅ {meal_type.value.title()} delivery for {delivery_date.strftime("%B %d")} has been skipped. {compensation["description"]}', 'success')
-        current_app.logger.info(f"User {current_user.email} skipped {meal_type.value} delivery for {delivery_date}")
+        # Success message - clarify that meals are delivered evening before
+        actual_delivery_date = get_actual_delivery_date(meal_consumption_date)
+        flash(f'✅ Meals for {meal_consumption_date.strftime("%B %d")} (delivered {actual_delivery_date.strftime("%B %d")} evening) have been skipped. {compensation["description"]}', 'success')
+        current_app.logger.info(f"User {current_user.email} skipped meals for {meal_consumption_date} (delivered {actual_delivery_date} evening)")
         
     except Exception as e:
         db.session.rollback()
@@ -213,7 +378,7 @@ def unskip_delivery(subscription_id):
             return redirect(url_for('main.profile'))
         
         # Check if delivery can be unskipped
-        can_unskip, cutoff_datetime, meal_type = can_skip_delivery(subscription, delivery_date)
+        can_unskip, cutoff_datetime, meal_type, can_donate = can_skip_delivery(subscription, delivery_date)
         
         if not can_unskip:
             # Provide specific error message

@@ -216,6 +216,23 @@
                                                             Restore this delivery
                                                         </button>
                                                     </form>
+                                                    {% elif delivery.cutoff_passed and not delivery.is_skipped %}
+                                                    <div class="mt-2 space-y-1">
+                                                        <p class="text-xs text-yellow-400 mb-2">
+                                                            ⚠️ Cutoff passed. Meal will still be charged.
+                                                        </p>
+                                                        <form action="{{ url_for('subscription_mgmt.mark_donation', subscription_id=subscription.id) }}" method="POST" class="inline" onsubmit="return confirmCancelDelivery('{{ delivery.date }}');">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <input type="hidden" name="delivery_date" value="{{ delivery.date }}">
+                                                            <input type="hidden" name="skip_type" value="donation">
+                                                            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs py-1.5 px-2 rounded transition">
+                                                                Cancel Delivery (Donate Meal)
+                                                            </button>
+                                                        </form>
+                                                        <p class="text-xs text-gray-400 mt-1">
+                                                            Your meal will be donated to those in need
+                                                        </p>
+                                                    </div>
                                                     {% elif delivery.cutoff_passed %}
                                                     <p class="text-xs text-gray-500 mt-1">
                                                         Past cutoff time
@@ -1116,5 +1133,18 @@
             closeHistoryModal();
         }
     });
+    
+    // Confirm cancellation after cutoff
+    function confirmCancelDelivery(date) {
+        const message = `⚠️ Important Notice:\n\n` +
+                       `The skip cutoff (10:00 AM) has passed.\n\n` +
+                       `• Your meal will still be charged (already prepared)\n` +
+                       `• Delivery will be cancelled\n` +
+                       `• Your meal will be donated to those in need\n` +
+                       `• Delivery resources will be saved\n\n` +
+                       `Do you still want to cancel this delivery?`;
+        
+        return confirm(message);
+    }
 </script>
 {% endblock %}
