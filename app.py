@@ -3,12 +3,13 @@ Main application setup for Flask and SQLAlchemy
 """
 import os
 import logging
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory, make_response
+from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from extensions import db, migrate, login_manager, mail, limiter, csrf
 from datetime import timedelta, datetime
 # from flask_session import Session  # Commented out - using Flask's built-in sessions
-from database.models import User, SiteSetting, Banner, Subscription, Order
+from database.models import User, SiteSetting, Banner, Subscription, Order, MealPlan, Delivery, Newsletter, CouponCode, DeliveryLocation
 from flask_wtf.csrf import CSRFError
 from routes.main_routes import main_bp
 from routes.admin_routes import admin_bp
@@ -60,10 +61,27 @@ def create_app(config_class=Config):
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)  # Changed from DEBUG to INFO
     
-    # Add template context processor for current datetime
+    # Initialize OAuth (Google) - after logger is configured
+    try:
+        from utils.google_oauth import init_oauth
+        oauth, google = init_oauth(app)
+        app.oauth = oauth
+        app.google_oauth = google
+        logger.info("Google OAuth initialized successfully")
+    except Exception as e:
+        logger.warning(f"Could not initialize OAuth: {e}")
+        app.oauth = None
+        app.google_oauth = None
+    
+    # Add template context processor for current datetime in IST
     @app.context_processor
     def inject_now():
-        return {'now': datetime.utcnow()}
+        try:
+            from utils.timezone_utils import get_current_ist_time
+            return {'now': get_current_ist_time()}
+        except ImportError:
+            # Fallback to UTC if timezone utils not available
+            return {'now': datetime.utcnow()}
 
     @app.context_processor
     def inject_site_settings():
@@ -77,13 +95,13 @@ def create_app(config_class=Config):
             essential_defaults = {
                 'site_logo': '/static/images/logo white.png',
                 'hero_subtitle': 'In Supervision Of Nutrition Experts',
-                'company_name': 'HealthyRizz',
+                'company_name': 'FitSmart',
                 'company_tagline': 'Healthy Meal Delivery',
-                'contact_phone': '8054090043',
-                'contact_email': 'healthyrizz.in@gmail.com',
-                'company_address': 'Ludhiana, Punjab, India',
-                'facebook_url': 'https://facebook.com/healthyrizz',
-                'instagram_url': 'https://instagram.com/healthyrizz.india',
+                'contact_phone': '+1 (647) 573-2429',
+                'contact_email': 'info@fitsmart.ca',
+                'company_address': 'Canada',
+                'facebook_url': 'https://facebook.com/fitsmart',
+                'instagram_url': 'https://instagram.com/fitsmart.ca',
                 'show_social_links': 'True',
                 'show_fssai_badge': 'True',
                 'show_hygiene_badge': 'True',
@@ -103,13 +121,13 @@ def create_app(config_class=Config):
             return {'site_settings': {
                 'site_logo': '/static/images/logo white.png',
                 'hero_subtitle': 'In Supervision Of Nutrition Experts',
-                'company_name': 'HealthyRizz',
+                'company_name': 'FitSmart',
                 'company_tagline': 'Healthy Meal Delivery',
-                'contact_phone': '8054090043',
-                'contact_email': 'healthyrizz.in@gmail.com',
-                'company_address': 'Ludhiana, Punjab, India',
-                'facebook_url': 'https://facebook.com/healthyrizz',
-                'instagram_url': 'https://instagram.com/healthyrizz.india',
+                'contact_phone': '+1 (647) 573-2429',
+                'contact_email': 'info@fitsmart.ca',
+                'company_address': 'Canada',
+                'facebook_url': 'https://facebook.com/fitsmart',
+                'instagram_url': 'https://instagram.com/fitsmart.ca',
                 'show_social_links': 'True',
                 'show_fssai_badge': 'True',
                 'show_hygiene_badge': 'True',
@@ -150,34 +168,79 @@ def create_app(config_class=Config):
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(admin_orders_bp)
-    app.register_blueprint(pwa_bp)  # Register PWA blueprint
     
+    # Import and register subscription management routes
+    try:
+        from routes.subscription_management_routes import subscription_mgmt_bp
+        app.register_blueprint(subscription_mgmt_bp, url_prefix='/subscription')
+    except ImportError:
+        pass  # Skip if file doesn't exist yet
+    
+    # Import and register WhatsApp routes
+    try:
+        from routes.whatsapp_routes import whatsapp_bp
+        app.register_blueprint(whatsapp_bp)
+    except ImportError:
+        pass  # Skip if file doesn't exist yet
+    
+    # Import and register WhatsApp admin routes
+    try:
+        from routes.admin_whatsapp_routes import admin_whatsapp_bp
+        app.register_blueprint(admin_whatsapp_bp)
+        logger.info(f"Registered blueprint: {admin_whatsapp_bp.name}")
+    except Exception as e:
+        logger.warning(f"Could not register admin_whatsapp blueprint: {e}")
+        pass  # Skip if file doesn't exist or has errors
+    
+    # Import and register Email Campaign routes
+    from routes.email_campaign_routes import email_campaign_bp
+    app.register_blueprint(email_campaign_bp)
+    
+    app.register_blueprint(pwa_bp)  # Register PWA blueprint
+
     # Add direct favicon route as fallback
     @app.route('/favicon.ico')
     def favicon_fallback():
-        """Direct favicon route as fallback"""
-        import os
-        from flask import send_file
-        favicon_path = os.path.join(app.root_path, 'static', 'favicon.ico')
-        if os.path.exists(favicon_path):
-            return send_file(favicon_path, mimetype='image/x-icon')
-        else:
-            # Return a simple 404 response
-            return '', 404
+        """Serve favicon from static folder"""
+        return send_from_directory('static', 'favicon.ico')
+
+    @app.route('/service-worker.js')
+    def service_worker():
+        """Serve the service worker file"""
+        response = make_response(send_from_directory('static/js', 'service-worker.js'))
+        response.headers['Content-Type'] = 'application/javascript'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+
+    @app.route('/manifest.json')
+    def manifest():
+        """Serve the manifest file"""
+        response = make_response(send_from_directory('static', 'manifest.json'))
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    
+    @app.route('/clear-service-worker')
+    def clear_service_worker():
+        """Serve the service worker clearing helper page"""
+        return send_from_directory('.', 'force_clear_service_worker.html')
+    
+    @app.route('/clear-cache')
+    def clear_cache():
+        """Serve the cache clearing page"""
+        return send_from_directory('.', 'clear-cache.html')
     
     # Register commands
     init_commands(app)
 
-    # Initialize Razorpay client
-    razorpay_client = razorpay.Client(
-        auth=(app.config['RAZORPAY_KEY_ID'], app.config['RAZORPAY_KEY_SECRET'])
-    )
+    # Stripe is initialized in utils/stripe_utils.py using environment variables
 
     def send_order_confirmation_email(subscription):
         """Send order confirmation email"""
         try:
             # Use the generic send_email function
-            subject = "Order Confirmation - HealthyRizz"
+            subject = "Order Confirmation - FitSmart"
             html_content = f"""
             <html>
             <body>
@@ -191,7 +254,7 @@ def create_app(config_class=Config):
             
             return send_email(
                 to_email=subscription.user.email,
-                from_email='no-reply@healthyrizz.in',
+                from_email='no-reply@fitsmart.ca',
                 subject=subject,
                 html_content=html_content
             )
@@ -203,7 +266,7 @@ def create_app(config_class=Config):
         """Send payment failure notification email"""
         try:
             # Use the generic send_email function
-            subject = "Payment Failed - HealthyRizz"
+            subject = "Payment Failed - FitSmart"
             html_content = f"""
             <html>
             <body>
@@ -217,7 +280,7 @@ def create_app(config_class=Config):
             
             return send_email(
                 to_email=subscription.user.email,
-                from_email='no-reply@healthyrizz.in',
+                from_email='no-reply@fitsmart.ca',
                 subject=subject,
                 html_content=html_content
             )
@@ -225,100 +288,47 @@ def create_app(config_class=Config):
             app.logger.error(f"Failed to send payment failure email: {str(e)}")
             return False
 
-    @app.route('/razorpay-webhook', methods=['POST'])
-    @csrf.exempt
-    def razorpay_webhook():
-        """Handle Razorpay webhook events for payment status updates"""
-        try:
-            # Get webhook data
-            webhook_data = request.get_json()
-            if not webhook_data:
-                app.logger.error('Webhook: No JSON data received')
-                return jsonify({'error': 'No JSON data received'}), 400
-            
-            # Verify webhook signature
-            signature = request.headers.get('X-Razorpay-Signature')
-            if not signature:
-                app.logger.error('Webhook: No signature found in headers')
-                return jsonify({'error': 'No signature found'}), 400
-                
-            # Verify webhook signature
-            try:
-                razorpay_client.utility.verify_webhook_signature(
-                    request.data,
-                    signature,
-                    app.config['RAZORPAY_WEBHOOK_SECRET']
-                )
-            except Exception as sig_error:
-                app.logger.error(f'Webhook: Signature verification failed: {str(sig_error)}')
-                return jsonify({'error': 'Invalid signature'}), 400
-            
-            # Handle different webhook events
-            event_type = webhook_data.get('event')
-            app.logger.info(f'Webhook: Received event: {event_type}')
-            
-            if event_type == 'payment.captured':
-                payment_id = webhook_data['payload']['payment']['entity']['id']
-                order_id = webhook_data['payload']['payment']['entity']['order_id']
-                
-                app.logger.info(f'Webhook: Payment captured - Payment ID: {payment_id}, Order ID: {order_id}')
-                
-                # Update subscription status
-                subscription = Subscription.query.filter_by(payment_id=payment_id).first()
-                if subscription:
-                    subscription.status = 'active'
-                    subscription.payment_status = 'captured'
-                    subscription.updated_at = datetime.utcnow()
-                    db.session.commit()
-                    
-                    app.logger.info(f'Webhook: Subscription {subscription.id} activated')
-                    
-                    # Send confirmation email
-                    try:
-                        send_order_confirmation_email(subscription)
-                    except Exception as email_error:
-                        app.logger.error(f'Webhook: Failed to send confirmation email: {str(email_error)}')
-                else:
-                    app.logger.warning(f'Webhook: No subscription found for payment ID: {payment_id}')
-            
-            elif event_type == 'payment.failed':
-                payment_id = webhook_data['payload']['payment']['entity']['id']
-                
-                app.logger.info(f'Webhook: Payment failed - Payment ID: {payment_id}')
-                
-                # Update subscription status
-                subscription = Subscription.query.filter_by(payment_id=payment_id).first()
-                if subscription:
-                    subscription.status = 'failed'
-                    subscription.payment_status = 'failed'
-                    subscription.updated_at = datetime.utcnow()
-                    db.session.commit()
-                    
-                    app.logger.info(f'Webhook: Subscription {subscription.id} marked as failed')
-                    
-                    # Send failure notification
-                    try:
-                        send_payment_failure_email(subscription)
-                    except Exception as email_error:
-                        app.logger.error(f'Webhook: Failed to send failure email: {str(email_error)}')
-                else:
-                    app.logger.warning(f'Webhook: No subscription found for failed payment ID: {payment_id}')
-            
-            elif event_type == 'order.paid':
-                order_id = webhook_data['payload']['order']['entity']['id']
-                app.logger.info(f'Webhook: Order paid - Order ID: {order_id}')
-                
-                # Handle order.paid event if needed
-                # This is typically handled by payment.captured, but good to have as backup
-            
-            else:
-                app.logger.info(f'Webhook: Unhandled event type: {event_type}')
-            
-            return jsonify({'status': 'success'})
-            
-        except Exception as e:
-            app.logger.error(f'Webhook error: {str(e)}')
-            return jsonify({'error': 'Internal server error'}), 500
+    # Stripe webhook is handled in routes/main_routes.py
+
+    @app.route('/profile/deliveries')
+    @login_required
+    def deliveries():
+        user = current_user
+        # Get user's active subscriptions
+        subscriptions = Subscription.query.filter_by(user_id=user.id, status=SubscriptionStatus.ACTIVE).all()
+        
+        # Get all deliveries for these subscriptions
+        deliveries = []
+        for subscription in subscriptions:
+            subscription_deliveries = Delivery.query.filter_by(subscription_id=subscription.id).order_by(Delivery.delivery_date.desc()).all()
+            deliveries.extend(subscription_deliveries)
+        
+        return render_template('profile/deliveries.html', deliveries=deliveries)
+
+    @app.route('/cart-checkout')
+    @login_required
+    def cart_checkout():
+        user = current_user
+        # Get user's cart items (if any)
+        cart_items = []  # This would be implemented based on your cart system
+        
+        # Get available delivery locations
+        states = DeliveryLocation.query.with_entities(DeliveryLocation.state).distinct().all()
+        states = [state[0] for state in states if state[0]]
+        
+        return render_template('checkout.html', cart_items=cart_items, states=states)
+
+    # Newsletter subscription route moved to main_routes.py
+
+    @app.route('/checkout-success')
+    def checkout_success():
+        return render_template('checkout_success.html')
+
+    @app.route('/checkout-cancel')
+    def checkout_cancel():
+        return render_template('checkout_cancel.html')
+
+
 
     @app.route('/order-confirmation/<int:order_id>')
     @login_required
@@ -338,6 +348,30 @@ def create_app(config_class=Config):
     def unauthorized(error):
         return redirect(url_for('main.index'))
 
+    # Security headers middleware - FIX FOR PAYMENT BLOCKING
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        
+        # Fixed CSP to allow CSS and other resources properly
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.tailwindcss.com https://fonts.gstatic.com https://unpkg.com https://cdn.jsdelivr.net; img-src 'self' data: https: blob:; connect-src 'self' https://api.stripe.com https://www.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com https://fonts.googleapis.com; object-src 'none'; media-src 'self'; frame-src 'self' https://js.stripe.com;"
+        
+        # Add cache control for static files to prevent caching issues
+        if request.path.startswith('/static/'):
+            # Add cache-busting parameter for CSS and JS files
+            if request.path.endswith(('.css', '.js')):
+                response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+                response.headers['Pragma'] = 'no-cache'
+                response.headers['Expires'] = '0'
+            else:
+                # For other static files, allow caching but with shorter duration
+                response.headers['Cache-Control'] = 'public, max-age=3600'  # 1 hour
+        
+        return response
+
     # Password reset helper functions
     def generate_password_reset_token(user, expires_sec=3600):
         s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
@@ -354,8 +388,8 @@ def create_app(config_class=Config):
     def send_password_reset_email(to_email, token):
         reset_url = url_for('reset_password', token=token, _external=True)
         msg = Message(
-            subject="Password Reset Request - HealthyRizz",
-            sender=app.config.get("MAIL_DEFAULT_SENDER", "noreply@healthyrizz.in"),
+            subject="Password Reset Request - FitSmart",
+            sender=app.config.get("MAIL_DEFAULT_SENDER", "noreply@fitsmart.ca"),
             recipients=[to_email]
         )
         msg.body = f'''To reset your password, visit the following link:
@@ -410,3 +444,5 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+

@@ -1,5 +1,5 @@
 """
-Stripe payment integration routes for HealthyRizz meal delivery application.
+Stripe payment integration routes for FitSmart meal delivery application.
 """
 import os
 import json

@@ -65,8 +65,8 @@ class PWAInstallPrompt {
             <div class="pwa-popup-overlay"></div>
             <div class="pwa-popup-content">
                 <div class="pwa-popup-header">
-                    <img src="/static/images/pwa_icons/icon-72x72.png" alt="HealthyRizz" class="pwa-logo">
-                    <h3>Install HealthyRizz App</h3>
+                    <img src="/static/images/pwa_icons/icon-72x72.png" alt="FitSmart" class="pwa-logo">
+                    <h3>Install FitSmart App</h3>
                     <button class="pwa-close-btn" id="pwa-close-btn">
                         <i class="fas fa-times"></i>
                     </button>
@@ -104,13 +104,45 @@ class PWAInstallPrompt {
         const closeBtn = document.getElementById('pwa-close-btn');
         const dismissBtn = document.getElementById('pwa-dismiss-btn');
         
-        this.installButton.addEventListener('click', () => this.installApp());
-        closeBtn.addEventListener('click', () => this.hideInstallPrompt());
-        dismissBtn.addEventListener('click', () => this.hideInstallPrompt());
+        if (this.installButton) {
+            this.installButton.addEventListener('click', () => this.installApp());
+        }
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Close button clicked');
+                this.hideInstallPrompt();
+            });
+        }
+        
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Dismiss button clicked');
+                this.hideInstallPrompt();
+            });
+        }
         
         // Close on overlay click
-        this.installPopup.querySelector('.pwa-popup-overlay').addEventListener('click', () => {
-            this.hideInstallPrompt();
+        const overlay = this.installPopup.querySelector('.pwa-popup-overlay');
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Overlay clicked');
+                this.hideInstallPrompt();
+            });
+        }
+        
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isPopupVisible) {
+                console.log('Escape key pressed');
+                this.hideInstallPrompt();
+            }
         });
     }
 
@@ -306,18 +338,37 @@ class PWAInstallPrompt {
     }
 
     showInstallPrompt() {
+        console.log('Showing install prompt');
+        console.log('Deferred prompt:', this.deferredPrompt);
+        console.log('Is popup visible:', this.isPopupVisible);
+        console.log('Install popup element:', this.installPopup);
+        
         if (this.deferredPrompt && !this.isPopupVisible) {
             this.isPopupVisible = true;
-            this.installPopup.classList.add('show');
+            if (this.installPopup) {
+                this.installPopup.classList.add('show');
+                console.log('Popup shown successfully');
+            } else {
+                console.error('Install popup element not found');
+            }
         } else if (!this.deferredPrompt) {
             // Show manual instructions if no prompt available
+            console.log('No deferred prompt, showing manual instructions');
             this.showManualInstallInstructions();
+        } else {
+            console.log('Popup already visible or no prompt available');
         }
     }
 
     hideInstallPrompt() {
+        console.log('Hiding install prompt');
         this.isPopupVisible = false;
-        this.installPopup.classList.remove('show');
+        if (this.installPopup) {
+            this.installPopup.classList.remove('show');
+            console.log('Popup hidden successfully');
+        } else {
+            console.error('Install popup element not found');
+        }
     }
 
     async installApp() {
@@ -365,7 +416,7 @@ class PWAInstallPrompt {
         const isAndroid = /Android/.test(navigator.userAgent);
         
         let message = '';
-        let title = 'Install HealthyRizz App';
+        let title = 'Install FitSmart App';
         
         if (isIOS) {
             message = 'To install the app on iOS:\n\n1. Tap the Share button (📤) in Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm';
@@ -397,7 +448,7 @@ window.showPWAInstallPopup = function() {
             message = 'To install the app:\n\n1. Look for the install icon (📥) in your browser\'s address bar\n2. Click "Install" to confirm';
         }
         
-        alert(`Install HealthyRizz App\n\n${message}`);
+        alert(`Install FitSmart App\n\n${message}`);
     }
 };
 

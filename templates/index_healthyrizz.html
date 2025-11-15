@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana{% endblock %}
+{% block title %}FitSmart - Fresh, Healthy Meal Plans in Ludhiana{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/video-player.css') }}">
@@ -36,7 +36,7 @@
         animation: float 3s ease-in-out infinite;
     }
 
-    /* HealthyRizz specific styles */
+    /* FitSmart specific styles */
     .feature-icon {
         width: 60px;
         height: 60px;
@@ -139,7 +139,7 @@
   <div class="absolute inset-0 bg-black bg-opacity-60 z-10"></div>
   <!-- Logo Placement (centered top) -->
   <div class="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
-    <img src="{{ site_settings.get('site_logo', '/static/images/logo white.png') }}" alt="HealthyRizz Logo" class="h-36 w-36 rounded-full shadow-lg bg-white p-2" />
+    <img src="{{ site_settings.get('site_logo', '/static/images/logo white.png') }}" alt="FitSmart Logo" class="h-36 w-36 rounded-full shadow-lg bg-white p-2" />
   </div>
   <!-- Animated Text Overlay -->
   <div class="relative z-20 flex flex-col items-center justify-center h-full text-center text-white">
@@ -151,11 +151,11 @@
   </div>
 </div>
 
-<!-- Why Choose HealthyRizz Section -->
+<!-- Why Choose FitSmart Section -->
 <section class="py-20 bg-gray-900">
   <div class="container mx-auto px-4">
     <div class="text-center mb-16">
-      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Why Choose HealthyRizz?</h2>
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Why Choose FitSmart?</h2>
       <p class="text-xl text-gray-300 max-w-3xl mx-auto">Discover what makes us different and why thousands of Ludhiana residents trust us for their daily nutrition.</p>
     </div>
 
@@ -282,7 +282,7 @@
   <div class="container mx-auto px-4">
     <div class="text-center mb-16">
       <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">How It Works</h2>
-      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Getting started with HealthyRizz is simple. Follow these easy steps to begin your healthy journey.</p>
+      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Getting started with FitSmart is simple. Follow these easy steps to begin your healthy journey.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -377,7 +377,7 @@
   <div class="container mx-auto px-4">
     <div class="text-center mb-16">
       <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">What Our Customers Say</h2>
-      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Real stories from real people who have transformed their health with HealthyRizz.</p>
+      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Real stories from real people who have transformed their health with FitSmart.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -388,7 +388,7 @@
             ⭐⭐⭐⭐⭐
           </div>
         </div>
-        <p class="text-gray-300 mb-6">"Lost 5kg in 4 weeks and didn't miss junk food at all! The meals are so delicious and filling. HealthyRizz has completely changed my relationship with food."</p>
+        <p class="text-gray-300 mb-6">"Lost 5kg in 4 weeks and didn't miss junk food at all! The meals are so delicious and filling. FitSmart has completely changed my relationship with food."</p>
         <div class="flex items-center">
           <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold mr-4">S</div>
           <div>
@@ -422,7 +422,7 @@
             ⭐⭐⭐⭐⭐
           </div>
         </div>
-        <p class="text-gray-300 mb-6">"Tasty, fresh, and filling. The diabetic-friendly meals have helped me maintain stable sugar levels. Highly recommend HealthyRizz for anyone serious about their health!"</p>
+        <p class="text-gray-300 mb-6">"Tasty, fresh, and filling. The diabetic-friendly meals have helped me maintain stable sugar levels. Highly recommend FitSmart for anyone serious about their health!"</p>
         <div class="flex items-center">
           <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold mr-4">R</div>
           <div>
@@ -505,12 +505,12 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.1.0/dist/typed.umd.js"></script>
 <script src="{{ url_for('static', filename='js/video-player.js') }}"></script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Typing animation for HealthyRizz
+    // Typing animation for FitSmart
     new Typed('#typed-text', {
       strings: [
         "Fresh, Healthy Meals",

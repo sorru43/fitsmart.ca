@@ -1,6 +1,6 @@
 {% extends 'admin/base_admin.html' %}
 
-{% block title %}Coupons - HealthyRizz Admin{% endblock %}
+{% block title %}Coupons - FitSmart Admin{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
@@ -121,18 +121,18 @@
                             {% if coupon.discount_type == 'percent' %}
                                 {{ coupon.discount_value }}%
                             {% elif coupon.discount_type == 'fixed' %}
-                                ₹{{ coupon.discount_value }}
+                                ${{ coupon.discount_value }}
                             {% else %}
                                 Free
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {% if coupon.discount_type == 'percent' %}
-                                ₹{{ coupon.min_order_value }}
+                                ${{ coupon.min_order_value }}
                             {% elif coupon.discount_type == 'fixed' %}
-                                ₹{{ coupon.min_order_value }}
+                                ${{ coupon.min_order_value }}
                             {% else %}
-                                ₹{{ coupon.min_order_value }}
+                                ${{ coupon.min_order_value }}
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

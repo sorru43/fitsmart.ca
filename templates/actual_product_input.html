@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actual Product Analyzer - FitSmart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                        <span class="text-2xl">🔍</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">Actual Product Analyzer</h1>
+                        <p class="text-blue-100">Analyze real product details from packaging</p>
+                    </div>
+                </div>
+                <a href="" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+                    📱 Image Scanner
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Instructions -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+                <h2 class="text-xl font-semibold text-blue-800 mb-4">📋 How to Use</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold text-blue-700 mb-2">1. 📦 Product Information</h3>
+                        <p class="text-blue-600 text-sm">Enter the exact product name from the packaging</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-blue-700 mb-2">2. 📊 Nutrition Facts</h3>
+                        <p class="text-blue-600 text-sm">Copy the nutrition facts directly from the product label</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-blue-700 mb-2">3. 📝 Ingredients List</h3>
+                        <p class="text-blue-600 text-sm">Copy the complete ingredients list from the packaging</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-blue-700 mb-2">4. 👤 Health Profile (Optional)</h3>
+                        <p class="text-blue-600 text-sm">Add your health conditions for personalized advice</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Form -->
+            <form id="productForm" class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <!-- Product Name -->
+                <div class="mb-6">
+                    <label for="productName" class="block text-sm font-medium text-gray-700 mb-2">
+                        📦 Product Name *
+                    </label>
+                    <input 
+                        type="text" 
+                        id="productName" 
+                        name="product_name" 
+                        required
+                        placeholder="e.g., Kellogg's Special K Cereal"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                </div>
+
+                <!-- Nutrition Facts -->
+                <div class="mb-6">
+                    <label for="nutritionFacts" class="block text-sm font-medium text-gray-700 mb-2">
+                        📊 Nutrition Facts *
+                    </label>
+                    <textarea 
+                        id="nutritionFacts" 
+                        name="nutrition_facts" 
+                        required
+                        rows="8"
+                        placeholder="Copy nutrition facts from packaging:
+Calories: 120
+Total Fat: 2g
+Sodium: 200mg
+Total Carbohydrates: 25g
+Protein: 3g
+Sugar: 8g
+Fiber: 3g"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                    ></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Copy the exact nutrition facts from the product packaging</p>
+                </div>
+
+                <!-- Ingredients List -->
+                <div class="mb-6">
+                    <label for="ingredientsList" class="block text-sm font-medium text-gray-700 mb-2">
+                        📝 Ingredients List *
+                    </label>
+                    <textarea 
+                        id="ingredientsList" 
+                        name="ingredients_list" 
+                        required
+                        rows="4"
+                        placeholder="Copy ingredients list from packaging:
+Whole grain oats, brown sugar, honey, canola oil, natural flavors, salt, BHT (preservative)"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                    ></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Copy the complete ingredients list from the product packaging</p>
+                </div>
+
+                <!-- Health Profile -->
+                <div class="mb-6">
+                    <label for="healthProfile" class="block text-sm font-medium text-gray-700 mb-2">
+                        👤 Health Profile (Optional)
+                    </label>
+                    <select 
+                        id="healthProfile" 
+                        name="health_profile"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">Select your health profile (optional)</option>
+                        <option value="diabetic">💊 Diabetic - Monitor carbohydrate intake</option>
+                        <option value="heart issues">❤️ Heart Issues - Watch sodium and fat</option>
+                        <option value="children">👶 Children - Extra caution for artificial ingredients</option>
+                        <option value="weight management">⚖️ Weight Management - Track calories and sugar</option>
+                        <option value="allergies">⚠️ Allergies - Check ingredients carefully</option>
+                        <option value="blood pressure">🩺 High Blood Pressure - Monitor sodium</option>
+                        <option value="pregnant">🤱 Pregnant - Avoid certain preservatives</option>
+                        <option value="elderly">👴 Elderly - Focus on heart-healthy choices</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-center">
+                    <button 
+                        type="submit" 
+                        class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                    >
+                        <span>🔍</span>
+                        <span>Analyze Product</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden bg-white rounded-lg shadow-lg p-6">
+                <div id="loadingSection" class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p class="text-gray-600">Analyzing product details...</p>
+                </div>
+                
+                <div id="resultsContent" class="hidden">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+
+            <!-- Example Section -->
+            <div class="bg-gray-50 rounded-lg p-6 mt-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">💡 Example Analysis</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white p-4 rounded-lg border">
+                        <h4 class="font-semibold text-green-600 mb-2">✅ Healthy Product Example</h4>
+                        <p class="text-sm text-gray-600">
+                            <strong>Product:</strong> Organic Oatmeal<br>
+                            <strong>Health Score:</strong> 8/10<br>
+                            <strong>Result:</strong> Minimal harmful ingredients
+                        </p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border">
+                        <h4 class="font-semibold text-red-600 mb-2">🚨 Unhealthy Product Example</h4>
+                        <p class="text-sm text-gray-600">
+                            <strong>Product:</strong> Artificial Candy<br>
+                            <strong>Health Score:</strong> 2/10<br>
+                            <strong>Result:</strong> Multiple dangerous ingredients
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-300">🔍 Actual Product Analyzer - Get real health insights from your food packaging</p>
+            <p class="text-gray-400 text-sm mt-2">Powered by comprehensive ingredient and nutrition analysis</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show results section and loading
+            document.getElementById('resultsSection').classList.remove('hidden');
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('resultsContent').classList.add('hidden');
+            
+            // Scroll to results
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('/analyze-actual-product', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        product_name: formData.get('product_name'),
+                        nutrition_facts: formData.get('nutrition_facts'),
+                        ingredients_list: formData.get('ingredients_list'),
+                        health_profile: formData.get('health_profile')
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // Hide loading, show results
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.getElementById('resultsContent').classList.remove('hidden');
+                
+                displayResults(result);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.getElementById('resultsContent').classList.remove('hidden');
+                document.getElementById('resultsContent').innerHTML = `
+                    <div class="text-center text-red-600">
+                        <p>❌ Error analyzing product. Please try again.</p>
+                    </div>
+                `;
+            }
+        });
+        
+        function displayResults(result) {
+            const resultsContent = document.getElementById('resultsContent');
+            
+            if (result.error) {
+                resultsContent.innerHTML = `
+                    <div class="text-center text-red-600">
+                        <p>❌ ${result.error}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div class="fade-in">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">🔍 Analysis Results</h2>
+                    
+                    <!-- Product Info -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h3 class="text-lg font-semibold text-blue-800">📦 ${result.product_name}</h3>
+                        <div class="flex items-center space-x-4 mt-2">
+                            <span class="text-2xl font-bold ${getScoreColor(result.health_score)}">${result.health_score}/10</span>
+                            <span class="text-blue-600">Health Score</span>
+                        </div>
+                        <p class="text-blue-700 mt-2">${result.summary}</p>
+                    </div>
+            `;
+            
+            // Nutritional Information
+            if (result.nutritional_info && Object.keys(result.nutritional_info).length > 0) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">📊 Nutritional Information</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                `;
+                Object.entries(result.nutritional_info).forEach(([key, value]) => {
+                    html += `
+                        <div class="bg-gray-50 p-3 rounded">
+                            <div class="text-sm text-gray-600 capitalize">${key.replace('_', ' ')}</div>
+                            <div class="font-semibold">${value}</div>
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+            }
+            
+            // Harmful Ingredients
+            if (result.harmful_ingredients && result.harmful_ingredients.length > 0) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-red-600 mb-3">🚨 Harmful Ingredients (${result.harmful_ingredients.length})</h3>
+                        <div class="space-y-3">
+                `;
+                result.harmful_ingredients.forEach(ingredient => {
+                    const isHighRisk = ingredient.risk_level === 'high';
+                    const bgColor = isHighRisk ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200';
+                    const textColor = isHighRisk ? 'text-red-800' : 'text-orange-800';
+                    const icon = isHighRisk ? '🚨' : '⚠️';
+                    
+                    html += `
+                        <div class="p-3 border rounded-lg ${bgColor}">
+                            <div class="flex items-start">
+                                <span class="text-lg mr-2">${icon}</span>
+                                <div class="flex-1">
+                                    <h4 class="font-semibold ${textColor}">${ingredient.name}</h4>
+                                    <p class="text-sm ${textColor} mt-1">${ingredient.impact}</p>
+                                    <p class="text-sm font-semibold ${textColor} mt-1">${ingredient.recommendation}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+            } else {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-green-600 mb-3">✅ Harmful Ingredients</h3>
+                        <p class="text-green-700">No harmful ingredients detected! 🎉</p>
+                    </div>
+                `;
+            }
+            
+            // Allergens
+            if (result.allergens && result.allergens.length > 0) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-orange-600 mb-3">⚠️ Allergens (${result.allergens.length})</h3>
+                        <div class="flex flex-wrap gap-2">
+                `;
+                result.allergens.forEach(allergen => {
+                    html += `<span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">${allergen}</span>`;
+                });
+                html += '</div></div>';
+            }
+            
+            // Recommendations
+            if (result.health_recommendations && result.health_recommendations.length > 0) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-blue-600 mb-3">💡 Health Recommendations</h3>
+                        <ul class="space-y-2">
+                `;
+                result.health_recommendations.forEach(rec => {
+                    html += `<li class="flex items-start"><span class="mr-2">•</span><span>${rec}</span></li>`;
+                });
+                html += '</ul></div>';
+            }
+            
+            // Alternatives
+            if (result.alternatives && result.alternatives.length > 0) {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-green-600 mb-3">🔄 Healthier Alternatives</h3>
+                        <ul class="space-y-2">
+                `;
+                result.alternatives.forEach(alt => {
+                    html += `<li class="flex items-start"><span class="mr-2">•</span><span>${alt}</span></li>`;
+                });
+                html += '</ul></div>';
+            }
+            
+            // Analysis Details
+            html += `
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">📋 Analysis Details</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-600">Method:</span>
+                            <div class="font-semibold">${result.analysis_method}</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Ingredients:</span>
+                            <div class="font-semibold">${result.metadata.ingredients_count}</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Harmful:</span>
+                            <div class="font-semibold">${result.metadata.harmful_ingredients_count}</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-600">Allergens:</span>
+                            <div class="font-semibold">${result.metadata.allergens_count}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            html += '</div>';
+            resultsContent.innerHTML = html;
+        }
+        
+        function getScoreColor(score) {
+            if (score >= 8) return 'text-green-600';
+            if (score >= 6) return 'text-yellow-600';
+            if (score >= 4) return 'text-orange-600';
+            return 'text-red-600';
+        }
+    </script>
+</body>
+</html> 

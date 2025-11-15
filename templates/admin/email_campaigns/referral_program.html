@@ -1,0 +1,97 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Referral Program Campaign{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-white mb-2">
+                    <i class="fas fa-share-alt text-primary mr-2"></i>
+                    Referral Program Campaign
+                </h1>
+                <p class="text-gray-400">Encourage user referrals</p>
+            </div>
+            <a href="{{ url_for('email_campaign.email_campaigns_dashboard') }}" 
+               class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Campaign Form -->
+        <div class="bg-dark-lighter rounded-lg border border-gray-700">
+            <div class="bg-dark p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-paper-plane text-primary mr-2"></i>
+                    Send Referral Invitations
+                </h3>
+            </div>
+            <div class="p-6">
+                <form method="POST" class="space-y-6">
+                    <div class="bg-purple-900 bg-opacity-20 border border-purple-700 rounded-lg p-4">
+                        <h4 class="text-purple-300 font-semibold mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>Campaign Info
+                        </h4>
+                        <p class="text-gray-300 text-sm">
+                            This will send referral invitations to all active users, encouraging them to:
+                        </p>
+                        <ul class="text-gray-300 text-sm mt-2 space-y-1">
+                            <li>• Share their unique referral link</li>
+                            <li>• Earn rewards for successful referrals</li>
+                            <li>• Help friends discover FitSmart</li>
+                            <li>• Build a community of health-conscious users</li>
+                        </ul>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                            <i class="fas fa-paper-plane mr-2"></i>Send Referral Invitations
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Active Users -->
+        <div class="bg-dark-lighter rounded-lg border border-gray-700">
+            <div class="bg-dark p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-user-check text-primary mr-2"></i>
+                    Active Users
+                </h3>
+            </div>
+            <div class="p-6">
+                {% if active_users %}
+                    <div class="space-y-3">
+                        {% for user in active_users %}
+                        <div class="flex items-center justify-between p-3 bg-dark rounded-lg border border-gray-700">
+                            <div>
+                                <p class="text-white font-semibold">{{ user.name or 'No Name' }}</p>
+                                <p class="text-gray-400 text-sm">{{ user.email }}</p>
+                                <p class="text-gray-500 text-xs">Member since: {{ user.created_at.strftime('%Y-%m-%d') }}</p>
+                            </div>
+                            <span class="bg-green-500 text-white px-2 py-1 rounded text-xs">Active</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4 p-3 bg-green-900 bg-opacity-20 border border-green-700 rounded-lg">
+                        <p class="text-green-300 text-sm">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            {{ active_users|length }} active users will receive referral invitations
+                        </p>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-users text-gray-500 text-4xl mb-4"></i>
+                        <p class="text-gray-400">No active users found</p>
+                        <p class="text-gray-500 text-sm">Users need to be active to receive referral invitations</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

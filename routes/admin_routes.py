@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, session, Response, abort, send_file
 from flask_login import login_required, current_user, login_user
 from sqlalchemy import desc, func, or_, true, false
-from wtforms import StringField, TextAreaField, SelectField, RadioField, BooleanField, FloatField, DateField, IntegerField, SelectMultipleField
+from wtforms import StringField, TextAreaField, SelectField, RadioField, BooleanField, FloatField, DateField, IntegerField, SelectMultipleField, SubmitField, FileField
 from wtforms.validators import DataRequired, Length, URL, Optional, Regexp, NumberRange, ValidationError
 from flask_wtf import FlaskForm
 from extensions import mail, db, limiter, csrf
@@ -29,8 +29,11 @@ from database.models import (
     Subscription, Newsletter, ServiceRequest, BlogPost, FAQ,
     CouponCode, Banner, PushSubscription, Notification, SubscriptionStatus, SubscriptionFrequency, DeliveryStatus,
     State, City, Area, HeroSlide, Video, TeamMember, SiteSetting,
-    ContactInquiry, FullWidthSection
+    ContactInquiry, FullWidthSection, SampleMenuItem, Holiday, SkippedDelivery
 )
+
+# AI posting agent import removed - functionality not available
+# from ai_posting_agent import create_ai_agent, AIPostingAgent
 
 # Import forms
 from forms.auth_forms import LoginForm
@@ -38,6 +41,7 @@ from forms.auth_forms import LoginForm
 # Import utility functions
 from utils.email_utils import send_email
 from utils.sms_utils import send_sms
+from utils.meal_tracking import MealTracker
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -53,6 +57,13 @@ def get_db():
 @admin_bp.context_processor
 def inject_site_settings():
     """Inject site settings into all admin templates"""
+    def has_blueprint(blueprint_name):
+        """Check if a blueprint is registered"""
+        try:
+            return blueprint_name in current_app.blueprints
+        except:
+            return False
+    
     try:
         from database.models import SiteSetting
         settings = {}
@@ -64,18 +75,18 @@ def inject_site_settings():
         if 'site_logo' not in settings:
             settings['site_logo'] = '/static/images/logo white.png'
         if 'company_name' not in settings:
-            settings['company_name'] = 'HealthyRizz'
+            settings['company_name'] = 'FitSmart'
         if 'company_tagline' not in settings:
             settings['company_tagline'] = 'Healthy Meal Delivery'
         
-        return {'site_settings': settings}
+        return {'site_settings': settings, 'has_blueprint': has_blueprint}
     except Exception as e:
         current_app.logger.error(f"Error loading site settings: {str(e)}")
         return {'site_settings': {
             'site_logo': '/static/images/logo white.png',
-            'company_name': 'HealthyRizz',
+            'company_name': 'FitSmart',
             'company_tagline': 'Healthy Meal Delivery'
-        }}
+        }, 'has_blueprint': has_blueprint}
 
 # Admin required decorator
 def admin_required(f):
@@ -98,7 +109,10 @@ class NotificationForm(FlaskForm):
     email_content = TextAreaField('Email Content', validators=[DataRequired()])
     recipient_type = RadioField('Recipients', choices=[
         ('all', 'All Users'),
-        ('subscribers', 'Active Subscribers Only'),
+        ('meal_subscribers', 'Active Meal Plan Subscribers'),
+        ('newsletter_subscribers', 'Newsletter Subscribers'),
+        ('location_based', 'Users by Location'),
+        ('meal_plan_based', 'Users by Meal Plan'),
         ('specific', 'Specific User')
     ], default='all')
     user_id = StringField('User ID', validators=[Optional()])
@@ -144,6 +158,19 @@ class CouponForm(FlaskForm):
     is_single_use = BooleanField('Single Use')
     is_active = BooleanField('Active', default=True)
 
+class HeroSlideForm(FlaskForm):
+    """Form for adding/editing hero slides"""
+    title = StringField('Title', validators=[DataRequired(), Length(max=200)])
+    subtitle = StringField('Subtitle', validators=[Optional(), Length(max=500)])
+    image = StringField('Image URL', validators=[Optional(), URL()])
+    image_url = StringField('Image URL', validators=[Optional(), URL()])
+    image_file = FileField('Upload Image', validators=[Optional()])  # File upload field
+    button_text = StringField('Button Text', validators=[Optional(), Length(max=100)])
+    button_link = StringField('Button Link', validators=[Optional(), URL()])
+    order = IntegerField('Order', validators=[Optional()], default=0)
+    is_active = BooleanField('Active', default=True)
+    submit = SubmitField('Add Hero Slide')
+
     def validate_discount_value(self, field):
         if self.discount_type.data == 'percentage' and field.data > 100:
             raise ValidationError('Percentage discount cannot exceed 100%')
@@ -170,8 +197,8 @@ def admin_dashboard():
         ).count()
         
         # Get subscription statistics
-        active_subscriptions = Subscription.query.filter_by(status='active').count()
-        trial_subscriptions = Subscription.query.filter_by(status='trial').count()
+        active_subscriptions = Subscription.query.filter_by(status=SubscriptionStatus.ACTIVE).count()
+        trial_subscriptions = Subscription.query.filter_by(status=SubscriptionStatus.PAUSED).count()  # Using PAUSED instead of 'trial'
         total_meal_plans = MealPlan.query.count()
         active_meal_plans = MealPlan.query.filter_by(is_active=True).count()
         total_locations = DeliveryLocation.query.count()
@@ -181,28 +208,44 @@ def admin_dashboard():
         recent_activity = []
         
         # Add recent subscriptions
-        recent_subs = Subscription.query.order_by(Subscription.created_at.desc()).limit(5).all()
-        for sub in recent_subs:
-            recent_activity.append({
-                'type': 'subscription',
-                'user': sub.user,
-                'details': f"New {sub.status} subscription",
-                'created_at': sub.created_at
-            })
+        try:
+            recent_subs = Subscription.query.order_by(Subscription.created_at.desc()).limit(5).all()
+            for sub in recent_subs:
+                try:
+                    user_name = sub.user.name if sub.user and sub.user.name else (sub.user.email if sub.user else 'Unknown User')
+                    status_str = sub.status.value if hasattr(sub.status, 'value') else str(sub.status)
+                    recent_activity.append({
+                        'type': 'subscription',
+                        'user': sub.user,
+                        'details': f"New {status_str} subscription - {user_name}",
+                        'created_at': sub.created_at if sub.created_at else datetime.utcnow()
+                    })
+                except Exception as sub_error:
+                    current_app.logger.warning(f"Error processing subscription {sub.id}: {str(sub_error)}")
+                    continue
+        except Exception as e:
+            current_app.logger.warning(f"Error loading recent subscriptions: {str(e)}")
         
         # Add recent trial requests
-        recent_trials = TrialRequest.query.order_by(TrialRequest.created_at.desc()).limit(5).all()
-        for trial in recent_trials:
-            recent_activity.append({
-                'type': 'trial_request',
-                'user': None,  # Trial requests don't have user_id
-                'details': f"New trial request from {trial.email}",
-                'created_at': trial.created_at
-            })
+        try:
+            recent_trials = TrialRequest.query.order_by(TrialRequest.created_at.desc()).limit(5).all()
+            for trial in recent_trials:
+                recent_activity.append({
+                    'type': 'trial_request',
+                    'user': None,  # Trial requests don't have user_id
+                    'details': f"New trial request from {trial.email if hasattr(trial, 'email') else 'Unknown'}",
+                    'created_at': trial.created_at if hasattr(trial, 'created_at') else datetime.utcnow()
+                })
+        except Exception as e:
+            current_app.logger.warning(f"Error loading recent trial requests: {str(e)}")
 
-        # Sort activities by date
-        recent_activity.sort(key=lambda x: x['created_at'], reverse=True)
-        recent_activity = recent_activity[:10]  # Keep only the 10 most recent
+        # Sort activities by date (handle None dates gracefully)
+        try:
+            recent_activity.sort(key=lambda x: x.get('created_at') or datetime.utcnow(), reverse=True)
+            recent_activity = recent_activity[:10]  # Keep only the 10 most recent
+        except Exception as e:
+            current_app.logger.warning(f"Error sorting recent activity: {str(e)}")
+            recent_activity = recent_activity[:10]  # Just take first 10 if sorting fails
 
         return render_template('admin/dashboard.html',
                              total_users=total_users,
@@ -215,9 +258,13 @@ def admin_dashboard():
                              active_locations=active_locations,
                              recent_activity=recent_activity)
     except Exception as e:
-        current_app.logger.error(f"Error loading admin dashboard: {str(e)}")
-        flash('An error occurred while loading the dashboard.', 'error')
-        return redirect(url_for('main.index'))
+        current_app.logger.error(f"Error loading admin dashboard: {str(e)}", exc_info=True)
+        import traceback
+        error_details = traceback.format_exc()
+        current_app.logger.error(f"Dashboard error traceback: {error_details}")
+        flash(f'An error occurred while loading the dashboard: {str(e)}', 'error')
+        # Return error page instead of redirecting to avoid losing error context
+        return render_template('admin/error.html', error=str(e), error_details=error_details), 500
 
 @admin_bp.route('/locations', methods=['GET'])
 @login_required
@@ -374,8 +421,7 @@ def admin_edit_user(user_id):
             # Only update password if provided
             password = request.form.get('password')
             if password and password.strip():
-                # In a real app, you would hash the password
-                user.password_hash = password  # This would be properly hashed
+                user.set_password(password)
             
             # Update status fields
             user.is_active = 'is_active' in request.form
@@ -386,27 +432,25 @@ def admin_edit_user(user_id):
                 user.is_admin = True
             
             # Update address
-            user.address_line1 = request.form.get('address_line1', user.address_line1)
-            user.address_line2 = request.form.get('address_line2', user.address_line2)
+            user.address = request.form.get('address', user.address)
             user.city = request.form.get('city', user.city)
             user.province = request.form.get('province', user.province)
             user.postal_code = request.form.get('postal_code', user.postal_code)
-            user.country = request.form.get('country', user.country)
             
-            # Update admin notes
-            user.admin_notes = request.form.get('admin_notes', user.admin_notes)
-            user.notes_updated_at = datetime.utcnow()
+            # Update admin notes (removed - User model doesn't have admin_notes field)
+            # user.admin_notes = request.form.get('admin_notes', user.admin_notes)
+            # user.notes_updated_at = datetime.utcnow()
             
             db.session.commit()
             flash('User information updated successfully', 'success')
             return redirect(url_for('admin.admin_view_user', user_id=user.id))
         
         elif action == 'update_notes':
-            # Handle notes update form submission
-            user.admin_notes = request.form.get('admin_notes', '')
-            user.notes_updated_at = datetime.utcnow()
-            db.session.commit()
-            flash('Admin notes updated successfully', 'success')
+            # Handle notes update form submission (removed - User model doesn't have admin_notes field)
+            # user.admin_notes = request.form.get('admin_notes', '')
+            # user.notes_updated_at = datetime.utcnow()
+            # db.session.commit()
+            flash('Admin notes feature not available for users', 'info')
             return redirect(url_for('admin.admin_view_user', user_id=user.id))
             
         elif action == 'delete_user':
@@ -561,7 +605,12 @@ def admin_add_meal_plan():
                 tag=request.form.get('tag'),
                 is_popular=request.form.get('is_popular') == 'true',
                 is_active=request.form.get('is_active') == 'true',
-                image_url=request.form.get('image_url')
+                image_url=request.form.get('image_url'),
+                # Meal configuration fields
+                includes_breakfast=request.form.get('includes_breakfast') == 'true',
+                includes_lunch=request.form.get('includes_lunch') == 'true',
+                includes_dinner=request.form.get('includes_dinner') == 'true',
+                includes_snacks=request.form.get('includes_snacks') == 'true'
             )
             
             db.session.add(meal_plan)
@@ -753,9 +802,30 @@ def admin_orders():
     
     current_app.logger.info(f"Admin viewing orders for date: {selected_date}")
     
+    # Create pagination-like object for template compatibility
+    class OrdersPagination:
+        def __init__(self, items):
+            self.items = items
+            self.page = 1
+            self.pages = 1
+            self.per_page = len(items)
+            self.total = len(items)
+            self.has_prev = False
+            self.has_next = False
+            self.prev_num = None
+            self.next_num = None
+
+        def __len__(self):
+            return len(self.items)
+
+        def __iter__(self):
+            return iter(self.items)
+    
+    orders_pagination = OrdersPagination(transformed_orders)
+    
     return render_template('admin/orders.html', 
                           selected_date=selected_date,
-                          orders=transformed_orders,
+                          orders=orders_pagination,
                           skipped=skipped,
                           delivery_statuses=delivery_statuses,
                           location_counts=location_counts,
@@ -765,15 +835,16 @@ def admin_orders():
 @login_required
 @admin_required
 def admin_subscriptions():
-    """Admin subscriptions management page"""
+    """Admin subscriptions management page - FIXED VERSION"""
     try:
+        from sqlalchemy import desc, or_
         page = request.args.get('page', 1, type=int)
         per_page = 20
         status = request.args.get('status', '')
         search = request.args.get('search', '')
         
         # Start with base query
-        query = Subscription.query
+        query = Subscription.query.join(User).join(MealPlan)
         
         # Apply status filter if provided
         if status:
@@ -786,7 +857,7 @@ def admin_subscriptions():
         
         # Apply search filter if provided
         if search:
-            query = query.join(User).filter(
+            query = query.filter(
                 or_(
                     User.name.ilike(f'%{search}%'),
                     User.email.ilike(f'%{search}%')
@@ -794,9 +865,13 @@ def admin_subscriptions():
             )
         
         # Order by newest first and paginate
-        subscriptions = query.order_by(Subscription.created_at.desc()).paginate(
+        subscriptions = query.order_by(desc(Subscription.created_at)).paginate(
             page=page, per_page=per_page, error_out=False
         )
+        
+        # Calculate next delivery dates for each subscription
+        for subscription in subscriptions.items:
+            subscription.next_delivery_date = calculate_next_delivery_date(subscription)
         
         return render_template('admin/subscriptions.html', 
                              subscriptions=subscriptions,
@@ -806,6 +881,44 @@ def admin_subscriptions():
         current_app.logger.error(f"Error loading subscriptions: {str(e)}")
         flash('Error loading subscriptions', 'error')
         return redirect(url_for('admin.admin_dashboard'))
+
+def calculate_next_delivery_date(subscription):
+    """Calculate the next delivery date for a subscription"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # Get delivery days
+        delivery_days = []
+        if subscription.delivery_days:
+            try:
+                delivery_days = json.loads(subscription.delivery_days)
+            except:
+                delivery_days = [0, 1, 2, 3, 4]  # Default to weekdays
+        
+        if not delivery_days:
+            delivery_days = [0, 1, 2, 3, 4]  # Default to weekdays
+        
+        # Start from today
+        current_date = datetime.now().date()
+        
+        # Find the next delivery date
+        for i in range(14):  # Look ahead 2 weeks
+            check_date = current_date + timedelta(days=i)
+            if check_date.weekday() in delivery_days:
+                # Check if this delivery is not skipped
+                is_skipped = SkippedDelivery.query.filter_by(
+                    subscription_id=subscription.id,
+                    delivery_date=check_date
+                ).first()
+                
+                if not is_skipped:
+                    return check_date
+        
+        return None
+        
+    except Exception as e:
+        current_app.logger.error(f"Error calculating next delivery date: {str(e)}")
+        return None
 
 @admin_bp.route('/newsletters')
 @login_required
@@ -1015,6 +1128,11 @@ def send_notification():
     """Handle sending notifications through multiple channels"""
     form = NotificationForm()
     
+    # Ensure CSRF token is available
+    if not form.csrf_token.data:
+        flash('CSRF token missing. Please refresh the page and try again.', 'error')
+        return redirect(url_for('admin.admin_notifications'))
+    
     if form.validate_on_submit():
         title = form.title.data
         message = form.message.data
@@ -1028,8 +1146,58 @@ def send_notification():
         # Get users based on recipient type
         if recipient_type == 'specific' and user_id:
             users = User.query.filter_by(id=user_id).all()
-        elif recipient_type == 'subscribers':
-            users = User.query.join(Subscription).filter(Subscription.status == 'active').all()
+        elif recipient_type == 'meal_subscribers':
+            # Active meal plan subscribers
+            users = User.query.join(Subscription).filter(Subscription.status == SubscriptionStatus.ACTIVE).all()
+        elif recipient_type == 'newsletter_subscribers':
+            # Newsletter subscribers - include both users and non-users
+            newsletter_emails = [n.email for n in Newsletter.query.all()]
+            logger.info(f"Found {len(newsletter_emails)} newsletter subscribers: {newsletter_emails}")
+            
+            users = User.query.filter(User.email.in_(newsletter_emails)).all()
+            logger.info(f"Found {len(users)} users with newsletter emails")
+            
+            # If no users found, create a list of newsletter subscribers without user accounts
+            if not users and newsletter_emails:
+                # Create mock user objects for newsletter subscribers without accounts
+                users = []
+                for email in newsletter_emails:
+                    # Check if this email doesn't have a user account
+                    existing_user = User.query.filter_by(email=email).first()
+                    if not existing_user:
+                        # Create a mock user object for newsletter subscribers
+                        mock_user = type('MockUser', (), {
+                            'id': f'newsletter_{email}',
+                            'email': email,
+                            'name': email.split('@')[0],  # Use email prefix as name
+                            'phone': None
+                        })()
+                        users.append(mock_user)
+                        logger.info(f"Created mock user for newsletter subscriber: {email}")
+            
+            logger.info(f"Total newsletter recipients: {len(users)}")
+        elif recipient_type == 'location_based':
+            # Get location filter from form
+            location_filter = request.form.get('location_filter', '')
+            if location_filter:
+                users = User.query.filter(
+                    or_(
+                        User.city.ilike(f'%{location_filter}%'),
+                        User.province.ilike(f'%{location_filter}%'),
+                        User.address.ilike(f'%{location_filter}%')
+                    )
+                ).all()
+            else:
+                users = User.query.all()
+        elif recipient_type == 'meal_plan_based':
+            # Get meal plan filter from form
+            meal_plan_filter = request.form.get('meal_plan_filter', '')
+            if meal_plan_filter:
+                users = User.query.join(Subscription).join(MealPlan).filter(
+                    MealPlan.name.ilike(f'%{meal_plan_filter}%')
+                ).all()
+            else:
+                users = User.query.join(Subscription).all()
         else:
             users = User.query.all()
         
@@ -1052,6 +1220,9 @@ def send_notification():
         failed_count = 0
         
         for user in users:
+            user_sent = False
+            user_failed = False
+            
             try:
                 # Send push notification if selected
                 if 'push' in channels:
@@ -1059,39 +1230,80 @@ def send_notification():
                     if subscription:
                         try:
                             send_push_notification(subscription, title, message, notification_type)
-                            sent_count += 1
+                            user_sent = True
                         except Exception as e:
                             logger.error(f"Failed to send push notification to user {user.id}: {str(e)}")
-                            failed_count += 1
+                            user_failed = True
+                    else:
+                        logger.info(f"User {user.id} has no push subscription")
                 
                 # Send email if selected
                 if 'email' in channels and user.email:
                     try:
+                        # Create simple HTML email without template to avoid URL issues
+                        html_content = f"""
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta charset="UTF-8">
+                            <style>
+                                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                                .header {{ background-color: #379777; color: white; padding: 20px; text-align: center; }}
+                                .content {{ padding: 20px; background-color: #f9f9f9; }}
+                                .footer {{ text-align: center; padding: 20px; font-size: 12px; color: #666; }}
+                                .button {{ display: inline-block; padding: 10px 20px; background-color: #379777; 
+                                          color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <div class="header">
+                                    <h1>{title}</h1>
+                                </div>
+                                <div class="content">
+                                    <p>Hello {user.name or 'Valued Customer'},</p>
+                                    <p>{message}</p>
+                                    {email_content}
+                                    <p style="text-align: center;">
+                                        <a href="https://healthyrizz.in/" class="button">Visit HealthyRizz</a>
+                                    </p>
+                                </div>
+                                <div class="footer">
+                                    <p>This email was sent to {user.email}</p>
+                                    <p>&copy; {datetime.utcnow().year} HealthyRizz. All rights reserved.</p>
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                        """
+                        
                         send_email(
                             to_email=user.email,
                             from_email=os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@healthyrizz.ca'),
                             subject=email_subject,
                             text_content=email_content,
-                            html_content=render_template('email/notification.html',
-                                user=user,
-                                title=title,
-                                message=message,
-                                content=email_content
-                            )
+                            html_content=html_content
                         )
-                        sent_count += 1
+                        user_sent = True
                     except Exception as e:
                         logger.error(f"Failed to send email to user {user.id}: {str(e)}")
-                        failed_count += 1
+                        user_failed = True
                 
                 # Send SMS if selected
                 if 'sms' in channels and user.phone:
                     try:
                         send_sms(user.phone, message)
-                        sent_count += 1
+                        user_sent = True
                     except Exception as e:
                         logger.error(f"Failed to send SMS to user {user.id}: {str(e)}")
-                        failed_count += 1
+                        user_failed = True
+                
+                # Count as sent if at least one channel succeeded
+                if user_sent:
+                    sent_count += 1
+                elif user_failed:
+                    failed_count += 1
                 
             except Exception as e:
                 logger.error(f"Failed to process notifications for user {user.id}: {str(e)}")
@@ -1380,26 +1592,79 @@ def admin_delete_banner(banner_id):
 @login_required
 @admin_required
 def admin_blog():
-    """Admin blog management page"""
+    """Admin blog management page with sorting and filtering"""
     from database.models import BlogPost
     try:
-        # Get all blog posts with author information
-        posts = BlogPost.query.order_by(BlogPost.created_at.desc()).all()
-        current_app.logger.info(f"Admin blog route - Found {len(posts)} blog posts")
+        # Get query parameters
+        search_query = request.args.get('search', '').strip()
+        category_filter = request.args.get('category', '').strip()
+        status_filter = request.args.get('status', '').strip()
+        sort_by = request.args.get('sort', 'date_desc').strip()
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
         
-        # Get unique categories
+        # Start with base query
+        query = BlogPost.query
+        
+        # Apply filters
+        if search_query:
+            query = query.filter(
+                or_(
+                    BlogPost.title.ilike(f'%{search_query}%'),
+                    BlogPost.content.ilike(f'%{search_query}%'),
+                    BlogPost.summary.ilike(f'%{search_query}%')
+                )
+            )
+        
+        if category_filter:
+            query = query.filter(BlogPost.category == category_filter)
+        
+        if status_filter == 'published':
+            query = query.filter(BlogPost.is_published == True)
+        elif status_filter == 'draft':
+            query = query.filter(BlogPost.is_published == False)
+        elif status_filter == 'featured':
+            query = query.filter(BlogPost.is_featured == True)
+        
+        # Apply sorting
+        if sort_by == 'title_asc':
+            query = query.order_by(BlogPost.title.asc())
+        elif sort_by == 'title_desc':
+            query = query.order_by(BlogPost.title.desc())
+        elif sort_by == 'date_asc':
+            query = query.order_by(BlogPost.created_at.asc())
+        elif sort_by == 'date_desc':
+            query = query.order_by(BlogPost.created_at.desc())
+        elif sort_by == 'category_asc':
+            query = query.order_by(BlogPost.category.asc())
+        elif sort_by == 'category_desc':
+            query = query.order_by(BlogPost.category.desc())
+        else:
+            query = query.order_by(BlogPost.created_at.desc())
+        
+        # Get paginated results
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        posts = pagination.items
+        
+        # Get unique categories for filter dropdown
         categories = db.session.query(BlogPost.category).distinct().all()
         categories = [cat[0] for cat in categories if cat[0]]
         
-        # Log post details for debugging
-        for post in posts:
-            current_app.logger.info(f"Admin blog post: {post.title} (ID: {post.id}, Published: {post.is_published}, Featured: {post.is_featured}, Created: {post.created_at})")
+        current_app.logger.info(f"Admin blog route - Found {len(posts)} blog posts (page {page})")
         
-        return render_template('admin/blog.html', posts=posts, categories=categories)
+        return render_template('admin/blog.html', 
+                             posts=posts, 
+                             categories=categories,
+                             pagination=pagination,
+                             search_query=search_query,
+                             category_filter=category_filter,
+                             status_filter=status_filter,
+                             sort_by=sort_by,
+                             current_page=page)
     except Exception as e:
-        current_app.logger.error(f"Error loading blog posts: {str(e)}")
+        current_app.logger.error(f"Error loading blog posts: {str(e)}", exc_info=True)
         flash('Error loading blog posts', 'error')
-        return render_template('admin/blog.html', posts=[], categories=[])
+        return render_template('admin/blog.html', posts=[], categories=[], pagination=None)
 
 @admin_bp.route('/toggle-user-status', methods=['POST'])
 @login_required
@@ -1594,6 +1859,145 @@ def admin_add_coupon():
         flash('Error adding coupon', 'error')
         return redirect(url_for('admin.admin_coupons'))
 
+@admin_bp.route('/test-blog-template')
+@login_required
+@admin_required
+def test_blog_template():
+    """Test route to check if template rendering works"""
+    try:
+        return render_template('admin/add_blog_post.html', categories=['Test'], meal_plans=[])
+    except Exception as e:
+        current_app.logger.error(f"Template test error: {str(e)}")
+        return f"Template error: {str(e)}", 500
+
+@admin_bp.route('/test-blog-simple')
+@login_required
+@admin_required
+def test_blog_simple():
+    """Test route with simple template"""
+    try:
+        return render_template('admin/test_blog_simple.html', categories=['Test'])
+    except Exception as e:
+        current_app.logger.error(f"Simple template test error: {str(e)}")
+        return f"Simple template error: {str(e)}", 500
+
+@admin_bp.route('/test-html-editor')
+@login_required
+@admin_required
+def test_html_editor():
+    """Test HTML editor functionality"""
+    try:
+        return render_template('admin/test_html_editor.html')
+    except Exception as e:
+        current_app.logger.error(f"HTML editor test error: {str(e)}")
+        return f"HTML editor test error: {str(e)}", 500
+
+@admin_bp.route('/test-blog-no-auth')
+def test_blog_no_auth():
+    """Test blog post page without authentication"""
+    try:
+        # Get meal plans for HTML insertion
+        meal_plans_objects = MealPlan.query.filter_by(is_active=True).order_by(MealPlan.name).all()
+        meal_plans = []
+        for plan in meal_plans_objects:
+            meal_plans.append({
+                'id': plan.id,
+                'name': plan.name,
+                'description': plan.description,
+                'price_weekly': float(plan.price_weekly) if plan.price_weekly else 0,
+                'is_popular': plan.is_popular,
+                'calories': int(plan.calories) if plan.calories else 0,
+                'protein': float(plan.protein) if plan.protein else 0,
+                'carbs': float(plan.carbs) if plan.carbs else 0,
+                'fat': float(plan.fat) if plan.fat else 0
+            })
+        
+        categories = ['Test Category']
+        
+        return render_template('admin/add_blog_post.html', categories=categories, meal_plans=meal_plans)
+    except Exception as e:
+        current_app.logger.error(f"Blog test error: {str(e)}")
+        return f"Blog test error: {str(e)}", 500
+
+@admin_bp.route('/test-html-editor-simple')
+def test_html_editor_simple():
+    """Simple test for HTML editor functionality"""
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>HTML Editor Test</title>
+        <style>
+            .html-editor {
+                width: 100%;
+                min-height: 300px;
+                padding: 0.75rem;
+                border: 1px solid #4b5563;
+                border-radius: 0.375rem;
+                background-color: #2d2d2d;
+                color: #fff;
+                font-family: 'Courier New', monospace;
+                font-size: 0.875rem;
+                line-height: 1.5;
+                resize: vertical;
+                pointer-events: auto !important;
+                user-select: text !important;
+                cursor: text !important;
+                display: block !important;
+            }
+            .html-editor:focus {
+                outline: 3px solid #007bff !important;
+                outline-offset: 2px !important;
+                border-color: #007bff !important;
+                box-shadow: 0 0 0 3px rgba(0,123,255,0.25) !important;
+            }
+        </style>
+    </head>
+    <body style="background: #1a1a1a; color: white; padding: 20px;">
+        <h1>HTML Editor Test</h1>
+        <p>Try typing in this textarea:</p>
+        <textarea class="html-editor" placeholder="Type here to test the HTML editor...">This is a test textarea. Try typing here!</textarea>
+        <br><br>
+        <button onclick="alert('Textarea value: ' + document.querySelector('.html-editor').value)">Check Value</button>
+        <br><br>
+        <button onclick="document.querySelector('.html-editor').focus()">Focus Textarea</button>
+        <br><br>
+        <button onclick="console.log('Textarea element:', document.querySelector('.html-editor')); console.log('Disabled:', document.querySelector('.html-editor').disabled); console.log('ReadOnly:', document.querySelector('.html-editor').readOnly);">Debug Textarea</button>
+    </body>
+    </html>
+    '''
+
+@admin_bp.route('/test-blog-working')
+def test_blog_working():
+    """Test blog post page with working HTML editor"""
+    try:
+        # Get meal plans for HTML insertion
+        meal_plans_objects = MealPlan.query.filter_by(is_active=True).order_by(MealPlan.name).all()
+        meal_plans = []
+        for plan in meal_plans_objects:
+            meal_plans.append({
+                'id': plan.id,
+                'name': plan.name,
+                'description': plan.description,
+                'price_weekly': float(plan.price_weekly) if plan.price_weekly else 0,
+                'is_popular': plan.is_popular,
+                'calories': int(plan.calories) if plan.calories else 0,
+                'protein': float(plan.protein) if plan.protein else 0,
+                'carbs': float(plan.carbs) if plan.carbs else 0,
+                'fat': float(plan.fat) if plan.fat else 0
+            })
+        
+        categories = ['Test Category']
+        
+        return render_template('admin/add_blog_post.html', categories=categories, meal_plans=meal_plans)
+    except Exception as e:
+        current_app.logger.error(f"Blog test error: {str(e)}")
+        return f"Blog test error: {str(e)}", 500
+
+
+
+
+
 @admin_bp.route('/add-blog-post', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -1609,8 +2013,30 @@ def admin_add_blog_post():
             'Lifestyle',
             'Health Tips',
             'Workout',
-            'Diet'
+            'Diet',
+            'Meal Plans'
         ]
+        
+        # Get meal plans for HTML insertion
+        try:
+            meal_plans_objects = MealPlan.query.filter_by(is_active=True).order_by(MealPlan.name).all()
+            # Convert to dictionaries for JSON serialization
+            meal_plans = []
+            for plan in meal_plans_objects:
+                meal_plans.append({
+                    'id': plan.id,
+                    'name': plan.name,
+                    'description': plan.description,
+                    'price_weekly': float(plan.price_weekly) if plan.price_weekly else 0,
+                    'is_popular': plan.is_popular,
+                    'calories': int(plan.calories) if plan.calories else 0,
+                    'protein': float(plan.protein) if plan.protein else 0,
+                    'carbs': float(plan.carbs) if plan.carbs else 0,
+                    'fat': float(plan.fat) if plan.fat else 0
+                })
+        except Exception as e:
+            current_app.logger.error(f"Error loading meal plans: {str(e)}")
+            meal_plans = []
         
         if request.method == 'POST':
             # Get form data
@@ -1659,7 +2085,8 @@ def admin_add_blog_post():
             return redirect(url_for('admin.admin_blog'))
             
         # GET request - show the form
-        return render_template('admin/add_blog_post.html', categories=categories)
+        current_app.logger.info(f"Rendering add blog post template with {len(meal_plans)} meal plans")
+        return render_template('admin/add_blog_post.html', categories=categories, meal_plans=meal_plans)
         
     except Exception as e:
         current_app.logger.error(f"Error adding blog post: {str(e)}")
@@ -2472,48 +2899,68 @@ def admin_update_delivery_status(delivery_id):
 @login_required
 @admin_required
 def admin_edit_meal_plan(id):
-    """Edit a meal plan"""
-    try:
-        meal_plan = MealPlan.query.get_or_404(id)
-        
-        if request.method == 'POST':
-            # Get form data
-            meal_plan.name = request.form.get('name')
-            meal_plan.description = request.form.get('description')
-            meal_plan.calories = request.form.get('calories')
-            meal_plan.protein = request.form.get('protein')
-            meal_plan.fat = request.form.get('fat')
-            meal_plan.carbs = request.form.get('carbs')
-            meal_plan.price_weekly = float(request.form.get('price_weekly'))
-            meal_plan.price_monthly = float(request.form.get('price_monthly'))
+    """Admin edit meal plan page"""
+    meal_plan = MealPlan.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        try:
+            # Update basic information
+            meal_plan.name = request.form.get('name', '').strip()
+            meal_plan.description = request.form.get('description', '').strip()
+            meal_plan.image_url = request.form.get('image_url', '').strip()
+            
+            # Update pricing
+            meal_plan.price_weekly = float(request.form.get('price_weekly', 0))
+            meal_plan.price_monthly = float(request.form.get('price_monthly', 0))
             meal_plan.price_trial = float(request.form.get('price_trial', 14.99))
-            meal_plan.is_active = request.form.get('is_active') == 'true'
-            meal_plan.available_for_trial = request.form.get('available_for_trial') == 'true'
-            meal_plan.includes_breakfast = request.form.get('includes_breakfast') == 'true'
+            
+            # Update nutritional information
+            meal_plan.calories = request.form.get('calories', '').strip()
+            meal_plan.protein = request.form.get('protein', '').strip()
+            meal_plan.carbs = request.form.get('carbs', '').strip()
+            meal_plan.fat = request.form.get('fat', '').strip()
+            meal_plan.fiber = request.form.get('fiber', '').strip()
+            meal_plan.sodium = request.form.get('sodium', '').strip()
+            meal_plan.sugar = request.form.get('sugar', '').strip()
+            
+            # Update dietary preferences
+            meal_plan.is_vegetarian = 'is_vegetarian' in request.form
+            meal_plan.is_vegan = 'is_vegan' in request.form
+            meal_plan.is_gluten_free = 'is_gluten_free' in request.form
+            meal_plan.is_dairy_free = 'is_dairy_free' in request.form
+            meal_plan.is_keto = 'is_keto' in request.form
+            meal_plan.is_paleo = 'is_paleo' in request.form
+            meal_plan.is_low_carb = 'is_low_carb' in request.form
+            meal_plan.is_high_protein = 'is_high_protein' in request.form
+            
+            # Update meal inclusions
+            meal_plan.includes_breakfast = 'includes_breakfast' in request.form
+            meal_plan.includes_lunch = 'includes_lunch' in request.form
+            meal_plan.includes_dinner = 'includes_dinner' in request.form
+            meal_plan.includes_snacks = 'includes_snacks' in request.form
+            
+            # Update delivery times
+            meal_plan.breakfast_time = request.form.get('breakfast_time', '7:00-9:00 AM')
+            meal_plan.lunch_time = request.form.get('lunch_time', '12:00-2:00 PM')
+            meal_plan.dinner_time = request.form.get('dinner_time', '6:00-8:00 PM')
+            
+            # Update other fields
             meal_plan.for_gender = request.form.get('for_gender', 'both')
-            meal_plan.tag = request.form.get('tag')
-            meal_plan.is_vegetarian = request.form.get('is_vegetarian') == 'true'
-            meal_plan.is_vegan = request.form.get('is_vegan') == 'true'
-            meal_plan.is_gluten_free = request.form.get('is_gluten_free') == 'true'
-            meal_plan.is_dairy_free = request.form.get('is_dairy_free') == 'true'
-            meal_plan.is_keto = request.form.get('is_keto') == 'true'
-            meal_plan.is_paleo = request.form.get('is_paleo') == 'true'
-            meal_plan.is_low_carb = request.form.get('is_low_carb') == 'true'
-            meal_plan.is_high_protein = request.form.get('is_high_protein') == 'true'
-            meal_plan.image_url = request.form.get('image_url')
-            meal_plan.is_popular = request.form.get('is_popular') == 'true'
+            meal_plan.tag = request.form.get('tag', '').strip()
+            meal_plan.meal_plan_type = request.form.get('meal_plan_type', 'all_day')
+            meal_plan.available_for_trial = 'available_for_trial' in request.form
+            meal_plan.is_popular = 'is_popular' in request.form
+            meal_plan.is_active = 'is_active' in request.form
             
             db.session.commit()
             flash('Meal plan updated successfully', 'success')
             return redirect(url_for('admin.admin_meal_plans'))
             
-        return render_template('admin/edit_meal_plan.html', meal_plan=meal_plan)
-        
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error editing meal plan: {str(e)}")
-        flash('Error editing meal plan', 'error')
-        return redirect(url_for('admin.admin_meal_plans'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating meal plan: {str(e)}', 'error')
+    
+    return render_template('admin/edit_meal_plan.html', meal_plan=meal_plan)
 
 @admin_bp.route('/orders/generate-simple-labels/<date>')
 @login_required
@@ -2546,6 +2993,37 @@ def admin_generate_simple_labels(date):
         flash(f'Error generating simple labels: {str(e)}', 'error')
         return redirect(url_for('admin.admin_orders'))
 
+@admin_bp.route('/orders/generate-barcode-labels/<date>')
+@login_required
+@admin_required
+def admin_generate_barcode_labels(date):
+    """Generate 4x4 inch barcode labels for label printers - OPTIMIZED FOR PACKING"""
+    try:
+        # Parse the date
+        try:
+            selected_date = datetime.strptime(date, '%Y-%m-%d').date()
+        except ValueError:
+            flash('Invalid date format', 'error')
+            return redirect(url_for('admin.admin_orders'))
+        
+        # Get orders for the date using barcode labels function
+        from utils.report_utils import generate_barcode_labels_4x4
+        labels_pdf = generate_barcode_labels_4x4(selected_date)
+        
+        if not labels_pdf:
+            flash('No orders found for this date', 'error')
+            return redirect(url_for('admin.admin_orders'))
+        
+        return send_file(
+            labels_pdf,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'barcode_labels_4x4_{date}.pdf'
+        )
+    except Exception as e:
+        flash(f'Error generating barcode labels: {str(e)}', 'error')
+        return redirect(url_for('admin.admin_orders'))
+
 @admin_bp.route('/edit-blog-post/<int:id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -2555,11 +3033,22 @@ def admin_edit_blog_post(id):
         post = BlogPost.query.get_or_404(id)
         
         if request.method == 'POST':
+            # Debug logging
+            current_app.logger.info(f"Edit blog post form submitted for post ID: {id}")
+            current_app.logger.info(f"Form data: {dict(request.form)}")
+            
             post.title = request.form.get('title')
             post.content = request.form.get('content')
             post.category = request.form.get('category')
             post.tags = request.form.get('tags')
             post.is_published = request.form.get('is_published') == 'true'
+            
+            # Debug logging for form values
+            current_app.logger.info(f"Updated post - Title: {post.title}")
+            current_app.logger.info(f"Updated post - Content length: {len(post.content) if post.content else 0}")
+            current_app.logger.info(f"Updated post - Category: {post.category}")
+            current_app.logger.info(f"Updated post - Tags: {post.tags}")
+            current_app.logger.info(f"Updated post - Is Published: {post.is_published}")
             
             # Update slug if title changed
             new_slug = post.title.lower().replace(' ', '-')
@@ -2589,7 +3078,7 @@ def admin_edit_blog_post(id):
             flash('Blog post updated successfully', 'success')
             return redirect(url_for('admin.admin_blog'))
         
-        # Define available categories
+        # Predefined categories
         categories = [
             'Nutrition',
             'Fitness',
@@ -2598,10 +3087,32 @@ def admin_edit_blog_post(id):
             'Lifestyle',
             'Health Tips',
             'Workout',
-            'Diet'
+            'Diet',
+            'Meal Plans'
         ]
         
-        return render_template('admin/edit_blog_post.html', post=post, categories=categories)
+        # Get meal plans for HTML insertion
+        try:
+            meal_plans_objects = MealPlan.query.filter_by(is_active=True).order_by(MealPlan.name).all()
+            # Convert to dictionaries for JSON serialization
+            meal_plans = []
+            for plan in meal_plans_objects:
+                meal_plans.append({
+                    'id': plan.id,
+                    'name': plan.name,
+                    'description': plan.description,
+                    'price_weekly': float(plan.price_weekly) if plan.price_weekly else 0,
+                    'is_popular': plan.is_popular,
+                    'calories': int(plan.calories) if plan.calories else 0,
+                    'protein': float(plan.protein) if plan.protein else 0,
+                    'carbs': float(plan.carbs) if plan.carbs else 0,
+                    'fat': float(plan.fat) if plan.fat else 0
+                })
+        except Exception as e:
+            current_app.logger.error(f"Error loading meal plans: {str(e)}")
+            meal_plans = []
+        
+        return render_template('admin/edit_blog_post.html', post=post, categories=categories, meal_plans=meal_plans)
     except Exception as e:
         current_app.logger.error(f"Error editing blog post: {str(e)}")
         flash('Error editing blog post', 'error')
@@ -2638,52 +3149,40 @@ def admin_media():
 @admin_required
 def admin_add_hero_slide():
     """Add a new hero slide"""
-    if request.method == 'POST':
+    form = HeroSlideForm()
+    if form.validate_on_submit():
         try:
-            title = request.form.get('title')
-            subtitle = request.form.get('subtitle')
-            image_url = request.form.get('image_url')
-            image_file = request.files.get('image_file')
-            order = int(request.form.get('order', 0))
-            is_active = 'is_active' in request.form
-            
             # Handle image upload
-            final_image_url = image_url
-            if image_file and image_file.filename:
-                # Secure the filename and create upload path
+            final_image_url = form.image_url.data or form.image.data
+            
+            # Check if file was uploaded
+            if form.image_file.data and form.image_file.data.filename:
+                image_file = form.image_file.data
                 filename = secure_filename(image_file.filename)
-                # Add timestamp to avoid conflicts
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
                 filename = timestamp + filename
-                
                 upload_folder = os.path.join(current_app.root_path, 'static', 'uploads')
                 os.makedirs(upload_folder, exist_ok=True)
                 file_path = os.path.join(upload_folder, filename)
-                
-                # Save the file
                 image_file.save(file_path)
                 final_image_url = f'/static/uploads/{filename}'
             
             hero_slide = HeroSlide(
-                title=title,
-                subtitle=subtitle,
+                title=form.title.data,
+                subtitle=form.subtitle.data,
                 image_url=final_image_url,
-                order=order,
-                is_active=is_active
+                order=form.order.data or 0,
+                is_active=form.is_active.data
             )
-            
             db.session.add(hero_slide)
             db.session.commit()
-            
             flash('Hero slide added successfully!', 'success')
             return redirect(url_for('admin.admin_media'))
-            
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error adding hero slide: {str(e)}")
             flash('An error occurred while adding the hero slide.', 'error')
-    
-    return render_template('admin/add_hero_slide.html')
+    return render_template('admin/add_hero_slide.html', form=form)
 
 @admin_bp.route('/media/hero-slides/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -3110,7 +3609,13 @@ def admin_site_settings():
                 'fssai_license_number': request.form.get('fssai_license_number', ''),
                 'hygiene_badge_text': request.form.get('hygiene_badge_text', ''),
                 'facebook_url': request.form.get('facebook_url', ''),
-                'instagram_url': request.form.get('instagram_url', '')
+                'instagram_url': request.form.get('instagram_url', ''),
+                'facebook_pixel_id': request.form.get('facebook_pixel_id', ''),
+                'google_analytics_id': request.form.get('google_analytics_id', ''),
+                'whatsapp_phone_number_id': request.form.get('whatsapp_phone_number_id', ''),
+                'whatsapp_access_token': request.form.get('whatsapp_access_token', ''),
+                'whatsapp_business_account_id': request.form.get('whatsapp_business_account_id', ''),
+                'whatsapp_webhook_verify_token': request.form.get('whatsapp_webhook_verify_token', '')
             }
             
             # Handle boolean settings
@@ -3479,6 +3984,95 @@ def social_media_settings():
         current_app.logger.error(f"Error in social media settings: {str(e)}")
         flash('Error updating settings', 'error')
         return redirect(url_for('admin.admin_dashboard'))
+
+@admin_bp.route('/api/locations', methods=['GET'])
+@login_required
+@admin_required
+def get_locations():
+    """Get all unique locations from users"""
+    try:
+        # Get unique cities and provinces
+        cities = db.session.query(User.city).filter(User.city.isnot(None)).distinct().all()
+        provinces = db.session.query(User.province).filter(User.province.isnot(None)).distinct().all()
+        
+        locations = []
+        for city in cities:
+            if city[0]:  # city[0] because it's a tuple
+                locations.append(city[0])
+        for province in provinces:
+            if province[0]:  # province[0] because it's a tuple
+                locations.append(province[0])
+        
+        # Remove duplicates and sort
+        locations = sorted(list(set(locations)))
+        
+        return jsonify({'success': True, 'locations': locations})
+    except Exception as e:
+        logger.error(f"Error getting locations: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@admin_bp.route('/api/meal-plans', methods=['GET'])
+@login_required
+@admin_required
+def get_meal_plans():
+    """Get all meal plans"""
+    try:
+        from database.models import MealPlan
+        meal_plans = MealPlan.query.all()
+        meal_plan_list = [{'id': mp.id, 'name': mp.name} for mp in meal_plans]
+        return jsonify({'success': True, 'meal_plans': meal_plan_list})
+    except Exception as e:
+        logger.error(f"Error getting meal plans: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@admin_bp.route('/test-whatsapp-connection', methods=['POST'])
+@login_required
+@admin_required
+def test_whatsapp_connection():
+    """Test WhatsApp Business API connection"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        phone_number_id = data.get('phone_number_id')
+        access_token = data.get('access_token')
+        business_account_id = data.get('business_account_id')
+        
+        if not all([phone_number_id, access_token, business_account_id]):
+            return jsonify({'success': False, 'error': 'Missing required parameters'}), 400
+        
+        # Test WhatsApp API connection
+        import requests
+        
+        # Test 1: Get phone number details
+        url = f"https://graph.facebook.com/v18.0/{phone_number_id}"
+        headers = {
+            'Authorization': f'Bearer {access_token}'
+        }
+        
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            phone_data = response.json()
+            current_app.logger.info(f"WhatsApp API test successful: {phone_data}")
+            return jsonify({
+                'success': True, 
+                'message': 'WhatsApp API connection successful',
+                'phone_number': phone_data.get('display_phone_number', 'Unknown')
+            })
+        else:
+            error_data = response.json() if response.content else {}
+            current_app.logger.error(f"WhatsApp API test failed: {response.status_code} - {error_data}")
+            return jsonify({
+                'success': False, 
+                'error': f'API Error: {response.status_code} - {error_data.get("error", {}).get("message", "Unknown error")}'
+            })
+            
+    except Exception as e:
+        current_app.logger.error(f"Error testing WhatsApp connection: {str(e)}")
+        return jsonify({'success': False, 'error': f'Connection error: {str(e)}'})
 
 def allowed_file(filename, allowed_extensions):
     """Check if file extension is allowed"""
@@ -4068,7 +4662,12 @@ def admin_login():
             if not next_page or urlparse(next_page).netloc != '':
                 next_page = url_for('admin.admin_dashboard')
             
-            return redirect(next_page)
+            # Ensure we redirect to the dashboard
+            try:
+                return redirect(next_page)
+            except Exception as e:
+                current_app.logger.error(f"Error redirecting after login: {str(e)}")
+                return redirect(url_for('admin.admin_dashboard'))
         else:
             # Log failed login attempt
             current_app.logger.warning(f'Failed admin login attempt for email: {form.email.data}')
@@ -4076,3 +4675,1087 @@ def admin_login():
             return redirect(url_for('admin.admin_login'))
     
     return render_template('admin/login.html', form=form)
+
+@admin_bp.route('/users/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_add_user():
+    """Admin add user page"""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '').strip()
+        phone = request.form.get('phone', '').strip()
+        is_admin = 'is_admin' in request.form
+        is_active = 'is_active' in request.form
+        email_verified = 'email_verified' in request.form
+
+        # Validate required fields
+        if not username or not email or not password:
+            flash('Username, email, and password are required.', 'error')
+            return render_template('admin/add_user.html', form=request.form)
+
+        # Check if user already exists
+        if User.query.filter_by(email=email).first():
+            flash('A user with this email already exists.', 'error')
+            return render_template('admin/add_user.html', form=request.form)
+        if User.query.filter_by(username=username).first():
+            flash('A user with this username already exists.', 'error')
+            return render_template('admin/add_user.html', form=request.form)
+
+        # Create user
+        user = User(
+            username=username,
+            email=email,
+            phone=phone,
+            is_admin=is_admin,
+            is_active=is_active,
+            email_verified=email_verified
+        )
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        flash('User added successfully!', 'success')
+        return redirect(url_for('admin.admin_users'))
+
+    return render_template('admin/add_user.html', form={})
+
+@admin_bp.route('/profile', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_profile():
+    """Admin profile management - change email and password"""
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'change_email':
+            new_email = request.form.get('new_email', '').strip().lower()
+            current_password = request.form.get('current_password', '').strip()
+            
+            # Validate current password
+            if not current_user.check_password(current_password):
+                flash('Current password is incorrect.', 'error')
+                return render_template('admin/profile.html')
+            
+            # Check if email is already taken
+            existing_user = User.query.filter_by(email=new_email).first()
+            if existing_user and existing_user.id != current_user.id:
+                flash('This email is already registered by another user.', 'error')
+                return render_template('admin/profile.html')
+            
+            # Update email
+            current_user.email = new_email
+            db.session.commit()
+            flash('Email updated successfully!', 'success')
+            return redirect(url_for('admin.admin_profile'))
+            
+        elif action == 'change_password':
+            current_password = request.form.get('current_password', '').strip()
+            new_password = request.form.get('new_password', '').strip()
+            confirm_password = request.form.get('confirm_password', '').strip()
+            
+            # Validate current password
+            if not current_user.check_password(current_password):
+                flash('Current password is incorrect.', 'error')
+                return render_template('admin/profile.html')
+            
+            # Validate new password
+            if not new_password:
+                flash('New password is required.', 'error')
+                return render_template('admin/profile.html')
+            
+            if new_password != confirm_password:
+                flash('New passwords do not match.', 'error')
+                return render_template('admin/profile.html')
+            
+            if len(new_password) < 6:
+                flash('New password must be at least 6 characters long.', 'error')
+                return render_template('admin/profile.html')
+            
+            # Update password
+            current_user.set_password(new_password)
+            db.session.commit()
+            flash('Password updated successfully!', 'success')
+            return redirect(url_for('admin.admin_profile'))
+    
+    return render_template('admin/profile.html')
+
+@admin_bp.route('/meal-plans/<int:meal_plan_id>/sample-menu')
+@login_required
+@admin_required
+def admin_sample_menu(meal_plan_id):
+    """Admin sample menu management page"""
+    meal_plan = MealPlan.query.get_or_404(meal_plan_id)
+    sample_items = SampleMenuItem.query.filter_by(meal_plan_id=meal_plan_id).order_by(SampleMenuItem.display_order).all()
+    
+    return render_template('admin/sample_menu.html', meal_plan=meal_plan, sample_items=sample_items)
+
+@admin_bp.route('/meal-plans/<int:meal_plan_id>/sample-menu/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_add_sample_menu_item(meal_plan_id):
+    """Admin add sample menu item page"""
+    meal_plan = MealPlan.query.get_or_404(meal_plan_id)
+    
+    if request.method == 'POST':
+        try:
+            # Create new sample menu item
+            sample_item = SampleMenuItem(
+                meal_plan_id=meal_plan_id,
+                name=request.form.get('name', '').strip(),
+                description=request.form.get('description', '').strip(),
+                meal_type=request.form.get('meal_type', 'breakfast'),
+                day_of_week=int(request.form.get('day_of_week', 0)) if request.form.get('day_of_week') else None,
+                image_url=request.form.get('image_url', '').strip(),
+                calories=int(request.form.get('calories', 0)) if request.form.get('calories') else None,
+                protein=float(request.form.get('protein', 0)) if request.form.get('protein') else None,
+                carbs=float(request.form.get('carbs', 0)) if request.form.get('carbs') else None,
+                fat=float(request.form.get('fat', 0)) if request.form.get('fat') else None,
+                display_order=int(request.form.get('display_order', 0)),
+                is_active='is_active' in request.form
+            )
+            
+            db.session.add(sample_item)
+            db.session.commit()
+            flash('Sample menu item added successfully!', 'success')
+            return redirect(url_for('admin.admin_sample_menu', meal_plan_id=meal_plan_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error adding sample menu item: {str(e)}', 'error')
+    
+    return render_template('admin/add_sample_menu_item.html', meal_plan=meal_plan)
+
+@admin_bp.route('/meal-plans/<int:meal_plan_id>/sample-menu/<int:item_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_edit_sample_menu_item(meal_plan_id, item_id):
+    """Admin edit sample menu item page"""
+    meal_plan = MealPlan.query.get_or_404(meal_plan_id)
+    sample_item = SampleMenuItem.query.get_or_404(item_id)
+    
+    if sample_item.meal_plan_id != meal_plan_id:
+        flash('Invalid sample menu item for this meal plan.', 'error')
+        return redirect(url_for('admin.admin_sample_menu', meal_plan_id=meal_plan_id))
+    
+    if request.method == 'POST':
+        try:
+            # Update sample menu item
+            sample_item.name = request.form.get('name', '').strip()
+            sample_item.description = request.form.get('description', '').strip()
+            sample_item.meal_type = request.form.get('meal_type', 'breakfast')
+            sample_item.day_of_week = int(request.form.get('day_of_week', 0)) if request.form.get('day_of_week') else None
+            sample_item.image_url = request.form.get('image_url', '').strip()
+            sample_item.calories = int(request.form.get('calories', 0)) if request.form.get('calories') else None
+            sample_item.protein = float(request.form.get('protein', 0)) if request.form.get('protein') else None
+            sample_item.carbs = float(request.form.get('carbs', 0)) if request.form.get('carbs') else None
+            sample_item.fat = float(request.form.get('fat', 0)) if request.form.get('fat') else None
+            sample_item.display_order = int(request.form.get('display_order', 0))
+            sample_item.is_active = 'is_active' in request.form
+            
+            db.session.commit()
+            flash('Sample menu item updated successfully!', 'success')
+            return redirect(url_for('admin.admin_sample_menu', meal_plan_id=meal_plan_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating sample menu item: {str(e)}', 'error')
+    
+    return render_template('admin/edit_sample_menu_item.html', meal_plan=meal_plan, sample_item=sample_item)
+
+@admin_bp.route('/meal-plans/<int:meal_plan_id>/sample-menu/<int:item_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def admin_delete_sample_menu_item(meal_plan_id, item_id):
+    """Admin delete sample menu item"""
+    sample_item = SampleMenuItem.query.get_or_404(item_id)
+    
+    if sample_item.meal_plan_id != meal_plan_id:
+        flash('Invalid sample menu item for this meal plan.', 'error')
+        return redirect(url_for('admin.admin_sample_menu', meal_plan_id=meal_plan_id))
+    
+    try:
+        db.session.delete(sample_item)
+        db.session.commit()
+        flash('Sample menu item deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting sample menu item: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.admin_sample_menu', meal_plan_id=meal_plan_id))
+
+@admin_bp.route('/meal-plans/<int:meal_plan_id>/sample-menu/<int:item_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def admin_toggle_sample_menu_item(meal_plan_id, item_id):
+    """Admin toggle sample menu item status"""
+    sample_item = SampleMenuItem.query.get_or_404(item_id)
+    
+    if sample_item.meal_plan_id != meal_plan_id:
+        flash('Invalid sample menu item for this meal plan.', 'error')
+        return redirect(url_for('admin.admin_sample_menu', meal_plan_id=meal_plan_id))
+    
+    try:
+        sample_item.is_active = not sample_item.is_active
+        db.session.commit()
+        status = 'activated' if sample_item.is_active else 'deactivated'
+        flash(f'Sample menu item {status} successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error toggling sample menu item: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.admin_sample_menu', meal_plan_id=meal_plan_id))
+
+# AI Posting Agent Routes
+@admin_bp.route('/ai-posting')
+@login_required
+@admin_required
+def admin_ai_posting():
+    """AI posting agent dashboard - DISABLED"""
+    flash('AI posting functionality is currently disabled.', 'warning')
+    return redirect(url_for('admin.admin_dashboard'))
+    
+    # try:
+    #     # Get AI agent
+    #     ai_agent = create_ai_agent()
+    #     
+    #     # Get recent AI-generated posts
+    #     ai_posts = BlogPost.query.filter_by(author="AI Assistant").order_by(BlogPost.created_at.desc()).limit(10).all()
+    #     
+    #     # Get posting statistics
+    #     total_ai_posts = BlogPost.query.filter_by(author="AI Assistant").count()
+    #     total_posts = BlogPost.query.count()
+    #     ai_percentage = (total_ai_posts / total_posts * 100) if total_posts > 0 else 0
+    #     
+    #     return render_template('admin/ai_posting.html', 
+    #                          ai_posts=ai_posts,
+    #                          total_ai_posts=total_ai_posts,
+    #                          total_posts=total_posts,
+    #                          ai_percentage=ai_percentage)
+    # except Exception as e:
+    #     current_app.logger.error(f"Error in AI posting dashboard: {str(e)}")
+    #     flash('Error loading AI posting dashboard.', 'error')
+    #     return redirect(url_for('admin.admin_dashboard'))
+
+@admin_bp.route('/ai-posting/analyze-market', methods=['POST'])
+@login_required
+@admin_required
+def admin_analyze_market():
+    """Analyze market using AI - DISABLED"""
+    return jsonify({'success': False, 'error': 'AI posting functionality is currently disabled'})
+    
+    # try:
+    #     location = request.form.get('location', 'India')
+    #     ai_agent = create_ai_agent()
+    #     
+    #     # Analyze market
+    #     market_analysis = ai_agent.analyze_market(location)
+    #     
+    #     return jsonify({
+    #         'success': True,
+    #         'market_analysis': {
+    #             'target_audience': market_analysis.target_audience,
+    #             'competitors': market_analysis.competitors,
+    #             'market_trends': market_analysis.market_trends,
+    #             'local_area_insights': market_analysis.local_area_insights,
+    #             'seasonal_factors': market_analysis.seasonal_factors,
+    #             'pricing_insights': market_analysis.pricing_insights
+    #         }
+    #     })
+    # except Exception as e:
+    #     current_app.logger.error(f"Error analyzing market: {str(e)}")
+    #     return jsonify({'success': False, 'error': str(e)})
+
+@admin_bp.route('/ai-posting/generate-content', methods=['POST'])
+@login_required
+@admin_required
+def admin_generate_content():
+    """Generate content using AI - DISABLED"""
+    return jsonify({'success': False, 'error': 'AI posting functionality is currently disabled'})
+    
+    # try:
+    #     topic = request.form.get('topic', '')
+    #     content_type = request.form.get('content_type', 'lifestyle_blog')
+    #     meal_plan_id = request.form.get('meal_plan_id', type=int)
+    #     
+    #     if not topic:
+    #         return jsonify({'success': False, 'error': 'Topic is required'})
+    #     
+    #     ai_agent = create_ai_agent()
+    #     content = ai_agent.generate_blog_post(topic, content_type, meal_plan_id)
+    #     
+    #     return jsonify({
+    #         'success': True,
+    #         'content': content
+    #     })
+    # except Exception as e:
+    #     current_app.logger.error(f"Error generating content: {str(e)}")
+    #     return jsonify({'success': False, 'error': str(e)})
+
+@admin_bp.route('/ai-posting/auto-post', methods=['POST'])
+@login_required
+@admin_required
+def admin_auto_post():
+    """Trigger automatic posting - DISABLED"""
+    return jsonify({'success': False, 'error': 'AI posting functionality is currently disabled'})
+    
+    # try:
+    #     frequency = request.form.get('frequency', 'daily')
+    #     ai_agent = create_ai_agent()
+    #     
+    #     success = ai_agent.auto_post_content(frequency)
+    #     
+    #     if success:
+    #         flash('Content auto-posted successfully!', 'success')
+    #     else:
+    #         flash('Error auto-posting content.', 'error')
+    #     
+    #     return jsonify({'success': success})
+    # except Exception as e:
+    #     current_app.logger.error(f"Error in auto posting: {str(e)}")
+    #     return jsonify({'success': False, 'error': str(e)})
+
+@admin_bp.route('/ai-posting/settings', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def admin_ai_settings():
+    """AI posting settings - DISABLED"""
+    flash('AI posting functionality is currently disabled.', 'warning')
+    return redirect(url_for('admin.admin_dashboard'))
+
+@admin_bp.route('/holidays')
+@login_required
+@admin_required
+def admin_holidays():
+    """Admin holiday management page"""
+    holidays = Holiday.query.order_by(Holiday.start_date.desc()).all()
+    current_holiday = Holiday.get_current_holiday()
+    upcoming_holidays = Holiday.get_upcoming_holidays()
+    
+    return render_template('admin/holidays.html', 
+                         holidays=holidays,
+                         current_holiday=current_holiday,
+                         upcoming_holidays=upcoming_holidays)
+
+@admin_bp.route('/holidays/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add_holiday():
+    """Add new holiday"""
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name')
+            description = request.form.get('description')
+            start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date()
+            end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date()
+            protect_meals = request.form.get('protect_meals') == 'on'
+            show_popup = request.form.get('show_popup') == 'on'
+            popup_message = request.form.get('popup_message')
+            
+            # Get popup options
+            popup_options = []
+            option_count = int(request.form.get('option_count', 0))
+            for i in range(option_count):
+                option_text = request.form.get(f'option_{i}')
+                if option_text:
+                    popup_options.append(option_text)
+            
+            # Validate dates
+            if start_date > end_date:
+                flash('Start date cannot be after end date', 'error')
+                return redirect(url_for('admin.add_holiday'))
+            
+            # Check for overlapping holidays
+            overlapping = Holiday.query.filter(
+                Holiday.is_active == True,
+                Holiday.start_date <= end_date,
+                Holiday.end_date >= start_date
+            ).first()
+            
+            if overlapping:
+                flash(f'Holiday overlaps with existing holiday: {overlapping.name}', 'error')
+                return redirect(url_for('admin.add_holiday'))
+            
+            # Create holiday
+            holiday = Holiday(
+                name=name,
+                description=description,
+                start_date=start_date,
+                end_date=end_date,
+                protect_meals=protect_meals,
+                show_popup=show_popup,
+                popup_message=popup_message
+            )
+            holiday.set_popup_options(popup_options)
+            
+            db.session.add(holiday)
+            db.session.commit()
+            
+            flash(f'Holiday "{name}" created successfully!', 'success')
+            return redirect(url_for('admin.admin_holidays'))
+            
+        except Exception as e:
+            current_app.logger.error(f"Error creating holiday: {str(e)}")
+            flash('Error creating holiday. Please try again.', 'error')
+            return redirect(url_for('admin.add_holiday'))
+    
+    return render_template('admin/add_holiday.html')
+
+@admin_bp.route('/holidays/<int:holiday_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_holiday(holiday_id):
+    """Edit holiday"""
+    holiday = Holiday.query.get_or_404(holiday_id)
+    
+    if request.method == 'POST':
+        try:
+            holiday.name = request.form.get('name')
+            holiday.description = request.form.get('description')
+            holiday.start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date()
+            holiday.end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date()
+            holiday.protect_meals = request.form.get('protect_meals') == 'on'
+            holiday.show_popup = request.form.get('show_popup') == 'on'
+            holiday.popup_message = request.form.get('popup_message')
+            
+            # Get popup options
+            popup_options = []
+            option_count = int(request.form.get('option_count', 0))
+            for i in range(option_count):
+                option_text = request.form.get(f'option_{i}')
+                if option_text:
+                    popup_options.append(option_text)
+            
+            holiday.set_popup_options(popup_options)
+            
+            db.session.commit()
+            
+            flash(f'Holiday "{holiday.name}" updated successfully!', 'success')
+            return redirect(url_for('admin.admin_holidays'))
+            
+        except Exception as e:
+            current_app.logger.error(f"Error updating holiday: {str(e)}")
+            flash('Error updating holiday. Please try again.', 'error')
+    
+    return render_template('admin/edit_holiday.html', holiday=holiday)
+
+@admin_bp.route('/holidays/<int:holiday_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def toggle_holiday(holiday_id):
+    """Toggle holiday active status"""
+    holiday = Holiday.query.get_or_404(holiday_id)
+    
+    try:
+        holiday.is_active = not holiday.is_active
+        db.session.commit()
+        
+        status = "activated" if holiday.is_active else "deactivated"
+        flash(f'Holiday "{holiday.name}" {status} successfully!', 'success')
+        
+    except Exception as e:
+        current_app.logger.error(f"Error toggling holiday: {str(e)}")
+        flash('Error updating holiday status.', 'error')
+    
+    return redirect(url_for('admin.admin_holidays'))
+
+@admin_bp.route('/holidays/<int:holiday_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_holiday(holiday_id):
+    """Delete holiday"""
+    holiday = Holiday.query.get_or_404(holiday_id)
+    
+    try:
+        name = holiday.name
+        db.session.delete(holiday)
+        db.session.commit()
+        
+        flash(f'Holiday "{name}" deleted successfully!', 'success')
+        
+    except Exception as e:
+        current_app.logger.error(f"Error deleting holiday: {str(e)}")
+        flash('Error deleting holiday.', 'error')
+    
+    return redirect(url_for('admin.admin_holidays'))
+
+@admin_bp.route('/holidays/current-status')
+@login_required
+@admin_required
+def holiday_status():
+    """Get current holiday status for AJAX"""
+    current_holiday = Holiday.get_current_holiday()
+    
+    if current_holiday:
+        return jsonify({
+            'active': True,
+            'holiday': {
+                'id': current_holiday.id,
+                'name': current_holiday.name,
+                'description': current_holiday.description,
+                'start_date': current_holiday.start_date.isoformat(),
+                'end_date': current_holiday.end_date.isoformat(),
+                'days_remaining': current_holiday.days_remaining,
+                'protect_meals': current_holiday.protect_meals,
+                'show_popup': current_holiday.show_popup,
+                'popup_message': current_holiday.popup_message,
+                'popup_options': current_holiday.get_popup_options()
+            }
+        })
+    else:
+        return jsonify({'active': False})
+
+@admin_bp.route('/admin/meal-tracking')
+@login_required
+@admin_required
+def meal_tracking_dashboard():
+    """Admin dashboard for meal tracking and subscription management"""
+    try:
+        from utils.meal_tracking import MealTracker
+        
+        # Get all active subscriptions
+        subscriptions = Subscription.query.filter_by(status=SubscriptionStatus.ACTIVE).all()
+        
+        # Get meal status for each subscription
+        meal_tracking_data = []
+        total_promised = 0
+        total_delivered = 0
+        total_skipped = 0
+        subscriptions_needing_renewal = 0
+        
+        for subscription in subscriptions:
+            meal_status = MealTracker.get_meal_status(subscription)
+            meal_tracking_data.append({
+                'subscription': subscription,
+                'meal_status': meal_status,
+                'user': subscription.user,
+                'meal_plan': subscription.meal_plan
+            })
+            
+            total_promised += meal_status['promised_meals']
+            total_delivered += meal_status['delivered_meals']
+            total_skipped += meal_status['skipped_meals']
+            
+            if meal_status['needs_renewal']:
+                subscriptions_needing_renewal += 1
+        
+        # Calculate overall statistics
+        overall_stats = {
+            'total_subscriptions': len(subscriptions),
+            'total_promised_meals': total_promised,
+            'total_delivered_meals': total_delivered,
+            'total_skipped_meals': total_skipped,
+            'total_remaining_meals': total_promised - total_delivered,
+            'overall_completion_percentage': round((total_delivered / total_promised * 100) if total_promised > 0 else 0, 2),
+            'subscriptions_needing_renewal': subscriptions_needing_renewal
+        }
+        
+        return render_template('admin/meal_tracking.html',
+                              meal_tracking_data=meal_tracking_data,
+                              overall_stats=overall_stats)
+                              
+    except Exception as e:
+        current_app.logger.error(f"Error in meal tracking dashboard: {str(e)}")
+        flash('Error loading meal tracking dashboard', 'error')
+        return redirect(url_for('admin.admin_dashboard'))
+
+@admin_bp.route('/admin/meal-tracking/update-counts', methods=['POST'])
+@login_required
+@admin_required
+def update_meal_counts():
+    """Update meal counts for all subscriptions"""
+    try:
+        from utils.meal_tracking import MealTracker
+        
+        updated_count = MealTracker.update_all_subscription_meal_counts()
+        
+        flash(f'Successfully updated meal counts for {updated_count} subscriptions', 'success')
+        return redirect(url_for('admin.meal_tracking_dashboard'))
+        
+    except Exception as e:
+        current_app.logger.error(f"Error updating meal counts: {str(e)}")
+        flash('Error updating meal counts', 'error')
+        return redirect(url_for('admin.meal_tracking_dashboard'))
+
+@admin_bp.route('/admin/meal-tracking/subscription/<int:subscription_id>')
+@login_required
+@admin_required
+def subscription_meal_details(subscription_id):
+    """Detailed meal tracking view for a specific subscription"""
+    try:
+        from utils.meal_tracking import MealTracker
+        
+        subscription = Subscription.query.get_or_404(subscription_id)
+        meal_status = MealTracker.get_meal_status(subscription)
+        
+        # Get delivery history
+        deliveries = Delivery.query.filter_by(
+            subscription_id=subscription_id
+        ).order_by(Delivery.delivery_date.desc()).limit(20).all()
+        
+        # Get skipped deliveries
+        skipped_deliveries = SkippedDelivery.query.filter_by(
+            subscription_id=subscription_id
+        ).order_by(SkippedDelivery.delivery_date.desc()).limit(20).all()
+        
+        return render_template('admin/subscription_meal_details.html',
+                              subscription=subscription,
+                              meal_status=meal_status,
+                              deliveries=deliveries,
+                              skipped_deliveries=skipped_deliveries)
+                              
+    except Exception as e:
+        current_app.logger.error(f"Error loading subscription meal details: {str(e)}")
+        flash('Error loading subscription details', 'error')
+        return redirect(url_for('admin.meal_tracking_dashboard'))
+
+@admin_bp.route('/daily-orders')
+@login_required
+@admin_required
+def admin_daily_orders():
+    """Enhanced daily orders management with meal-specific filtering"""
+    from datetime import datetime
+    from flask import request, current_app
+    from database.models import DeliveryStatus, Subscription, Delivery, SkippedDelivery, User, MealPlan
+    
+    # Get today's date or selected date from query parameters
+    date_str = request.args.get('date')
+    meal_filter = request.args.get('meal_type', 'all')  # breakfast, lunch, dinner, all
+    status_filter = request.args.get('status', 'all')  # pending, preparing, packed, etc.
+    
+    if date_str:
+        try:
+            selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            selected_date = datetime.now().date()
+    else:
+        selected_date = datetime.now().date()
+    
+    try:
+        # Get active subscriptions for the selected date
+        active_subscriptions = Subscription.query.filter_by(status=SubscriptionStatus.ACTIVE).all()
+        
+        daily_orders = []
+        skipped_orders = []
+        
+        for subscription in active_subscriptions:
+            # Check if this subscription should have delivery on the selected date
+            if subscription.is_delivery_day(selected_date):
+                # Check if delivery is skipped
+                skipped_delivery = SkippedDelivery.query.filter_by(
+                    subscription_id=subscription.id,
+                    delivery_date=selected_date
+                ).first()
+                
+                if skipped_delivery:
+                    # Add to skipped orders
+                    skipped_order = {
+                        'subscription_id': subscription.id,
+                        'user_name': subscription.user.name,
+                        'user_email': subscription.user.email,
+                        'user_phone': subscription.user.phone,
+                        'meal_plan_name': subscription.meal_plan.name,
+                        'delivery_address': subscription.delivery_address,
+                        'delivery_city': subscription.delivery_city,
+                        'delivery_province': subscription.delivery_province,
+                        'delivery_postal_code': subscription.delivery_postal_code,
+                        'is_vegetarian': selected_date.weekday() in [int(d) for d in subscription.vegetarian_days.split(',') if d] if subscription.vegetarian_days else False,
+                        'includes_breakfast': subscription.meal_plan.includes_breakfast,
+                        'includes_lunch': subscription.meal_plan.includes_lunch,
+                        'includes_dinner': subscription.meal_plan.includes_dinner,
+                        'includes_snacks': subscription.meal_plan.includes_snacks,
+                        'skip_reason': getattr(skipped_delivery, 'reason', 'user_request'),
+                        'skip_date': skipped_delivery.created_at,
+                        'type': 'skipped'
+                    }
+                    skipped_orders.append(skipped_order)
+                else:
+                    # Get or create delivery record
+                    delivery = Delivery.query.filter_by(
+                        subscription_id=subscription.id,
+                        delivery_date=selected_date
+                    ).first()
+                    
+                    if not delivery:
+                        delivery = Delivery(
+                            subscription_id=subscription.id,
+                            user_id=subscription.user_id,
+                            delivery_date=selected_date,
+                            status=DeliveryStatus.PENDING
+                        )
+                        db.session.add(delivery)
+                        db.session.commit()
+                    
+                    # Apply meal type filter
+                    if meal_filter != 'all':
+                        if meal_filter == 'breakfast' and not subscription.meal_plan.includes_breakfast:
+                            continue
+                        elif meal_filter == 'lunch' and not subscription.meal_plan.includes_lunch:
+                            continue
+                        elif meal_filter == 'dinner' and not subscription.meal_plan.includes_dinner:
+                            continue
+                    
+                    # Apply status filter
+                    if status_filter != 'all' and delivery.status.value != status_filter:
+                        continue
+                    
+                    # Add to daily orders
+                    order = {
+                        'delivery_id': delivery.id,
+                        'subscription_id': subscription.id,
+                        'user_name': subscription.user.name,
+                        'user_email': subscription.user.email,
+                        'user_phone': subscription.user.phone,
+                        'meal_plan_name': subscription.meal_plan.name,
+                        'delivery_address': subscription.delivery_address,
+                        'delivery_city': subscription.delivery_city,
+                        'delivery_province': subscription.delivery_province,
+                        'delivery_postal_code': subscription.delivery_postal_code,
+                        'is_vegetarian': selected_date.weekday() in [int(d) for d in subscription.vegetarian_days.split(',') if d] if subscription.vegetarian_days else False,
+                        'includes_breakfast': subscription.meal_plan.includes_breakfast,
+                        'includes_lunch': subscription.meal_plan.includes_lunch,
+                        'includes_dinner': subscription.meal_plan.includes_dinner,
+                        'includes_snacks': subscription.meal_plan.includes_snacks,
+                        'delivery_status': delivery.status.value,
+                        'tracking_number': delivery.tracking_number,
+                        'notes': delivery.notes,
+                        'status_updated_at': delivery.status_updated_at,
+                        'created_at': delivery.created_at,
+                        'type': 'delivery'
+                    }
+                    daily_orders.append(order)
+        
+        # Sort orders by user name
+        daily_orders.sort(key=lambda x: x['user_name'])
+        skipped_orders.sort(key=lambda x: x['user_name'])
+        
+        # Calculate statistics
+        stats = {
+            'total_orders': len(daily_orders),
+            'total_skipped': len(skipped_orders),
+            'pending': len([o for o in daily_orders if o['delivery_status'] == 'pending']),
+            'preparing': len([o for o in daily_orders if o['delivery_status'] == 'preparing']),
+            'packed': len([o for o in daily_orders if o['delivery_status'] == 'packed']),
+            'out_for_delivery': len([o for o in daily_orders if o['delivery_status'] == 'out_for_delivery']),
+            'delivered': len([o for o in daily_orders if o['delivery_status'] == 'delivered']),
+            'delayed': len([o for o in daily_orders if o['delivery_status'] == 'delayed']),
+            'breakfast_orders': len([o for o in daily_orders if o['includes_breakfast']]),
+            'lunch_orders': len([o for o in daily_orders if o['includes_lunch']]),
+            'dinner_orders': len([o for o in daily_orders if o['includes_dinner']]),
+            'vegetarian_orders': len([o for o in daily_orders if o['is_vegetarian']])
+        }
+        
+        # Get all delivery statuses for dropdown
+        delivery_statuses = [status.value for status in DeliveryStatus]
+        
+        return render_template('admin/daily_orders.html',
+                              selected_date=selected_date,
+                              daily_orders=daily_orders,
+                              skipped_orders=skipped_orders,
+                              stats=stats,
+                              meal_filter=meal_filter,
+                              status_filter=status_filter,
+                              delivery_statuses=delivery_statuses)
+                              
+    except Exception as e:
+        current_app.logger.error(f"Error loading daily orders: {str(e)}")
+        flash('Error loading daily orders', 'error')
+        return redirect(url_for('admin.admin_dashboard'))
+
+@admin_bp.route('/daily-orders/update-status', methods=['POST'])
+@login_required
+@admin_required
+def admin_update_daily_order_status():
+    """Update delivery status with customer notification"""
+    try:
+        delivery_id = request.form.get('delivery_id')
+        new_status = request.form.get('status')
+        notes = request.form.get('notes', '')
+        notify_customer = request.form.get('notify_customer', 'false') == 'true'
+        
+        if not delivery_id or not new_status:
+            return jsonify({'success': False, 'message': 'Missing required fields'})
+        
+        delivery = Delivery.query.get_or_404(delivery_id)
+        
+        # Update delivery status
+        old_status = delivery.status.value
+        delivery.status = DeliveryStatus(new_status)
+        delivery.status_updated_at = datetime.now()
+        
+        if notes:
+            delivery.notes = notes if delivery.notes is None else f"{delivery.notes}\n{notes} ({datetime.now().strftime('%Y-%m-%d %H:%M')})"
+        
+        # Add tracking number if status is out_for_delivery or delivered
+        if new_status in ['out_for_delivery', 'delivered'] and not delivery.tracking_number:
+            delivery.tracking_number = f"TRK{delivery.id:06d}"
+        
+        db.session.commit()
+        
+        # Send notification to customer if requested
+        if notify_customer:
+            try:
+                from utils.email_functions import send_delivery_status_update_email
+                send_delivery_status_update_email(delivery, old_status, new_status)
+            except Exception as e:
+                current_app.logger.error(f"Failed to send delivery notification: {str(e)}")
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Delivery status updated to {new_status.title()} successfully',
+            'tracking_number': delivery.tracking_number
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating delivery status: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error updating delivery status'})
+
+@admin_bp.route('/daily-orders/bulk-update', methods=['POST'])
+@login_required
+@admin_required
+def admin_bulk_update_daily_orders():
+    """Bulk update delivery statuses"""
+    try:
+        delivery_ids = request.form.getlist('delivery_ids[]')
+        new_status = request.form.get('status')
+        meal_type = request.form.get('meal_type', 'all')  # breakfast, lunch, dinner, all
+        notify_customers = request.form.get('notify_customers', 'false') == 'true'
+        
+        if not delivery_ids or not new_status:
+            return jsonify({'success': False, 'message': 'Missing required fields'})
+        
+        updated_count = 0
+        failed_count = 0
+        
+        for delivery_id in delivery_ids:
+            try:
+                delivery = Delivery.query.get(delivery_id)
+                if not delivery:
+                    failed_count += 1
+                    continue
+                
+                # Check meal type filter
+                if meal_type != 'all':
+                    subscription = delivery.subscription
+                    if meal_type == 'breakfast' and not subscription.meal_plan.includes_breakfast:
+                        continue
+                    elif meal_type == 'lunch' and not subscription.meal_plan.includes_lunch:
+                        continue
+                    elif meal_type == 'dinner' and not subscription.meal_plan.includes_dinner:
+                        continue
+                
+                # Update status
+                old_status = delivery.status.value
+                delivery.status = DeliveryStatus(new_status)
+                delivery.status_updated_at = datetime.now()
+                
+                # Add tracking number if needed
+                if new_status in ['out_for_delivery', 'delivered'] and not delivery.tracking_number:
+                    delivery.tracking_number = f"TRK{delivery.id:06d}"
+                
+                updated_count += 1
+                
+                # Send notification if requested
+                if notify_customers:
+                    try:
+                        from utils.email_functions import send_delivery_status_update_email
+                        send_delivery_status_update_email(delivery, old_status, new_status)
+                    except Exception as e:
+                        current_app.logger.error(f"Failed to send notification for delivery {delivery_id}: {str(e)}")
+                
+            except Exception as e:
+                current_app.logger.error(f"Error updating delivery {delivery_id}: {str(e)}")
+                failed_count += 1
+        
+        db.session.commit()
+        
+        message = f'Successfully updated {updated_count} deliveries to {new_status.title()}'
+        if failed_count > 0:
+            message += f'. {failed_count} updates failed.'
+        
+        return jsonify({
+            'success': True,
+            'message': message,
+            'updated_count': updated_count,
+            'failed_count': failed_count
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error in bulk update: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error performing bulk update'})
+
+@admin_bp.route('/daily-orders/meal-specific-update', methods=['POST'])
+@login_required
+@admin_required
+def admin_meal_specific_update():
+    """Update status for specific meal types only"""
+    try:
+        delivery_ids = request.form.getlist('delivery_ids[]')
+        new_status = request.form.get('status')
+        meal_type = request.form.get('meal_type')  # breakfast, lunch, dinner
+        notify_customers = request.form.get('notify_customers', 'false') == 'true'
+        
+        if not delivery_ids or not new_status or not meal_type:
+            return jsonify({'success': False, 'message': 'Missing required fields'})
+        
+        updated_count = 0
+        failed_count = 0
+        
+        for delivery_id in delivery_ids:
+            try:
+                delivery = Delivery.query.get(delivery_id)
+                if not delivery:
+                    failed_count += 1
+                    continue
+                
+                # Check if this delivery includes the specified meal type
+                subscription = delivery.subscription
+                includes_meal = False
+                
+                if meal_type == 'breakfast' and subscription.meal_plan.includes_breakfast:
+                    includes_meal = True
+                elif meal_type == 'lunch' and subscription.meal_plan.includes_lunch:
+                    includes_meal = True
+                elif meal_type == 'dinner' and subscription.meal_plan.includes_dinner:
+                    includes_meal = True
+                
+                if not includes_meal:
+                    continue  # Skip this delivery as it doesn't include the specified meal
+                
+                # Update status
+                old_status = delivery.status.value
+                delivery.status = DeliveryStatus(new_status)
+                delivery.status_updated_at = datetime.now()
+                
+                # Add tracking number if needed
+                if new_status in ['out_for_delivery', 'delivered'] and not delivery.tracking_number:
+                    delivery.tracking_number = f"TRK{delivery.id:06d}"
+                
+                updated_count += 1
+                
+                # Send notification if requested
+                if notify_customers:
+                    try:
+                        from utils.email_functions import send_delivery_status_update_email
+                        send_delivery_status_update_email(delivery, old_status, new_status, meal_type)
+                    except Exception as e:
+                        current_app.logger.error(f"Failed to send notification for delivery {delivery_id}: {str(e)}")
+                
+            except Exception as e:
+                current_app.logger.error(f"Error updating delivery {delivery_id}: {str(e)}")
+                failed_count += 1
+        
+        db.session.commit()
+        
+        message = f'Successfully updated {updated_count} {meal_type} deliveries to {new_status.title()}'
+        if failed_count > 0:
+            message += f'. {failed_count} updates failed.'
+        
+        return jsonify({
+            'success': True,
+            'message': message,
+            'updated_count': updated_count,
+            'failed_count': failed_count
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error in meal-specific update: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error performing meal-specific update'})
+
+@admin_bp.route('/daily-orders/export', methods=['POST'])
+@login_required
+@admin_required
+def admin_export_daily_orders():
+    """Export daily orders to CSV"""
+    try:
+        from datetime import datetime
+        import csv
+        from io import StringIO
+        
+        date_str = request.form.get('date')
+        meal_filter = request.form.get('meal_type', 'all')
+        status_filter = request.form.get('status', 'all')
+        
+        if date_str:
+            selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        else:
+            selected_date = datetime.now().date()
+        
+        # Get the same data as the main view
+        active_subscriptions = Subscription.query.filter_by(status=SubscriptionStatus.ACTIVE).all()
+        
+        csv_data = StringIO()
+        writer = csv.writer(csv_data)
+        
+        # Write header
+        writer.writerow([
+            'Customer Name', 'Email', 'Phone', 'Meal Plan', 'Address', 'City', 'Province', 
+            'Postal Code', 'Vegetarian', 'Breakfast', 'Lunch', 'Dinner', 'Snacks',
+            'Delivery Status', 'Tracking Number', 'Notes', 'Status Updated At'
+        ])
+        
+        for subscription in active_subscriptions:
+            if subscription.is_delivery_day(selected_date):
+                # Check if skipped
+                skipped_delivery = SkippedDelivery.query.filter_by(
+                    subscription_id=subscription.id,
+                    delivery_date=selected_date
+                ).first()
+                
+                if not skipped_delivery:
+                    delivery = Delivery.query.filter_by(
+                        subscription_id=subscription.id,
+                        delivery_date=selected_date
+                    ).first()
+                    
+                    if delivery:
+                        # Apply filters
+                        if meal_filter != 'all':
+                            if meal_filter == 'breakfast' and not subscription.meal_plan.includes_breakfast:
+                                continue
+                            elif meal_filter == 'lunch' and not subscription.meal_plan.includes_lunch:
+                                continue
+                            elif meal_filter == 'dinner' and not subscription.meal_plan.includes_dinner:
+                                continue
+                        
+                        if status_filter != 'all' and delivery.status.value != status_filter:
+                            continue
+                        
+                        # Write row
+                        writer.writerow([
+                            subscription.user.name,
+                            subscription.user.email,
+                            subscription.user.phone,
+                            subscription.meal_plan.name,
+                            subscription.delivery_address,
+                            subscription.delivery_city,
+                            subscription.delivery_province,
+                            subscription.delivery_postal_code,
+                            'Yes' if (subscription.vegetarian_days and selected_date.weekday() in [int(d) for d in subscription.vegetarian_days.split(',') if d]) else 'No',
+                            'Yes' if subscription.meal_plan.includes_breakfast else 'No',
+                            'Yes' if subscription.meal_plan.includes_lunch else 'No',
+                            'Yes' if subscription.meal_plan.includes_dinner else 'No',
+                            'Yes' if subscription.meal_plan.includes_snacks else 'No',
+                            delivery.status.value.title(),
+                            delivery.tracking_number or '',
+                            delivery.notes or '',
+                            delivery.status_updated_at.strftime('%Y-%m-%d %H:%M:%S') if delivery.status_updated_at else ''
+                        ])
+        
+        csv_data.seek(0)
+        
+        from flask import send_file
+        return send_file(
+            StringIO(csv_data.getvalue()),
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'daily_orders_{selected_date.strftime("%Y-%m-%d")}.csv'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Error exporting daily orders: {str(e)}")
+        flash('Error exporting daily orders', 'error')
+        return redirect(url_for('admin.admin_daily_orders'))

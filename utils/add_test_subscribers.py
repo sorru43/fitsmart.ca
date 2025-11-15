@@ -2,22 +2,17 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import os
+from database.models import Newsletter, db
 
 # Initialize Flask app
 app = Flask(__name__)
 
 # Configure database - using the same configuration as your main app
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///healthyrizz.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fitsmart.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize SQLAlchemy
-db = SQLAlchemy(app)
-
-# Define Newsletter model
-class Newsletter(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now)
+db.init_app(app)
 
 def add_test_subscribers():
     test_subscribers = [

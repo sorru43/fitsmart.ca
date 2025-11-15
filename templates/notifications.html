@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}HealthyRizz - Notifications{% endblock %}
+{% block title %}FitSmart - Notifications{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
@@ -12,7 +12,7 @@
                 </div>
                 <div class="card-body">
                     <p class="lead">
-                        HealthyRizz can send you notifications about:
+                        FitSmart can send you notifications about:
                     </p>
                     <ul class="notification-types">
                         <li>Order status updates</li>
@@ -137,8 +137,8 @@
                 
                 // Try to show a notification directly (this works when testing locally)
                 try {
-                    const notification = new Notification('HealthyRizz Test Notification', {
-                        body: 'This is a test notification from HealthyRizz',
+                    const notification = new Notification('FitSmart Test Notification', {
+                        body: 'This is a test notification from FitSmart',
                         icon: '/static/icons/icon-192x192.png'
                     });
                     testStatus.textContent = 'Test notification sent successfully!';
@@ -150,8 +150,8 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            title: 'HealthyRizz Test Notification',
-                            message: 'This is a test notification from HealthyRizz',
+                            title: 'FitSmart Test Notification',
+                            message: 'This is a test notification from FitSmart',
                             url: '/notifications'
                         })
                     })

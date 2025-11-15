@@ -1,42 +1,231 @@
 {% extends 'base.html' %}
 
-{% block title %}Terms of Service - HealthyRizz{% endblock %}
+{% block title %}Terms of Service - FitSmart{% endblock %}
 
 {% block content %}
 <main class="bg-gray-900 py-16 md:py-20">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="max-w-3xl mx-auto bg-darker rounded-lg shadow-lg p-8 md:p-12 border border-gray-700">
             <h1 class="text-3xl md:text-4xl font-bold text-white mb-8 text-center">
-                <i class="fas fa-file-contract text-primary mr-3"></i>Terms & Conditions
+                <i class="fas fa-file-contract text-primary mr-3"></i>Terms of Service
             </h1>
             <div class="prose prose-lg text-gray-300 mx-auto space-y-6">
+                <p class="text-lg">Welcome to FitSmart. By accessing or using our website and services, you agree to be bound by these Terms of Service. Please read them carefully.</p>
+                
+                <p class="text-sm text-gray-400">Last updated: {{ now.strftime('%B %d, %Y') }}</p>
+
                 <div>
-                    <h2 class="text-xl font-semibold text-white">Meal Plans</h2>
-                    <p>We offer only weekly and monthly subscription plans. Meals are delivered as per the selected plan and schedule.</p>
+                    <h2 class="text-xl font-semibold text-white mb-3">1. Acceptance of Terms</h2>
+                    <p>By creating an account, placing an order, or using FitSmart services, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to these terms, please do not use our services.</p>
                 </div>
+
                 <div>
-                    <h2 class="text-xl font-semibold text-white">Payments</h2>
-                    <p>All payments must be made in advance via UPI, bank transfer, or other accepted methods.</p>
+                    <h2 class="text-xl font-semibold text-white mb-3">2. Eligibility</h2>
+                    <p>You must be at least 18 years old and have the legal capacity to enter into contracts to use our services. By using FitSmart, you represent and warrant that you meet these requirements.</p>
                 </div>
+
                 <div>
-                    <h2 class="text-xl font-semibold text-white">Cancellations</h2>
-                    <p>Plans can be paused or adjusted with 24 hours' notice. Refunds are not applicable for partial plans once started.</p>
+                    <h2 class="text-xl font-semibold text-white mb-3">3. Account Registration</h2>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>You are responsible for maintaining the confidentiality of your account credentials</li>
+                        <li>You agree to provide accurate, current, and complete information during registration</li>
+                        <li>You are responsible for all activities that occur under your account</li>
+                        <li>You must notify us immediately of any unauthorized use of your account</li>
+                        <li>We reserve the right to suspend or terminate accounts that violate these terms</li>
+                    </ul>
                 </div>
+
                 <div>
-                    <h2 class="text-xl font-semibold text-white">Delivery</h2>
-                    <p>Meals are delivered to the address provided. Delays due to external factors (traffic, weather, etc.) will be communicated.</p>
+                    <h2 class="text-xl font-semibold text-white mb-3">4. Meal Plans & Subscriptions</h2>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>We offer weekly and monthly subscription plans for healthy meal delivery</li>
+                        <li>Meals are delivered according to your selected plan and schedule</li>
+                        <li>Subscription plans automatically renew unless cancelled</li>
+                        <li>You can pause, modify, or cancel your subscription through your account dashboard</li>
+                        <li>Changes to subscriptions require at least 24 hours' notice before the next delivery</li>
+                        <li>We reserve the right to modify meal plans, prices, or availability with reasonable notice</li>
+                    </ul>
                 </div>
+
                 <div>
-                    <h2 class="text-xl font-semibold text-white">Health Disclaimer</h2>
-                    <p>Our meals are curated for general health support, not medical treatment. Please consult your doctor if you have medical conditions.</p>
+                    <h2 class="text-xl font-semibold text-white mb-3">5. Payments & Billing</h2>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>All payments must be made in advance via credit card, debit card, or other accepted payment methods</li>
+                        <li>We use Stripe for secure payment processing</li>
+                        <li>Prices are displayed in Canadian Dollars (CAD) and include applicable taxes (HST/GST)</li>
+                        <li>Subscription fees are charged according to your selected billing cycle</li>
+                        <li>Failed payments may result in service suspension until payment is resolved</li>
+                        <li>Refunds are subject to our Cancellation & Refund Policy</li>
+                        <li>We reserve the right to change prices with 30 days' notice to existing subscribers</li>
+                    </ul>
                 </div>
+
                 <div>
-                    <h2 class="text-xl font-semibold text-white">Changes to Terms</h2>
-                    <p>HealthyRizz may update these terms without prior notice.</p>
+                    <h2 class="text-xl font-semibold text-white mb-3">6. Cancellations & Modifications</h2>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Subscriptions can be paused, modified, or cancelled through your account dashboard</li>
+                        <li>Changes require at least 24 hours' notice before the next scheduled delivery</li>
+                        <li>Same-day cancellations are not accepted due to fresh ingredient preparation</li>
+                        <li>Refunds for unused portions are subject to our Cancellation & Refund Policy</li>
+                        <li>Cancelled subscriptions will not renew, but you remain responsible for charges already incurred</li>
+                    </ul>
                 </div>
-                <p class="mt-8">For assistance, contact us on WhatsApp or at <a href="mailto:info@healthyrizz.in" class="text-primary hover:underline">info@healthyrizz.in</a>.</p>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">7. Delivery</h2>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Meals are delivered to the address provided in your account</li>
+                        <li>You are responsible for ensuring accurate delivery information</li>
+                        <li>Delivery times are estimates and may vary due to traffic, weather, or other factors</li>
+                        <li>We will communicate any significant delays</li>
+                        <li>You must be available to receive deliveries or provide alternative arrangements</li>
+                        <li>We are not responsible for meals left unattended that spoil or are stolen</li>
+                        <li>Delivery areas are subject to availability - see our Shipping & Delivery Policy for details</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">8. Food Safety & Quality</h2>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>We prepare meals using fresh, quality ingredients following food safety standards</li>
+                        <li>Meals should be refrigerated immediately upon delivery</li>
+                        <li>Consume meals within the recommended time frame indicated on packaging</li>
+                        <li>Report any quality or safety concerns within 2 hours of delivery</li>
+                        <li>We are not liable for illness resulting from improper storage or handling after delivery</li>
+                        <li>Allergen information is provided, but cross-contamination may occur in our kitchen</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">9. Health Disclaimer</h2>
+                    <div class="bg-yellow-900 bg-opacity-20 border border-yellow-700 rounded-lg p-4">
+                        <p><strong class="text-white">Important:</strong> Our meals are curated for general health support and nutrition, not medical treatment. Our meal plans are designed by nutritionists but are not a substitute for professional medical advice, diagnosis, or treatment.</p>
+                        <ul class="list-disc pl-6 mt-3 space-y-1">
+                            <li>If you have medical conditions, allergies, or dietary restrictions, consult your healthcare provider before starting any meal plan</li>
+                            <li>We are not responsible for any health issues that may arise from consuming our meals</li>
+                            <li>Individual results may vary</li>
+                            <li>Always inform us of allergies, intolerances, or medical conditions when placing orders</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">10. User Conduct</h2>
+                    <p>You agree not to:</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Use our services for any illegal or unauthorized purpose</li>
+                        <li>Violate any laws in your jurisdiction</li>
+                        <li>Infringe on intellectual property rights</li>
+                        <li>Transmit viruses, malware, or harmful code</li>
+                        <li>Attempt to gain unauthorized access to our systems</li>
+                        <li>Interfere with or disrupt our services</li>
+                        <li>Use automated systems to access our website without permission</li>
+                        <li>Impersonate others or provide false information</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">11. Intellectual Property</h2>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>All content on our website, including text, graphics, logos, images, and software, is owned by FitSmart or our licensors</li>
+                        <li>You may not reproduce, distribute, modify, or create derivative works without our written permission</li>
+                        <li>You retain ownership of content you submit, but grant us a license to use it for service provision</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">12. Limitation of Liability</h2>
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <p>To the maximum extent permitted by Canadian law:</p>
+                        <ul class="list-disc pl-6 mt-2 space-y-2">
+                            <li>FitSmart's liability is limited to the amount you paid for the specific service in question</li>
+                            <li>We are not liable for indirect, incidental, special, or consequential damages</li>
+                            <li>We are not responsible for delays or failures due to circumstances beyond our control</li>
+                            <li>Our total liability shall not exceed the total fees paid by you in the 12 months preceding the claim</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">13. Indemnification</h2>
+                    <p>You agree to indemnify and hold FitSmart, its officers, directors, employees, and agents harmless from any claims, damages, losses, liabilities, and expenses (including legal fees) arising from:</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Your use of our services</li>
+                        <li>Your violation of these Terms of Service</li>
+                        <li>Your violation of any rights of another party</li>
+                        <li>Your violation of any applicable laws</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">14. Termination</h2>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>You may terminate your account at any time through your account settings</li>
+                        <li>We may suspend or terminate your account if you violate these terms</li>
+                        <li>Upon termination, your right to use our services immediately ceases</li>
+                        <li>We may delete your account and data in accordance with our Privacy Policy</li>
+                        <li>Provisions that by their nature should survive termination will remain in effect</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">15. Dispute Resolution</h2>
+                    <p>For residents of Canada:</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>These Terms are governed by the laws of Canada and the province in which you reside</li>
+                        <li>Any disputes will be resolved through good faith negotiation</li>
+                        <li>If negotiation fails, disputes will be resolved through binding arbitration in accordance with Canadian arbitration laws</li>
+                        <li>You waive any right to participate in a class-action lawsuit or class-wide arbitration</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">16. Changes to Terms</h2>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>We reserve the right to modify these Terms of Service at any time</li>
+                        <li>Material changes will be communicated via email or website notice</li>
+                        <li>Continued use of our services after changes constitutes acceptance</li>
+                        <li>If you do not agree to changes, you must stop using our services and cancel your account</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">17. Force Majeure</h2>
+                    <p>We are not liable for delays or failures in performance due to circumstances beyond our reasonable control, including but not limited to natural disasters, pandemics, government actions, labor disputes, or supply chain disruptions.</p>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">18. Severability</h2>
+                    <p>If any provision of these Terms is found to be invalid or unenforceable, the remaining provisions will continue in full force and effect.</p>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">19. Entire Agreement</h2>
+                    <p>These Terms of Service, together with our Privacy Policy and other policies referenced herein, constitute the entire agreement between you and FitSmart regarding the use of our services.</p>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold text-white mb-3">20. Contact Information</h2>
+                    <div class="bg-gray-800 rounded-lg p-6">
+                        <p class="mb-3">For questions, concerns, or assistance regarding these Terms of Service, please contact us:</p>
+                        <ul class="list-none space-y-2">
+                            <li><i class="fas fa-envelope text-primary mr-2"></i><strong class="text-white">Email:</strong> <a href="mailto:info@fitsmart.ca" class="text-primary hover:underline">info@fitsmart.ca</a></li>
+                            <li><i class="fas fa-phone text-primary mr-2"></i><strong class="text-white">Phone:</strong> {{ site_settings.get('contact_phone', '+1 (647) 573-2429') }}</li>
+                            <li><i class="fas fa-map-marker-alt text-primary mr-2"></i><strong class="text-white">Address:</strong> {{ site_settings.get('company_address', 'Canada') }}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-primary bg-opacity-10 border border-primary rounded-lg p-6 mt-8">
+                    <h3 class="text-lg font-semibold text-white mb-3">
+                        <i class="fas fa-info-circle text-primary mr-2"></i>Consumer Protection
+                    </h3>
+                    <p class="text-gray-300">As a Canadian consumer, you have rights under provincial and federal consumer protection laws. These Terms of Service do not limit your statutory rights. For consumer protection inquiries, contact your provincial consumer protection agency.</p>
+                </div>
+
+                <p class="text-sm text-gray-400 mt-8 text-center">By using FitSmart services, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.</p>
             </div>
         </div>
     </div>
 </main>
-{% endblock %} 
+{% endblock %}

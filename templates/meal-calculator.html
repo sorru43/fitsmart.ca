@@ -62,7 +62,7 @@
         <p class="text-gray-300 mb-4">Enter your email to receive a free nutrition guide and exclusive offers on meal plans tailored just for you!</p>
         
         <form id="retargetingForm" class="space-y-4">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="popup-name" class="block text-gray-300 mb-1">Name</label>
                 <input type="text" id="popup-name" name="name" required class="w-full px-4 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-primary">

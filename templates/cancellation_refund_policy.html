@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Cancellation & Refund Policy - HealthyRizz{% endblock %}
+{% block title %}Cancellation & Refund Policy - FitSmart{% endblock %}
 
 {% block content %}
 <main class="bg-gray-900 py-16 md:py-20">
@@ -10,22 +10,183 @@
                 <i class="fas fa-undo-alt text-primary mr-3"></i>Cancellation & Refund Policy
             </h1>
             <div class="prose prose-lg text-gray-300 mx-auto">
-                <p>We understand that plans can change, and we aim to be flexible while also minimizing food waste.</p>
-                <h3>🔁 Cancellations</h3>
-                <ul>
-                  <li><strong>Weekly Plans:</strong> Can be paused or rescheduled with at least 24 hours' notice before your next delivery.</li>
-                  <li><strong>Monthly Plans:</strong> You may pause or adjust the schedule with 48 hours' prior notice.</li>
-                  <li>Same-day or last-minute cancellations are not accepted due to fresh ingredient preparation.</li>
-                </ul>
-                <h3>💰 Refund Policy</h3>
-                <ul>
-                  <li>We do not offer refunds once a plan has started.</li>
-                  <li>In case of genuine concerns (e.g. allergies, medical advice), we can adjust or convert the remaining balance into future credits.</li>
-                  <li>For delivery failures on our end, we will issue a 100% credit or replacement meal the next day.</li>
-                </ul>
-                <p>For assistance, contact us via WhatsApp or email at <a href="mailto:healthyrizz.in@gmail.com" class="text-primary hover:underline">healthyrizz.in@gmail.com</a>.</p>
+                <p class="text-lg mb-6">At FitSmart, we understand that plans can change. This policy outlines our cancellation and refund procedures to ensure transparency and fairness for all our customers.</p>
+                
+                <p class="text-sm text-gray-400 mb-8">Last updated: {{ now.strftime('%B %d, %Y') }}</p>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">1. Subscription Cancellations</h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <h4 class="text-lg font-medium text-white mb-3">Weekly Plans</h4>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Can be paused, rescheduled, or cancelled with at least <strong>24 hours' notice</strong> before your next scheduled delivery</li>
+                        <li>Same-day or last-minute cancellations are not accepted due to fresh ingredient preparation and food waste prevention</li>
+                        <li>You can manage cancellations through your account dashboard or by contacting customer support</li>
+                    </ul>
+                    
+                    <h4 class="text-lg font-medium text-white mb-3 mt-4">Monthly Plans</h4>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Can be paused, adjusted, or cancelled with at least <strong>48 hours' prior notice</strong> before your next delivery</li>
+                        <li>Monthly plans offer more flexibility but require additional notice due to bulk preparation</li>
+                        <li>You can modify your delivery schedule up to 48 hours in advance</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">2. How to Cancel</h3>
+                <div class="bg-primary bg-opacity-10 border border-primary rounded-lg p-6 mb-6">
+                    <p class="text-white font-medium mb-3">You can cancel your subscription through:</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li><strong>Account Dashboard:</strong> Log in to your account and manage your subscription settings</li>
+                        <li><strong>Email:</strong> Send a cancellation request to <a href="mailto:support@fitsmart.ca" class="text-primary hover:underline">support@fitsmart.ca</a></li>
+                        <li><strong>Phone:</strong> Call us at {{ site_settings.get('contact_phone', '+1 (647) 573-2429') }}</li>
+                        <li><strong>Customer Support:</strong> Contact our support team through the website</li>
+                    </ul>
+                    <p class="text-sm text-gray-300 mt-4">Please include your account email and subscription details in your cancellation request.</p>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">3. Refund Policy</h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <h4 class="text-lg font-medium text-white mb-3">General Refund Rules</h4>
+                    <ul class="list-disc pl-6 space-y-2 mb-4">
+                        <li><strong>No Refunds for Started Plans:</strong> We do not offer refunds once a subscription plan has started and meals have been delivered</li>
+                        <li><strong>Pre-Delivery Cancellations:</strong> If you cancel before your first delivery, you may be eligible for a full refund minus any processing fees</li>
+                        <li><strong>Future Credits:</strong> In cases of genuine concerns (allergies, medical advice, quality issues), we may convert remaining balance into future meal credits</li>
+                    </ul>
+
+                    <h4 class="text-lg font-medium text-white mb-3 mt-4">Eligible Refund Scenarios</h4>
+                    <div class="bg-green-900 bg-opacity-20 border border-green-700 rounded-lg p-4">
+                        <ul class="list-disc pl-6 space-y-2">
+                            <li><strong>Delivery Failures (Our Responsibility):</strong> 100% credit or replacement meal for the next day</li>
+                            <li><strong>Quality Issues:</strong> Full refund or replacement for meals that don't meet our quality standards</li>
+                            <li><strong>Wrong Items Delivered:</strong> Immediate replacement with correct items or full refund</li>
+                            <li><strong>Allergy/Intolerance Issues:</strong> Full refund if dietary requirements were not met as specified</li>
+                            <li><strong>Unforeseen Circumstances:</strong> Case-by-case evaluation for medical emergencies or other valid reasons</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">4. Refund Processing</h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Refunds will be processed to the original payment method used for the purchase</li>
+                        <li>Processing time: 5-10 business days after approval</li>
+                        <li>You will receive an email confirmation when the refund is processed</li>
+                        <li>Bank processing times may vary depending on your financial institution</li>
+                        <li>For Stripe payments, refunds typically appear within 3-5 business days</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">5. Pausing Subscriptions</h3>
+                <div class="bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-6 mb-6">
+                    <p class="text-white font-medium mb-3">You can pause your subscription instead of cancelling:</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Pause for a specific duration (1-4 weeks)</li>
+                        <li>No charges during the pause period</li>
+                        <li>Subscription automatically resumes after the pause period</li>
+                        <li>You can extend or cancel the pause at any time</li>
+                        <li>Perfect for vacations, travel, or temporary schedule changes</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">6. Trial Orders</h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Trial orders can be cancelled up to 12 hours before scheduled delivery</li>
+                        <li>Full refund available for trial orders cancelled within the cancellation window</li>
+                        <li>No refunds for trial orders after delivery has been made</li>
+                        <li>Trial orders are subject to the same quality guarantee as regular subscriptions</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">7. Special Circumstances</h3>
+                <div class="bg-yellow-900 bg-opacity-20 border border-yellow-700 rounded-lg p-6 mb-6">
+                    <h4 class="text-lg font-medium text-white mb-3">Medical Emergencies</h4>
+                    <p class="mb-3">If you experience a medical emergency that prevents you from using our service:</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Contact us immediately with medical documentation</li>
+                        <li>We will work with you to find an appropriate solution</li>
+                        <li>May include pausing subscription, converting to credits, or partial refunds</li>
+                        <li>Evaluated on a case-by-case basis with compassion and understanding</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">8. Food Waste Prevention</h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <p class="mb-3">We require advance notice for cancellations to minimize food waste:</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Fresh ingredients are prepared in advance based on orders</li>
+                        <li>Last-minute cancellations result in food waste and environmental impact</li>
+                        <li>24-48 hour notice allows us to adjust preparation schedules</li>
+                        <li>This policy helps us maintain affordable pricing and sustainability</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">9. Disputes & Appeals</h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <p class="mb-3">If you disagree with a refund decision:</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>Contact our customer support team to discuss your case</li>
+                        <li>Provide any relevant documentation or evidence</li>
+                        <li>We will review your case and respond within 5 business days</li>
+                        <li>We are committed to fair resolution of all disputes</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">10. Consumer Rights (Canada)</h3>
+                <div class="bg-primary bg-opacity-10 border border-primary rounded-lg p-6 mb-6">
+                    <p class="text-white font-medium mb-3">As a Canadian consumer, you have rights under provincial consumer protection laws:</p>
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>This policy does not limit your statutory rights</li>
+                        <li>You may have additional rights under your province's consumer protection legislation</li>
+                        <li>For consumer protection inquiries, contact your provincial consumer protection agency</li>
+                        <li>We comply with all applicable Canadian consumer protection laws</li>
+                    </ul>
+                </div>
+
+                <h3 class="text-xl font-semibold text-white mt-6 mb-3">11. Contact Us</h3>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <p class="mb-3">For cancellation or refund requests, please contact us:</p>
+                    <ul class="list-none space-y-2">
+                        <li class="flex items-start">
+                            <i class="fas fa-envelope text-primary mr-3 mt-1"></i>
+                            <div>
+                                <strong class="text-white">Email:</strong>
+                                <a href="mailto:support@fitsmart.ca" class="text-primary hover:underline block">support@fitsmart.ca</a>
+                                <a href="mailto:info@fitsmart.ca" class="text-primary hover:underline block">info@fitsmart.ca</a>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-phone text-primary mr-3 mt-1"></i>
+                            <div>
+                                <strong class="text-white">Phone:</strong>
+                                <span class="text-gray-300 block">{{ site_settings.get('contact_phone', '+1 (647) 573-2429') }}</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-clock text-primary mr-3 mt-1"></i>
+                            <div>
+                                <strong class="text-white">Support Hours:</strong>
+                                <span class="text-gray-300 block">Monday - Friday: 9:00 AM - 6:00 PM EST<br>Saturday: 10:00 AM - 4:00 PM EST</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-primary bg-opacity-10 border border-primary rounded-lg p-6 mt-8">
+                    <h4 class="text-lg font-semibold text-white mb-3">
+                        <i class="fas fa-info-circle text-primary mr-2"></i>Important Notes
+                    </h4>
+                    <ul class="list-disc pl-6 space-y-2 text-gray-300">
+                        <li>All cancellation and refund requests must be submitted in writing (email or through account dashboard)</li>
+                        <li>Refund eligibility is determined on a case-by-case basis</li>
+                        <li>We reserve the right to refuse refunds for abuse of our refund policy</li>
+                        <li>This policy may be updated from time to time - check back for the latest version</li>
+                        <li>For questions about this policy, contact our customer support team</li>
+                    </ul>
+                </div>
+
+                <p class="text-sm text-gray-400 mt-8 text-center">This Cancellation & Refund Policy is governed by the laws of Canada and your province of residence.</p>
             </div>
         </div>
     </div>
 </main>
-{% endblock %} 
+{% endblock %}

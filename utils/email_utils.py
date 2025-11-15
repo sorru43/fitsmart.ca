@@ -1,107 +1,78 @@
 import os
 import sys
 from flask import current_app as app, url_for
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import (Mail, Attachment, FileContent, 
-                                  FileName, FileType, Disposition, ContentId)
-import base64
-from io import BytesIO
-import mimetypes
 from datetime import datetime
 from flask_mail import Message
 from extensions import mail
 
-def send_email(to_email, from_email, subject, html_content=None, text_content=None, attachments=None):
+def send_email_flask_mail(to_email, subject, html_content=None, text_content=None):
     """
-    Send an email using SendGrid
+    Send email using Flask-Mail (SMTP) instead of SendGrid
     
     Args:
         to_email (str): Recipient email address
-        from_email (str): Sender email address
         subject (str): Email subject
-        html_content (str, optional): HTML content of the email
-        text_content (str, optional): Text content of the email (fallback for HTML)
-        attachments (list, optional): List of attachment dictionaries with 'filename' and either 'path' or 'content'
+        html_content (str, optional): HTML content
+        text_content (str, optional): Text content
         
     Returns:
         bool: True if email was sent successfully, False otherwise
     """
-    sendgrid_key = os.environ.get('SENDGRID_API_KEY')
-    if not sendgrid_key:
-        app.logger.error("SendGrid API key is not set")
-        return False
-    
-    message = Mail(
-        from_email=from_email,
-        to_emails=to_email,
-        subject=subject
-    )
-    
-    # Add content
-    if html_content:
-        message.add_content(html_content, 'text/html')
-    if text_content:
-        message.add_content(text_content, 'text/plain')
-    
-    # Add attachments
-    if attachments:
-        for attachment_data in attachments:
-            attachment = Attachment()
-            
-            if 'path' in attachment_data:
-                # File is on disk
-                with open(attachment_data['path'], 'rb') as f:
-                    content = base64.b64encode(f.read()).decode()
-                    mime_type = mimetypes.guess_type(attachment_data['path'])[0]
-            elif 'content' in attachment_data:
-                # Content is provided as bytes
-                if isinstance(attachment_data['content'], bytes):
-                    content = base64.b64encode(attachment_data['content']).decode()
-                else:
-                    content = base64.b64encode(attachment_data['content']).decode()
-                
-                # Try to guess mime type from filename
-                mime_type = mimetypes.guess_type(attachment_data['filename'])[0]
-                
-                # Default mime types for common extensions
-                if not mime_type:
-                    ext = attachment_data['filename'].split('.')[-1].lower()
-                    if ext == 'pdf':
-                        mime_type = 'application/pdf'
-                    elif ext == 'csv':
-                        mime_type = 'text/csv'
-                    elif ext in ['jpg', 'jpeg']:
-                        mime_type = 'image/jpeg'
-                    elif ext == 'png':
-                        mime_type = 'image/png'
-                    else:
-                        mime_type = 'application/octet-stream'
-            else:
-                # Skip if neither path nor content is provided
-                continue
-            
-            attachment.file_content = FileContent(content)
-            attachment.file_name = FileName(attachment_data['filename'])
-            attachment.file_type = FileType(mime_type)
-            attachment.disposition = Disposition('attachment')
-            attachment.content_id = ContentId(attachment_data['filename'])
-            
-            message.add_attachment(attachment)
-    
-    # Send email
     try:
-        sg = SendGridAPIClient(sendgrid_key)
-        response = sg.send(message)
+        from flask import current_app
+        from flask_mail import Message
+        from extensions import mail
         
-        # Log the response status
-        app.logger.info(f"SendGrid response status: {response.status_code}")
+        # Get SMTP configuration from environment variables
+        smtp_server = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+        smtp_port = int(os.getenv('MAIL_PORT', 587))
+        username = os.getenv('MAIL_USERNAME', 'info@fitsmart.ca')
+        password = os.getenv('MAIL_PASSWORD', '')
+        default_sender = os.getenv('MAIL_DEFAULT_SENDER', 'info@fitsmart.ca')
         
-        # Return True if status code is 2xx
-        return 200 <= response.status_code < 300
+        # Create message with proper sender
+        msg = Message(
+            subject=subject,
+            sender=default_sender,
+            recipients=[to_email]
+        )
+        
+        if html_content:
+            msg.html = html_content
+        if text_content:
+            msg.body = text_content
+        elif html_content:
+            # Strip HTML tags for text fallback
+            import re
+            msg.body = re.sub(r'<[^>]+>', '', html_content)
+        
+        # Send email
+        mail.send(msg)
+        current_app.logger.info(f"Email sent successfully to {to_email}")
+        print(f"✅ Email sent successfully to {to_email}")
+        return True
         
     except Exception as e:
-        app.logger.error(f"Error sending email: {str(e)}")
+        current_app.logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        print(f"❌ Error sending email to {to_email}: {e}")
         return False
+
+def send_email(to_email, from_email, subject, html_content=None, text_content=None, attachments=None):
+    """
+    Send email using Flask-Mail (SMTP) - Updated to work with Gmail
+    
+    Args:
+        to_email (str): Recipient email address
+        from_email (str): Sender email address (ignored, uses config)
+        subject (str): Email subject
+        html_content (str, optional): HTML content
+        text_content (str, optional): Text content
+        attachments (list, optional): List of attachments (not implemented yet)
+        
+    Returns:
+        bool: True if email was sent successfully, False otherwise
+    """
+    return send_email_flask_mail(to_email, subject, html_content, text_content)
         
 def send_delivery_status_email(to_email, customer_name, delivery_date, message_text, delivery_status):
     """
@@ -123,10 +94,10 @@ def send_delivery_status_email(to_email, customer_name, delivery_date, message_t
         formatted_date = delivery_date.strftime('%A, %B %d, %Y')
     
     # Default sender from environment variable or use a fallback
-    from_email = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@healthyrizz.in')
+    from_email = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@fitsmart.ca')
     
     # Create the email subject
-    subject = f"HealthyRizz Delivery Update: {delivery_status.capitalize()}"
+    subject = f"FitSmart Delivery Update: {delivery_status.capitalize()}"
     
     # Create the HTML content
     html_content = f"""
@@ -147,12 +118,12 @@ def send_delivery_status_email(to_email, customer_name, delivery_date, message_t
     <body>
         <div class="container">
             <div class="header">
-                <h1>HealthyRizz Delivery Update</h1>
+                <h1>FitSmart Delivery Update</h1>
             </div>
             <div class="content">
                 <p>Hello {customer_name},</p>
                 
-                <p>We have an update regarding your HealthyRizz meal delivery scheduled for <strong>{formatted_date}</strong>.</p>
+                <p>We have an update regarding your FitSmart meal delivery scheduled for <strong>{formatted_date}</strong>.</p>
                 
                 <p>Your delivery status is now: <span class="status">{delivery_status.capitalize()}</span></p>
                 
@@ -162,17 +133,17 @@ def send_delivery_status_email(to_email, customer_name, delivery_date, message_t
                 
                 <p>You can view more details about your delivery by logging into your account:</p>
                 
-                <a href="https://healthyrizz.in/login" class="button">View Delivery Details</a>
+                <a href="https://fitsmart.ca/login" class="button">View Delivery Details</a>
                 
                 <p>If you have any questions, please contact our customer support team.</p>
                 
-                <p>Thank you for choosing HealthyRizz for your nutritional needs!</p>
+                <p>Thank you for choosing FitSmart for your nutritional needs!</p>
                 
-                <p>Warm regards,<br>The HealthyRizz Team</p>
+                <p>Warm regards,<br>The FitSmart Team</p>
             </div>
             <div class="footer">
                 <p>This is an automated message. Please do not reply to this email.</p>
-                <p>&copy; {datetime.now().year} HealthyRizz. All rights reserved.</p>
+                <p>&copy; {datetime.now().year} FitSmart. All rights reserved.</p>
             </div>
         </div>
     </body>
@@ -183,23 +154,23 @@ def send_delivery_status_email(to_email, customer_name, delivery_date, message_t
     text_content = f"""
 Hello {customer_name},
 
-We have an update regarding your HealthyRizz meal delivery scheduled for {formatted_date}.
+We have an update regarding your FitSmart meal delivery scheduled for {formatted_date}.
 
 Your delivery status is now: {delivery_status.capitalize()}
 
 Message: {message_text}
 
-You can view more details about your delivery by logging into your account at https://healthyrizz.in/login
+You can view more details about your delivery by logging into your account at https://fitsmart.ca/login
 
 If you have any questions, please contact our customer support team.
 
-Thank you for choosing HealthyRizz for your nutritional needs!
+Thank you for choosing FitSmart for your nutritional needs!
 
 Warm regards,
-The HealthyRizz Team
+The FitSmart Team
 
 This is an automated message. Please do not reply to this email.
-© {datetime.now().year} HealthyRizz. All rights reserved.
+© {datetime.now().year} FitSmart. All rights reserved.
     """
     
     # Send the email
@@ -207,18 +178,134 @@ This is an automated message. Please do not reply to this email.
 
 def send_password_reset_email(to_email, token):
     """Send a password reset email to the user"""
-    reset_url = url_for('main.reset_password', token=token, _external=True)
-    msg = Message(
-        subject="Password Reset Request - HealthyRizz",
-        sender=current_app.config.get("MAIL_DEFAULT_SENDER", "noreply@healthyrizz.in"),
-        recipients=[to_email]
-    )
-    msg.body = f'''To reset your password, visit the following link:
+    try:
+        # Use hardcoded URL instead of url_for to avoid request context issues
+        reset_url = f"https://fitsmart.ca/reset-password/{token}"
+        
+        subject = "Password Reset Request - FitSmart 🔐"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #10b981; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }}
+                .content {{ background: #f9f9f9; padding: 20px; border-radius: 8px; }}
+                .reset-box {{ background: #d1fae5; border: 1px solid #10b981; padding: 15px; border-radius: 6px; margin: 15px 0; text-align: center; }}
+                .warning {{ background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 15px 0; }}
+                .footer {{ text-align: center; color: #666; font-size: 14px; margin-top: 20px; }}
+                .button {{ display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 15px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>🔐 Password Reset Request</h1>
+                <p>FitSmart - Secure Your Account</p>
+            </div>
+            
+            <div class="content">
+                <p>Hello,</p>
+                
+                <p>We received a request to reset your password for your FitSmart account. If you made this request, please use the button below to create a new password.</p>
+                
+                <div class="reset-box">
+                    <h2>🔄 Reset Your Password</h2>
+                    <p>Click the button below to reset your password:</p>
+                    
+                    <a href="{reset_url}" class="button">Reset Password</a>
+                    
+                    <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                        If the button doesn't work, copy and paste this link into your browser:<br>
+                        <a href="{reset_url}" style="color: #379777; word-break: break-all;">{reset_url}</a>
+                    </p>
+                </div>
+                
+                <div class="warning">
+                    <h3>⚠️ Security Notice</h3>
+                    <ul>
+                        <li>This password reset link will expire in <strong>1 hour</strong></li>
+                        <li>If you didn't request this password reset, please ignore this email</li>
+                        <li>Your current password will remain unchanged until you complete the reset</li>
+                    </ul>
+                </div>
+                
+                <h3>🔒 Password Security Tips:</h3>
+                <ul>
+                    <li>Use at least 8 characters</li>
+                    <li>Include a mix of uppercase and lowercase letters</li>
+                    <li>Add numbers and special characters</li>
+                    <li>Avoid using personal information</li>
+                    <li>Don't reuse passwords from other accounts</li>
+                </ul>
+                
+                <p>If you didn't request this password reset, it's possible that someone else entered your email address by mistake. You can safely ignore this email.</p>
+                
+                <p>Need help? Contact us:<br>
+                📧 Email: fitsmart.ca@gmail.com<br>
+                📞 Phone: +91-98765-43210</p>
+                
+                <p>Best regards,<br>
+                The FitSmart Security Team</p>
+            </div>
+            
+            <div class="footer">
+                <p>This email was sent to {to_email}</p>
+                <p>If you didn't request a password reset, please ignore this email.</p>
+                <p>&copy; {datetime.now().year} FitSmart. All rights reserved.</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_content = f"""
+Password Reset Request - FitSmart
+
+Hello,
+
+We received a request to reset your password for your FitSmart account. If you made this request, please use the link below to create a new password.
+
+Reset your password:
 {reset_url}
 
-If you did not make this request, simply ignore this email.
-'''
-    mail.send(msg)
+Security Notice:
+- This password reset link will expire in 1 hour
+- If you didn't request this password reset, please ignore this email
+- Your current password will remain unchanged until you complete the reset
+
+Password Security Tips:
+- Use at least 8 characters
+- Include a mix of uppercase and lowercase letters
+- Add numbers and special characters
+- Avoid using personal information
+- Don't reuse passwords from other accounts
+
+If you didn't request this password reset, it's possible that someone else entered your email address by mistake. You can safely ignore this email.
+
+Need help? Contact us:
+- Email: fitsmart.ca@gmail.com
+- Phone: +91-98765-43210
+
+Best regards,
+The FitSmart Security Team
+
+This email was sent to {to_email}
+If you didn't request a password reset, please ignore this email.
+© {datetime.now().year} FitSmart. All rights reserved.
+        """
+        
+        # Use the working send_email function
+        return send_email(
+            to_email=to_email,
+            from_email="fitsmart.ca@gmail.com",
+            subject=subject,
+            html_content=html_content,
+            text_content=text_content
+        )
+        
+    except Exception as e:
+        print(f"❌ Error sending password reset email to {to_email}: {e}")
+        return False
 
 def send_contact_notification(inquiry):
     """
@@ -231,8 +318,8 @@ def send_contact_notification(inquiry):
         bool: True if email was sent successfully, False otherwise
     """
     # Get admin email from environment or use default
-    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@healthyrizz.in')
-    from_email = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@healthyrizz.in')
+    admin_email = os.environ.get('ADMIN_EMAIL', 'admin@fitsmart.ca')
+    from_email = os.environ.get('MAIL_DEFAULT_SENDER', 'no-reply@fitsmart.ca')
     
     # Create the email subject
     subject = f"New Contact Inquiry: {inquiry.inquiry_type.replace('_', ' ').title()} - {inquiry.name}"
@@ -320,9 +407,9 @@ def send_contact_notification(inquiry):
     
     html_content += f"""
                 <div class="footer">
-                    <p>This is an automated notification from the HealthyRizz contact form.</p>
+                    <p>This is an automated notification from the FitSmart contact form.</p>
                     <p>Inquiry ID: {inquiry.id}</p>
-                    <p>&copy; {datetime.now().year} HealthyRizz. All rights reserved.</p>
+                    <p>&copy; {datetime.now().year} FitSmart. All rights reserved.</p>
                 </div>
             </div>
         </div>

@@ -1,0 +1,330 @@
+{% set current_url = request.path %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fit Smart - Healthy Meal Delivery in Canada. Personalized meal plans delivered to your door.">
+    <title>{% block title %}Fit Smart - Healthy Meal Delivery{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind/tailwind.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind/custom-tailwind.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/meal-plans.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Page specific CSS -->
+    {% block extra_css %}{% endblock %}
+    
+    <style>
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #151515;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid #333333;
+            z-index: 50;
+        }
+        
+        .mobile-menu.show {
+            display: block !important;
+        }
+        
+        .profile-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            z-index: 30;
+        }
+        
+        .profile-dropdown.show {
+            display: block;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-gray-50">
+    <!-- Active Promotional Banner -->
+    {% if active_banner %}
+        <div id="promo-banner" class="w-full p-2 text-center text-sm sm:text-base" style="background-color: {{ active_banner.background_color }}; color: {{ active_banner.text_color }}">
+            {{ active_banner.message }}
+            {% if active_banner.link_url and active_banner.link_text %}
+                <a href="{{ active_banner.link_url }}" class="underline font-medium">{{ active_banner.link_text }}</a>
+            {% endif %}
+            <button id="close-banner" class="ml-2 text-xs rounded-full w-5 h-5 inline-flex items-center justify-center hover:bg-opacity-20 hover:bg-black focus:outline-none">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    {% endif %}
+    
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-30">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <!-- Logo -->
+                    <a href="{{ url_for('index') }}" class="flex-shrink-0 flex items-center">
+                        <img class="h-8 w-auto" src="{{ url_for('static', filename='images/fitsmart-logo.png') }}" alt="Fit Smart Logo">
+                    </a>
+                </div>
+                
+                <!-- Main Navigation - Desktop -->
+                <nav class="hidden md:flex space-x-6 items-center">
+                    <a href="{{ url_for('index') }}" class="text-gray-700 hover:text-primary py-2 {% if current_url == '/' %}text-primary font-medium border-b-2 border-primary{% endif %}">Home</a>
+                    <a href="{{ url_for('meal_plans') }}" class="text-gray-700 hover:text-primary py-2 {% if current_url == '/meal-plans' %}text-primary font-medium border-b-2 border-primary{% endif %}">Meal Plans</a>
+                <a href="{{ url_for('meal_calculator') }}" class="text-gray-700 hover:text-primary py-2 {% if current_url == '/meal-calculator' %}text-primary font-medium border-b-2 border-primary{% endif %}">Meal Calculator</a>
+                    <a href="{{ url_for('meal_calculator') }}" class="text-gray-700 hover:text-primary py-2 {% if current_url == '/meal-calculator' %}text-primary font-medium border-b-2 border-primary{% endif %}">Meal Calculator</a>
+                    <a href="{{ url_for('blog') }}" class="text-gray-700 hover:text-primary py-2 {% if current_url == '/blog' %}text-primary font-medium border-b-2 border-primary{% endif %}">Blog</a>
+                    
+                    <div class="flex items-center space-x-4 pl-6 ml-6 border-l border-gray-200">
+                        <a href="tel:+14374283393" class="text-gray-700 hover:text-primary" title="Call Us">
+                            <i class="fas fa-phone-alt"></i>
+                        </a>
+                        <a href="mailto:info@fitsmart.ca" class="text-gray-700 hover:text-primary" title="Email Us">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        <a href="https://facebook.com/fitsmart.canada" target="_blank" class="text-gray-700 hover:text-primary" title="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://instagram.com/fitsmart.canada" target="_blank" class="text-gray-700 hover:text-primary" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </nav>
+                
+                <div class="flex items-center">
+                    <!-- User Profile / Login -->
+                    <div class="ml-4 flex items-center">
+                        {% if current_user %}
+                            <div class="relative">
+                                <button id="profile-dropdown-toggle" class="flex items-center space-x-1 focus:outline-none hover:text-primary">
+                                    <span class="text-gray-700 hover:text-primary">{{ current_user.name }}</span>
+                                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 ml-1">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-xs text-gray-500 ml-1"></i>
+                                </button>
+                                <div id="profile-dropdown" class="profile-dropdown mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 bg-cream">
+                                    <a href="{{ url_for('profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-beige">My Profile</a>
+                                    {% if current_user.subscriptions %}
+                                        <a href="{{ url_for('profile') }}#subscriptions" class="block px-4 py-2 text-sm text-gray-700 hover:bg-beige">My Subscriptions</a>
+                                    {% endif %}
+                                    <a href="{{ url_for('profile') }}#payments" class="block px-4 py-2 text-sm text-gray-700 hover:bg-beige">Payment History</a>
+                                    <a href="{{ url_for('profile') }}#settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-beige">Account Settings</a>
+                                    {% if current_user.is_admin %}
+                                        <div class="border-t border-gray-100 my-1"></div>
+                                        <a href="{{ url_for('admin_dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-beige">Admin Dashboard</a>
+                                    {% endif %}
+                                    <div class="border-t border-gray-100 my-1"></div>
+                                    <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-beige">Logout</a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="mr-4 text-gray-700 hover:text-primary">Login</a>
+                            <a href="{{ url_for('register') }}" class="bg-primary hover:bg-primary-dark text-white rounded-md px-4 py-2 text-sm">Sign Up</a>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Mobile menu button -->
+                    <div class="flex md:hidden ml-2">
+                        <button type="button" class="md:hidden mobile-menu-button focus:outline-none rounded-md p-2 hover:bg-beige">
+                            <i class="fas fa-bars text-gray-700 text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div class="mobile-menu">
+                <div class="px-2 pt-2 pb-4 space-y-3 shadow-lg border-t border-gray-200">
+                    <a href="{{ url_for('index') }}" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">Home</a>
+                    <a href="{{ url_for('meal_plans') }}" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">Meal Plans</a>
+                <a href="{{ url_for('meal_calculator') }}" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">Meal Calculator</a>
+                    <a href="{{ url_for('blog') }}" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">Blog</a>
+                    
+                    <div class="border-t border-gray-200 my-2"></div>
+                    
+                    <!-- Mobile contact info -->
+                    <div class="px-3 py-2">
+                        <a href="tel:+14374283393" class="flex items-center text-gray-700 mb-2">
+                            <i class="fas fa-phone-alt mr-2 text-primary"></i>
+                            +1 (437) 428-3393
+                        </a>
+                        <a href="mailto:info@fitsmart.ca" class="flex items-center text-gray-700 mb-2">
+                            <i class="fas fa-envelope mr-2 text-primary"></i>
+                            info@fitsmart.ca
+                        </a>
+                        <div class="flex mt-2 space-x-4">
+                            <a href="https://facebook.com/fitsmart.canada" target="_blank" class="text-gray-700 hover:text-primary">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="https://instagram.com/fitsmart.canada" target="_blank" class="text-gray-700 hover:text-primary">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 my-2"></div>
+                    
+                    <!-- Mobile login/profile -->
+                    <div class="px-3 py-2">
+                        {% if current_user %}
+                            <div class="flex items-center mb-2">
+                                <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 mr-2">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span class="text-gray-700">{{ current_user.name }}</span>
+                            </div>
+                            <a href="{{ url_for('profile') }}" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">My Profile</a>
+                            {% if current_user.subscriptions %}
+                                <a href="{{ url_for('profile') }}#subscriptions" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">My Subscriptions</a>
+                            {% endif %}
+                            <a href="{{ url_for('profile') }}#payments" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">Payment History</a>
+                            <a href="{{ url_for('profile') }}#settings" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">Account Settings</a>
+                            {% if current_user.is_admin %}
+                                <a href="{{ url_for('admin_dashboard') }}" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">Admin Dashboard</a>
+                            {% endif %}
+                            <a href="{{ url_for('logout') }}" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">Logout</a>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="block px-3 py-2 text-gray-700 hover:bg-beige rounded-md">Login</a>
+                            <a href="{{ url_for('register') }}" class="block px-3 py-2 text-primary hover:bg-beige rounded-md">Sign Up</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-medium mb-4">About Fit Smart</h3>
+                    <p class="text-gray-400 mb-4">Fit Smart provides healthy, delicious meal plans delivered to your door. We use fresh, locally-sourced ingredients to create nutritious meals that help you achieve your health goals.</p>
+                    <div class="flex space-x-4">
+                        <a href="https://facebook.com/fitsmart.canada" target="_blank" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://instagram.com/fitsmart.canada" target="_blank" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://twitter.com/fitsmart_ca" target="_blank" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-medium mb-4">Meal Plans</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{{ url_for('meal_plans') }}?type=balanced" class="text-gray-400 hover:text-white">Balanced Diet</a></li>
+                        <li><a href="{{ url_for('meal_plans') }}?type=weight-loss" class="text-gray-400 hover:text-white">Weight Loss</a></li>
+                        <li><a href="{{ url_for('meal_plans') }}?type=athletic" class="text-gray-400 hover:text-white">Athletic Performance</a></li>
+                        <li><a href="{{ url_for('meal_plans') }}?type=vegetarian" class="text-gray-400 hover:text-white">Vegetarian</a></li>
+                        <li><a href="{{ url_for('meal_plans') }}?type=high-protein" class="text-gray-400 hover:text-white">High Protein</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-medium mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{{ url_for('index') }}" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li><a href="{{ url_for('meal_plans') }}" class="text-gray-400 hover:text-white">Meal Plans</a></li>
+                        <li><a href="{{ url_for('blog') }}" class="text-gray-400 hover:text-white">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-medium mb-4">Contact Us</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-start">
+                            <i class="fas fa-map-marker-alt text-primary mt-1 mr-2"></i>
+                            <span class="text-gray-400">123 Healthy St.<br>Toronto, ON M5V 2K4</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-phone-alt text-primary mr-2"></i>
+                            <a href="tel:+14374283393" class="text-gray-400 hover:text-white">+1 (437) 428-3393</a>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope text-primary mr-2"></i>
+                            <a href="mailto:info@fitsmart.ca" class="text-gray-400 hover:text-white">info@fitsmart.ca</a>
+                        </li>
+                    </ul>
+                    
+                    <form action="{{ url_for('subscribe_newsletter') }}" method="post" class="mt-4">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <label for="newsletter-email" class="block text-sm font-medium mb-1">Subscribe to our newsletter</label>
+                        <div class="flex">
+                            <input type="email" id="newsletter-email" name="email" placeholder="Your email" required
+                                   class="flex-grow rounded-l-md border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-gray-800 px-3 py-2 text-sm">
+                            <button type="submit" class="bg-primary hover:bg-primary-dark rounded-r-md text-white px-3 py-2 text-sm">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-12 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 text-sm mb-4 md:mb-0">
+                        &copy; {{ now.year }} Fit Smart Inc. All rights reserved.
+                    </p>
+                    <div class="flex space-x-4 text-sm text-gray-400">
+                        <a href="#" class="hover:text-gray-200">Privacy Policy</a>
+                        <a href="#" class="hover:text-gray-200">Terms of Service</a>
+                        <a href="#" class="hover:text-gray-200">Delivery Areas</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <!-- JavaScript for dropdowns -->
+    <script>
+        // Initialize dropdowns
+        document.addEventListener('DOMContentLoaded', function() {
+            // Profile dropdown toggle
+            const profileToggle = document.getElementById('profile-dropdown-toggle');
+            const profileDropdown = document.getElementById('profile-dropdown');
+            
+            if (profileToggle && profileDropdown) {
+                profileToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    profileDropdown.classList.toggle('show');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (profileDropdown.classList.contains('show') && 
+                        !profileToggle.contains(e.target) && 
+                        !profileDropdown.contains(e.target)) {
+                        profileDropdown.classList.remove('show');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Custom Email Campaign{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white mb-2">
+            <i class="fas fa-edit text-primary mr-2"></i>
+            Custom Email Campaign
+        </h1>
+        <p class="text-gray-400">Create and send personalized email campaigns</p>
+    </div>
+
+    <div class="bg-dark-lighter rounded-lg border border-gray-700">
+        <div class="bg-dark p-4 border-b border-gray-700">
+            <h3 class="text-lg font-semibold text-white">Campaign Details</h3>
+        </div>
+        <div class="p-6">
+            <form method="POST" class="space-y-6">
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-300 mb-2">Email Subject</label>
+                    <input type="text" id="subject" name="subject" required
+                           class="w-full px-3 py-2 bg-dark border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                           placeholder="Enter subject line">
+                </div>
+
+                <div>
+                    <label for="user_segment" class="block text-sm font-medium text-gray-300 mb-2">Target Audience</label>
+                    <select id="user_segment" name="user_segment" required
+                            class="w-full px-3 py-2 bg-dark border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">-- Select Target Audience --</option>
+                        <option value="all">All Active Users</option>
+                        <option value="new">New Users (Last 7 Days)</option>
+                        <option value="inactive">Inactive Users (30+ Days)</option>
+                        <option value="newsletter">Newsletter Subscribers</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="html_content" class="block text-sm font-medium text-gray-300 mb-2">Email Content (HTML)</label>
+                    <textarea id="html_content" name="html_content" rows="12" required
+                              class="w-full px-3 py-2 bg-dark border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
+                              placeholder="Enter your HTML email content here..."></textarea>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                        <i class="fas fa-paper-plane mr-2"></i>Send Campaign
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

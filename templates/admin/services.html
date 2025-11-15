@@ -1,0 +1,174 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Additional Services Management - FitSmart{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-white">Additional Services Management</h1>
+        <a href="{{ url_for('admin.admin_add_service') }}" class="bg-primary text-white px-4 py-2 rounded hover:bg-green-600 transition">
+            <i class="fas fa-plus mr-2"></i>Add New Service
+        </a>
+    </div>
+
+    <div class="bg-dark-lighter rounded-lg shadow-md p-6">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead class="bg-dark-lightest">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Service</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Price</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-dark-lighter divide-y divide-gray-700">
+                    {% for service in services %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div>
+                                <div class="text-sm font-medium text-white">{{ service.name }}</div>
+                                <div class="text-sm text-gray-400">{{ service.description[:100] }}{% if service.description|length > 100 %}...{% endif %}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ service.category.title() }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            ${{ service.price }}{% if service.price_type == 'percentage' %}%{% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if service.is_active %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                            {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <a href="{{ url_for('admin.admin_edit_service', service_id=service.id) }}" 
+                                   class="text-yellow-400 hover:text-yellow-300 transition-colors duration-200"
+                                   title="Edit Service">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button onclick="toggleServiceStatus({{ service.id }})"
+                                        class="text-green-400 hover:text-green-300 transition-colors duration-200"
+                                        title="{{ 'Deactivate' if service.is_active else 'Activate' }} Service">
+                                    <i class="fas fa-{{ 'toggle-on' if service.is_active else 'toggle-off' }}"></i>
+                                </button>
+                                <button onclick="deleteService({{ service.id }}, '{{ service.name }}')"
+                                        class="text-red-400 hover:text-red-300 transition-colors duration-200"
+                                        title="Delete Service">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="confirmModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-dark-lighter rounded-lg max-w-md w-full p-6 border border-gray-600">
+        <h3 class="text-lg font-bold text-white mb-4" id="modalTitle">Confirm Action</h3>
+        <p class="text-gray-300 mb-6" id="modalMessage">Are you sure you want to perform this action?</p>
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeModal()" class="px-4 py-2 border border-gray-600 rounded text-gray-300 hover:bg-gray-700 transition">
+                Cancel
+            </button>
+            <button id="confirmButton" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentAction = null;
+let currentServiceId = null;
+
+function toggleServiceStatus(serviceId) {
+    fetch('{{ url_for("admin.admin_toggle_service_status") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ service_id: serviceId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while updating service status');
+    });
+}
+
+function deleteService(serviceId, serviceName) {
+    currentAction = 'delete_service';
+    currentServiceId = serviceId;
+    
+    document.getElementById('modalTitle').textContent = 'Confirm Service Deletion';
+    document.getElementById('modalMessage').textContent = `Are you sure you want to delete service "${serviceName}"? This action cannot be undone.`;
+    document.getElementById('confirmButton').textContent = 'Delete Service';
+    
+    showModal();
+}
+
+function showModal() {
+    document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('confirmModal').classList.add('hidden');
+    currentAction = null;
+    currentServiceId = null;
+}
+
+document.getElementById('confirmButton').addEventListener('click', function() {
+    if (currentAction === 'delete_service' && currentServiceId) {
+        fetch('{{ url_for("admin.admin_delete_service") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ service_id: currentServiceId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            closeModal();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            closeModal();
+            console.error('Error:', error);
+            alert('An error occurred while deleting service');
+        });
+    }
+});
+
+document.getElementById('confirmModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

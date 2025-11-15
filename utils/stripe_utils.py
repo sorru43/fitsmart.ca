@@ -1,5 +1,5 @@
 """
-Stripe payment integration utility functions for HealthyRizz meal delivery application.
+Stripe payment integration utility functions for FitSmart meal delivery application.
 """
 import os
 import logging
@@ -11,7 +11,7 @@ from flask import current_app
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 # Constants
-CURRENCY = 'usd'
+CURRENCY = 'cad'  # Canadian Dollar
 
 def create_stripe_customer(name, email, phone, address):
     """

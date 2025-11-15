@@ -1,5 +1,5 @@
 from app import create_app, db
-from models import User
+from database.models import User
 
 app = create_app()
 with app.app_context():

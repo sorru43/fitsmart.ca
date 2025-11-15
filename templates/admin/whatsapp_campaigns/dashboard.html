@@ -1,0 +1,290 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}WhatsApp Campaigns Dashboard{% endblock %}
+
+{% block page_title %}WhatsApp Campaigns Dashboard{% endblock %}
+
+{% block content %}
+<div class="bg-dark-lighter rounded-lg p-6 mb-6">
+    <div class="flex items-center mb-6">
+        <i class="fab fa-whatsapp text-3xl text-green-500 mr-4"></i>
+        <h2 class="text-2xl font-bold text-white">WhatsApp Campaigns Dashboard</h2>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-green-600 rounded-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-3xl font-bold">{{ analytics.total_messages_sent }}</h3>
+                    <p class="text-green-100">Total Messages Sent</p>
+                </div>
+                <i class="fas fa-paper-plane text-4xl text-green-200"></i>
+            </div>
+        </div>
+        
+        <div class="bg-blue-600 rounded-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-3xl font-bold">{{ analytics.messages_delivered }}</h3>
+                    <p class="text-blue-100">Messages Delivered</p>
+                </div>
+                <i class="fas fa-check-circle text-4xl text-blue-200"></i>
+            </div>
+        </div>
+        
+        <div class="bg-yellow-600 rounded-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-3xl font-bold">{{ "%.1f"|format(analytics.delivery_rate * 100) }}%</h3>
+                    <p class="text-yellow-100">Delivery Rate</p>
+                </div>
+                <i class="fas fa-chart-line text-4xl text-yellow-200"></i>
+            </div>
+        </div>
+        
+        <div class="bg-red-600 rounded-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-3xl font-bold">{{ "%.1f"|format(analytics.read_rate * 100) }}%</h3>
+                    <p class="text-red-100">Read Rate</p>
+                </div>
+                <i class="fas fa-eye text-4xl text-red-200"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Segments -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-dark rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center">
+                <div class="bg-blue-500 rounded-lg p-3 mr-4">
+                    <i class="fas fa-users text-white text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Total Users</p>
+                    <p class="text-white text-2xl font-bold">{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-dark rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center">
+                <div class="bg-green-500 rounded-lg p-3 mr-4">
+                    <i class="fas fa-mobile-alt text-white text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-sm">Users with Phone</p>
+                    <p class="text-white text-2xl font-bold">{{ users_with_phone }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-dark rounded-lg p-6 border border-gray-700 mb-8">
+        <h5 class="text-lg font-semibold text-white mb-4">
+            <i class="fas fa-bolt text-yellow-500 mr-2"></i> Quick Actions
+        </h5>
+            <a href="{{ url_for('admin_whatsapp.send_welcome_message') }}" class="bg-primary hover:bg-primary-dark text-white px-4 py-3 rounded-lg flex items-center transition-colors duration-200">
+                <i class="fas fa-hand-wave mr-3"></i> Send Welcome Message
+            </a>
+            
+            <a href="{{ url_for('admin_whatsapp.send_order_confirmation') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg flex items-center transition-colors duration-200">
+                <i class="fas fa-shopping-cart mr-3"></i> Send Order Confirmation
+            </a>
+            
+            <a href="{{ url_for('admin_whatsapp.send_delivery_reminder') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg flex items-center transition-colors duration-200">
+                <i class="fas fa-truck mr-3"></i> Send Delivery Reminder
+            </a>
+            
+            <a href="{{ url_for('admin_whatsapp.send_holiday_notification') }}" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-lg flex items-center transition-colors duration-200">
+                <i class="fas fa-calendar mr-3"></i> Send Holiday Notification
+                                </a>
+            <a href="{{ url_for('admin_whatsapp.send_promotion_offer') }}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg flex items-center transition-colors duration-200">
+                <i class="fas fa-tag mr-3"></i> Send Promotion Offer
+            </a>
+            
+            <a href="{{ url_for('admin_whatsapp.send_custom_message') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg flex items-center transition-colors duration-200">
+                <i class="fas fa-edit mr-3"></i> Send Custom Message
+            </a>
+        </div>
+    </div>
+
+    <!-- Templates Section -->
+    <div class="bg-dark rounded-lg p-6 border border-gray-700 mb-8">
+        <h5 class="text-lg font-semibold text-white mb-4">
+            <i class="fas fa-list text-blue-500 mr-2"></i> Available Templates
+        </h5>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for template_name, template_data in templates.items() %}
+            <div class="bg-dark-lighter rounded-lg p-4 border border-gray-600">
+                <h6 class="text-white font-semibold mb-2">{{ template_name|title }}</h6>
+                <p class="text-gray-400 text-sm">
+                    Language: {{ template_data.language }}<br>
+                    Components: {{ template_data.components|length }}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Management Links -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-dark rounded-lg p-6 border border-gray-700">
+            <h5 class="text-lg font-semibold text-white mb-4">
+                <i class="fas fa-cogs text-blue-500 mr-2"></i> Campaign Management
+            </h5>
+            <ul class="space-y-3">
+                <li>
+                    <a href="{{ url_for('admin_whatsapp.whatsapp_analytics') }}" class="text-primary hover:text-primary-dark flex items-center">
+                        <i class="fas fa-chart-bar mr-3"></i> Analytics & Reports
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin_whatsapp.whatsapp_templates') }}" class="text-primary hover:text-primary-dark flex items-center">
+                        <i class="fas fa-list mr-3"></i> View Templates
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin_whatsapp.test_whatsapp_connection') }}" class="text-primary hover:text-primary-dark flex items-center">
+                        <i class="fas fa-vial mr-3"></i> Test Connection
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="bg-dark rounded-lg p-6 border border-gray-700">
+            <h5 class="text-lg font-semibold text-white mb-4">
+                <i class="fas fa-wrench text-green-500 mr-2"></i> Settings & Configuration
+            </h5>
+            <ul class="space-y-3">
+                <li>
+                    <a href="{{ url_for('admin_whatsapp.whatsapp_settings') }}" class="text-primary hover:text-primary-dark flex items-center">
+                        <i class="fas fa-cog mr-3"></i> API Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showWebhookInfo()" class="text-primary hover:text-primary-dark flex items-center">
+                        <i class="fas fa-link mr-3"></i> Webhook Configuration
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showTemplateGuidelines()" class="text-primary hover:text-primary-dark flex items-center">
+                        <i class="fas fa-book mr-3"></i> Template Guidelines
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Webhook Info Modal -->
+<div id="webhookModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-dark-lighter rounded-lg max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h5 class="text-lg font-semibold text-white">Webhook Configuration</h5>
+                <button type="button" class="text-gray-400 hover:text-white" onclick="closeWebhookModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="text-white">
+                <p class="font-semibold mb-2">Webhook URL:</p>
+                <code class="bg-dark p-2 rounded block mb-4 text-green-400">{{ request.host_url }}webhook/whatsapp</code>
+                <hr class="border-gray-600 mb-4">
+                <p class="font-semibold mb-2">Steps to configure:</p>
+                <ol class="list-decimal list-inside space-y-1 text-sm">
+                    <li>Go to Meta Developer Console</li>
+                    <li>Navigate to your WhatsApp Business App</li>
+                    <li>Go to Webhooks section</li>
+                    <li>Add the webhook URL above</li>
+                    <li>Set verify token to match your configuration</li>
+                    <li>Subscribe to message and status_update events</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template Guidelines Modal -->
+<div id="templateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-dark-lighter rounded-lg max-w-2xl w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h5 class="text-lg font-semibold text-white">WhatsApp Template Guidelines</h5>
+                <button type="button" class="text-gray-400 hover:text-white" onclick="closeTemplateModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="text-white space-y-4">
+                <div>
+                    <h6 class="font-semibold text-primary mb-2">Template Requirements:</h6>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>Templates must be pre-approved by WhatsApp</li>
+                        <li>Cannot contain promotional content initially</li>
+                        <li>Must follow WhatsApp's content policies</li>
+                        <li>Variables are marked with {{1}}, {{2}}, etc.</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-primary mb-2">Best Practices:</h6>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li>Keep messages concise and clear</li>
+                        <li>Use emojis sparingly and appropriately</li>
+                        <li>Include clear call-to-action when needed</li>
+                        <li>Test templates before sending to users</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h6 class="font-semibold text-primary mb-2">Template Types:</h6>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li><strong>Text Templates:</strong> Simple text messages</li>
+                        <li><strong>Media Templates:</strong> Include images, documents, or videos</li>
+                        <li><strong>Interactive Templates:</strong> Include buttons or quick replies</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Auto-refresh statistics every 30 seconds
+    setInterval(function() {
+        location.reload();
+    }, 30000);
+});
+
+function showWebhookInfo() {
+    document.getElementById('webhookModal').classList.remove('hidden');
+}
+
+function closeWebhookModal() {
+    document.getElementById('webhookModal').classList.add('hidden');
+}
+
+function showTemplateGuidelines() {
+    document.getElementById('templateModal').classList.remove('hidden');
+}
+
+function closeTemplateModal() {
+    document.getElementById('templateModal').classList.add('hidden');
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', function(event) {
+    if (event.target.id === 'webhookModal') {
+        closeWebhookModal();
+    }
+    if (event.target.id === 'templateModal') {
+        closeTemplateModal();
+    }
+});
+</script>
+{% endblock %}

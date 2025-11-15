@@ -1,84 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Order Successful - HealthyRizz{% endblock %}
-
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-2xl mx-auto text-center">
-        <!-- Success Icon -->
-        <div class="mb-8">
-            <div class="mx-auto w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
-                <i class="fas fa-check text-white text-2xl"></i>
-            </div>
-        </div>
-        
-        <!-- Success Message -->
-        <h1 class="text-3xl font-bold text-white mb-4">Order Successful!</h1>
-        <p class="text-gray-300 mb-8">Thank you for your purchase. Your order has been confirmed.</p>
-        
-        <!-- Order Details -->
-        <div class="bg-darker p-6 rounded-lg border border-gray-800 mb-8">
-            <h2 class="text-xl font-semibold text-white mb-4">Order Details</h2>
-            
-            <div class="space-y-3 text-left">
-                <div class="flex justify-between">
-                    <span class="text-gray-300">Order ID:</span>
-                    <span class="text-white font-mono">#{{ order.id }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-300">Payment ID:</span>
-                    <span class="text-white font-mono">{{ order.payment_id[:20] }}...</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-300">Meal Plan:</span>
-                    <span class="text-white">{{ meal_plan.name if meal_plan else 'N/A' }}</span>
-                </div>
-                {% if subscription %}
-                <div class="flex justify-between">
-                    <span class="text-gray-300">Frequency:</span>
-                    <span class="text-white">{{ subscription.frequency.value.title() }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-300">Next Delivery:</span>
-                    <span class="text-white">{{ subscription.current_period_end.strftime('%Y-%m-%d') }}</span>
-                </div>
-                {% endif %}
-                <div class="flex justify-between border-t border-gray-700 pt-3">
-                    <span class="text-gray-300 font-semibold">Total Amount:</span>
-                    <span class="text-primary font-bold text-lg">₹{{ "%.2f"|format(order.amount) }}</span>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Next Steps -->
-        <div class="bg-darker p-6 rounded-lg border border-gray-800 mb-8">
-            <h3 class="text-lg font-semibold text-white mb-4">What's Next?</h3>
-            <div class="space-y-3 text-gray-300 text-sm">
-                <p>✅ Your subscription is now active</p>
-                <p>📧 You'll receive email confirmation shortly</p>
-                <p>🚚 First delivery will be scheduled soon</p>
-                <p>👤 Check your profile for subscription management</p>
-            </div>
-        </div>
-        
-        <!-- Action Buttons -->
-        <div class="space-y-4">
-            {% if current_user.is_authenticated %}
-            <a href="{{ url_for('main.profile') }}" class="inline-block bg-primary text-white px-6 py-3 rounded-md hover:bg-green-600 font-semibold">
-                View My Profile
-            </a>
-            {% else %}
-            <a href="{{ url_for('main.login') }}" class="inline-block bg-primary text-white px-6 py-3 rounded-md hover:bg-green-600 font-semibold">
-                Login to Manage Subscription
-            </a>
-            {% endif %}
-            
-            <div>
-                <a href="{{ url_for('main.meal_plans') }}" class="text-gray-400 hover:text-white">
-                    ← Back to Meal Plans
-                </a>
-            </div>
-        </div>
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 text-center">
+        <div class="text-green-600 text-6xl mb-4">✅</div>
+        <h2 class="text-3xl font-extrabold text-gray-900 mb-4">
+            Payment Successful!
+        </h2>
+        <p class="text-gray-600 mb-8">
+            Your order has been placed successfully. You will receive a confirmation email shortly.
+        </p>
+        <a href="{{ url_for('index') }}" class="bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700">
+            Return to Home
+        </a>
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,195 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Edit Sample Menu Item - {{ meal_plan.name }} - FitSmart Admin{% endblock %}
+
+{% block page_title %}Edit Sample Menu Item{% endblock %}
+
+{% block admin_content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-white">
+            <i class="fas fa-edit text-primary mr-3"></i>
+            Edit Sample Menu Item
+        </h1>
+        <a href="{{ url_for('admin.admin_sample_menu', meal_plan_id=meal_plan.id) }}" class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Sample Menu
+        </a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-6 p-4 rounded-lg {% if category == 'success' %}bg-green-100 border border-green-400 text-green-700{% elif category == 'error' %}bg-red-100 border border-red-400 text-red-700{% else %}bg-blue-100 border border-blue-400 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Meal Plan Info -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Meal Plan: {{ meal_plan.name }}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+                <span class="font-medium">Calories:</span> {{ meal_plan.calories }}
+            </div>
+            <div>
+                <span class="font-medium">Protein:</span> {{ meal_plan.protein }}
+            </div>
+            <div>
+                <span class="font-medium">Price:</span> ${{ "%.2f"|format(meal_plan.price_weekly) }}/week
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Sample Menu Item Form -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Edit Sample Menu Item</h2>
+            <p class="text-gray-600 mt-1">Update the details of this sample menu item</p>
+        </div>
+        
+        <form method="POST" class="p-6 space-y-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <!-- Basic Information -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Basic Information</h3>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Item Name *</label>
+                    <input type="text" name="name" class="form-input" value="{{ sample_item.name }}" placeholder="e.g., Grilled Chicken Breast with Quinoa" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" class="form-textarea" rows="3" placeholder="Brief description of the item...">{{ sample_item.description or '' }}</textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Meal Type *</label>
+                        <select name="meal_type" class="form-select" required>
+                            <option value="">Select meal type</option>
+                            <option value="breakfast" {% if sample_item.meal_type == 'breakfast' %}selected{% endif %}>Breakfast</option>
+                            <option value="lunch" {% if sample_item.meal_type == 'lunch' %}selected{% endif %}>Lunch</option>
+                            <option value="dinner" {% if sample_item.meal_type == 'dinner' %}selected{% endif %}>Dinner</option>
+                            <option value="snack" {% if sample_item.meal_type == 'snack' %}selected{% endif %}>Snack</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Day of Week</label>
+                        <select name="day_of_week" class="form-select">
+                            <option value="">Any Day</option>
+                            <option value="1" {% if sample_item.day_of_week == 1 %}selected{% endif %}>Monday</option>
+                            <option value="2" {% if sample_item.day_of_week == 2 %}selected{% endif %}>Tuesday</option>
+                            <option value="3" {% if sample_item.day_of_week == 3 %}selected{% endif %}>Wednesday</option>
+                            <option value="4" {% if sample_item.day_of_week == 4 %}selected{% endif %}>Thursday</option>
+                            <option value="5" {% if sample_item.day_of_week == 5 %}selected{% endif %}>Friday</option>
+                            <option value="6" {% if sample_item.day_of_week == 6 %}selected{% endif %}>Saturday</option>
+                            <option value="7" {% if sample_item.day_of_week == 7 %}selected{% endif %}>Sunday</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                    <input type="url" name="image_url" class="form-input" value="{{ sample_item.image_url or '' }}" placeholder="https://example.com/image.jpg">
+                    <p class="text-sm text-gray-500 mt-1">Optional: URL to an image of this menu item</p>
+                </div>
+            </div>
+            
+            <!-- Nutritional Information -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Nutritional Information</h3>
+                <p class="text-sm text-gray-600">Optional: Add nutritional information to help customers understand the value</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Calories</label>
+                        <input type="number" name="calories" class="form-input" value="{{ sample_item.calories or '' }}" placeholder="250" min="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Protein (g)</label>
+                        <input type="number" name="protein" class="form-input" value="{{ sample_item.protein or '' }}" placeholder="25" min="0" step="0.1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Carbs (g)</label>
+                        <input type="number" name="carbs" class="form-input" value="{{ sample_item.carbs or '' }}" placeholder="30" min="0" step="0.1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fat (g)</label>
+                        <input type="number" name="fat" class="form-input" value="{{ sample_item.fat or '' }}" placeholder="8" min="0" step="0.1">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Display Settings -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">Display Settings</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
+                        <input type="number" name="display_order" class="form-input" value="{{ sample_item.display_order }}" placeholder="0" min="0">
+                        <p class="text-sm text-gray-500 mt-1">Lower numbers appear first</p>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" name="is_active" id="is_active" class="form-checkbox" {% if sample_item.is_active %}checked{% endif %}>
+                        <label for="is_active" class="ml-2 text-sm font-medium text-gray-700">Active</label>
+                        <p class="text-sm text-gray-500 ml-2">Show this item to customers</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <a href="{{ url_for('admin.admin_sample_menu', meal_plan_id=meal_plan.id) }}" class="btn-secondary">
+                    Cancel
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save mr-2"></i>Update Menu Item
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Current Item Preview -->
+    <div class="mt-8 bg-gray-50 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Current Item Preview</h3>
+        <div class="bg-white rounded-lg p-4 border">
+            <div class="flex items-center space-x-4">
+                {% if sample_item.image_url %}
+                    <img class="h-16 w-16 rounded-lg object-cover" src="{{ sample_item.image_url }}" alt="{{ sample_item.name }}">
+                {% else %}
+                    <div class="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-utensils text-gray-400"></i>
+                    </div>
+                {% endif %}
+                <div class="flex-1">
+                    <h4 class="text-lg font-medium text-gray-900">{{ sample_item.name }}</h4>
+                    {% if sample_item.description %}
+                        <p class="text-gray-600">{{ sample_item.description }}</p>
+                    {% endif %}
+                    <div class="flex items-center space-x-4 mt-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            {% if sample_item.meal_type == 'breakfast' %}bg-yellow-100 text-yellow-800
+                            {% elif sample_item.meal_type == 'lunch' %}bg-green-100 text-green-800
+                            {% elif sample_item.meal_type == 'dinner' %}bg-blue-100 text-blue-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ sample_item.meal_type|title }}
+                        </span>
+                        <span class="text-sm text-gray-500">{{ sample_item.day_name }}</span>
+                        {% if sample_item.calories %}
+                            <span class="text-sm text-gray-500">{{ sample_item.calories }} cal</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

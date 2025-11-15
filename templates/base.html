@@ -1,10 +1,10 @@
 {% set current_url = request.path %}
 {% set show_fssai_badge = site_settings.get('show_fssai_badge', 'True') %}
 {% set fssai_license_number = site_settings.get('fssai_license_number', '') %}
-{% set meta_description = meta_description | default('HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana. Nutritionist-curated meals delivered to your doorstep.') %}
-{% set og_title = og_title | default(title | default('HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana')) %}
+{% set meta_description = meta_description | default('FitSmart - Fresh, Healthy Meal Plans in Canada. Nutritionist-curated meals delivered to your doorstep.') %}
+{% set og_title = og_title | default(title | default('FitSmart - Fresh, Healthy Meal Plans in Canada')) %}
 {% set og_description = og_description | default(meta_description) %}
-{% set og_image = og_image | default('https://healthyrizz.in' + url_for('static', filename='images/healthy-meal-bowl.jpg')) %}
+{% set og_image = og_image | default('https://fitsmart.ca' + url_for('static', filename='images/healthy-meal-bowl.jpg')) %}
 {% set twitter_title = twitter_title | default(og_title) %}
 {% set twitter_description = twitter_description | default(og_description) %}
 {% set twitter_image = twitter_image | default(og_image) %}
@@ -14,28 +14,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="{{ meta_description }}">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' ws: wss:;">
+    <meta name="csrf-token" content="{{ csrf_token() if csrf_token else "" }}">
+    <!-- CSP handled by server headers, removing conflicting meta tag -->
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://healthyrizz.in{{ request.path }}">
+    <meta property="og:url" content="https://fitsmart.ca{{ request.path }}">
     <meta property="og:title" content="{{ og_title }}">
     <meta property="og:description" content="{{ og_description }}">
     <meta property="og:image" content="{{ og_image }}">
-    <meta property="og:site_name" content="HealthyRizz">
+    <meta property="og:site_name" content="FitSmart">
     <meta property="og:locale" content="en_US">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://healthyrizz.in{{ request.path }}">
+    <meta property="twitter:url" content="https://fitsmart.ca{{ request.path }}">
     <meta property="twitter:title" content="{{ twitter_title }}">
     <meta property="twitter:description" content="{{ twitter_description }}">
     <meta property="twitter:image" content="{{ twitter_image }}">
-    <meta property="twitter:site" content="@healthyrizz">
+    <meta property="twitter:site" content="@fitsmart">
     
     <!-- Additional SEO Meta Tags -->
-    <meta name="author" content="HealthyRizz">
+    <meta name="author" content="FitSmart">
     <meta name="robots" content="index, follow">
     <meta name="googlebot" content="index, follow">
     
@@ -53,61 +53,88 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://healthyrizz.in{{ request.path }}">
+    <link rel="canonical" href="https://fitsmart.ca{{ request.path }}">
     <!-- AMP Link (only for blog posts) -->
     {% if request.path.startswith('/blog/') and request.path != '/blog/' %}
-    <link rel="amphtml" href="https://healthyrizz.in/amp{{ request.path }}">
+    <link rel="amphtml" href="https://fitsmart.ca/amp{{ request.path }}">
     {% endif %}
     
-    <title>{% block title %}HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana{% endblock %}</title>
+    <title>{% block title %}FitSmart - Fresh, Healthy Meal Plans in Canada{% endblock %}</title>
     
     <!-- Favicon -->
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}">
+    {% set favicon_path = site_settings.get('site_favicon', '/static/favicon.ico') %}
+    <link rel="icon" href="{{ favicon_path }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ favicon_path }}" type="image/x-icon">
+    <link rel="apple-touch-icon" href="{{ favicon_path }}">
     
     <!-- Local Fonts -->
     <link rel="stylesheet" href="{{ url_for('static', filename='fonts/fonts.css') }}">
     
-    <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind/tailwind.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind/custom-tailwind.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-theme.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/light-theme.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/meal-plans.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/subscriptions.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-app-menu.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Main bundled CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.min.css') }}?v=20240716">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    
+    <!-- Holiday Popup CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/holiday-popup.css') }}">
+    
+    <!-- Footer Fix CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer-fix.css') }}">
+    
+
+    
+    <!-- Service Worker Registration (Simplified) -->
+    <script src="{{ url_for('static', filename='js/register-sw.js') }}"></script>
+    
+    <!-- Critical CSS for initial render -->
+    <style>
+        /* Critical CSS for above-the-fold content */
+        body { 
+            background-color: #000000; 
+            color: #FFFFFF; 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .bg-darker { background-color: #0A0A0A; }
+        .bg-dark { background-color: #151515; }
+        .text-white { color: #FFFFFF; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .h-16 { height: 4rem; }
+        .hidden { display: none; }
+        .md\:flex { display: none; }
+        @media (min-width: 768px) { .md\:flex { display: flex; } .md\:hidden { display: none; } }
+    </style>
     
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
         "@type": "Organization",
-        "name": "HealthyRizz",
-        "url": "https://healthyrizz.in",
-        "logo": "https://healthyrizz.in{{ url_for('static', filename='images/logo white.png') }}",
-        "description": "Fresh, Healthy Meal Plans in Ludhiana. Nutritionist-curated meals delivered to your doorstep.",
+        "name": "FitSmart",
+        "url": "https://fitsmart.ca",
+        "logo": "https://fitsmart.ca{{ url_for('static', filename='images/logo white.png') }}",
+        "description": "Fresh, Healthy Meal Plans in Canada. Nutritionist-curated meals delivered to your doorstep.",
         "address": {
             "@type": "PostalAddress",
-            "addressLocality": "Ludhiana",
-            "addressRegion": "Punjab",
-            "addressCountry": "IN"
+            "addressLocality": "Toronto",
+            "addressRegion": "Ontario",
+            "addressCountry": "CA"
         },
         "contactPoint": {
             "@type": "ContactPoint",
-            "telephone": "{{ site_settings.get('contact_phone', '+91-98765-43210') }}",
+            "telephone": "{{ site_settings.get('contact_phone', '+1 (647) 573-2429') }}",
             "contactType": "customer service",
-            "email": "{{ site_settings.get('contact_email', 'info@healthyrizz.in') }}"
+            "email": "info@fitsmart.ca"
         },
         "sameAs": [
-            "{{ site_settings.get('facebook_url', 'https://facebook.com/healthyrizz.in') }}",
-            "{{ site_settings.get('instagram_url', 'https://instagram.com/healthyrizz.in') }}"
+            "{{ site_settings.get('facebook_url', 'https://facebook.com/fitsmart') }}",
+            "{{ site_settings.get('instagram_url', 'https://instagram.com/fitsmart.ca') }}"
         ],
         "foundingDate": "2024",
-        "areaServed": "Ludhiana",
+        "areaServed": "Canada",
         "serviceType": "Meal Delivery Service",
         "hasOfferCatalog": {
             "@type": "OfferCatalog",
@@ -144,14 +171,14 @@
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Home",
-                "item": "https://healthyrizz.in"
+                "item": "https://fitsmart.ca"
             }
             {% if request.path != '/' %}
             ,{
                 "@type": "ListItem",
                 "position": 2,
                 "name": "{{ request.path.split('/')[-1].title() if request.path.split('/')[-1] else 'Page' }}",
-                "item": "https://healthyrizz.in{{ request.path }}"
+                "item": "https://fitsmart.ca{{ request.path }}"
             }
             {% endif %}
         ]
@@ -163,7 +190,7 @@
     <meta name="theme-color" content="#4CAF50">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="HealthyRizz">
+    <meta name="apple-mobile-web-app-title" content="FitSmart">
     
     <!-- iOS icons -->
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
@@ -366,8 +393,9 @@
                 padding-right: 1rem;
             }
             
-            button, 
-            [role="button"], 
+            /* Touch-friendly buttons - exclude header buttons */
+            button:not(#mobile-menu-button):not(#profile-dropdown-toggle), 
+            [role="button"]:not(#mobile-menu-button), 
             a.btn, 
             input[type="submit"], 
             .clickable {
@@ -380,6 +408,76 @@
             
             .footer-links li {
                 margin-bottom: 0.75rem;
+            }
+            
+            /* Mobile spacing - removed since no bottom button */
+            body {
+                padding-bottom: 0;
+            }
+            
+            main {
+                margin-bottom: 0;
+            }
+            
+            /* Ensure WhatsApp button positioning */
+            .fixed.bottom-24.right-6 {
+                z-index: 50;
+            }
+            
+            /* Force mobile header layout - override any conflicting styles */
+            header .flex.md\:hidden {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                width: 100% !important;
+                position: relative !important;
+                height: 4rem !important;
+            }
+            
+            /* Force burger menu to right - override any conflicting styles */
+            #mobile-menu-button {
+                margin-left: auto !important;
+                justify-content: flex-start !important;
+                position: relative !important;
+                right: 0 !important;
+                left: auto !important;
+                transform: none !important;
+                float: right !important;
+                align-self: center !important;
+                top: 0 !important;
+            }
+            
+            /* Ensure burger menu container is positioned correctly */
+            header .flex.md\:hidden .flex.items-center:last-child {
+                margin-left: auto !important;
+                justify-content: flex-end !important;
+                position: relative !important;
+                right: 0 !important;
+                left: auto !important;
+                align-items: center !important;
+                height: 100% !important;
+            }
+            
+            /* Force logo to left - override any conflicting styles */
+            header .flex.md\:hidden .flex.items-center:first-child {
+                justify-content: flex-start !important;
+                position: relative !important;
+                left: 0 !important;
+                right: auto !important;
+            }
+            
+            /* Remove any transform effects from navigation links on mobile */
+            header nav a:hover {
+                transform: none !important;
+            }
+            
+            /* Fix calculator button permanent hover effect */
+            a[href*="meal-calculator"] {
+                transform: none !important;
+            }
+            
+            a[href*="meal-calculator"]:hover {
+                transform: translateY(-1px) !important;
             }
         }
     </style>
@@ -435,16 +533,35 @@
     <!-- Header -->
     <header class="bg-darker shadow-sm sticky top-0 z-30">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 bg-darker">
+            <!-- Mobile Header (Logo + Burger Menu) -->
+            <div class="flex md:hidden items-center justify-between h-10 bg-darker mobile-header-container">
+                <!-- Logo on the left -->
+                <a href="{{ url_for('main.index') }}" class="flex-shrink-0 flex items-center group">
+                    <img class="h-10 w-auto transition-transform duration-300 group-hover:scale-105" src="{{ site_settings.get('site_logo', '/static/images/logo white.png') }}" alt="FitSmart Logo">
+                </a>
+                <!-- Burger menu on the right -->
+                <button type="button" 
+                        id="mobile-menu-button" 
+                        class="mobile-menu-button focus:outline-none rounded-md p-1 hover:bg-gray-800 transition-colors duration-300"
+                        aria-expanded="false"
+                        aria-controls="mobile-menu"
+                        aria-label="Toggle navigation menu">
+                    <span class="sr-only">Open main menu</span>
+                    <i class="fas fa-bars text-white text-base"></i>
+                </button>
+            </div>
+            
+            <!-- Desktop Header (Logo + Navigation + Profile) -->
+            <div class="hidden md:flex items-center justify-between h-20 bg-darker">
+                <!-- Logo on the left -->
                 <div class="flex items-center">
-                    <!-- Logo -->
                     <a href="{{ url_for('main.index') }}" class="flex-shrink-0 flex items-center group">
-                        <img class="h-12 md:h-20 w-auto transition-transform duration-300 group-hover:scale-105" src="{{ site_settings.get('site_logo', '/static/images/logo white.png') }}" alt="HealthyRizz Logo">
+                        <img class="h-20 w-auto transition-transform duration-300 group-hover:scale-105" src="{{ site_settings.get('site_logo', '/static/images/logo white.png') }}" alt="FitSmart Logo">
                     </a>
                 </div>
                 
-                <!-- Main Navigation - Desktop -->
-                <nav class="hidden md:flex space-x-6 items-center">
+                <!-- Desktop navigation -->
+                <nav class="flex space-x-6 items-center">
                     <a href="{{ url_for('main.index') }}" class="text-white hover:text-primary py-2 {% if current_url == '/' %}text-primary font-medium border-b-2 border-primary{% endif %}">Home</a>
                     <a href="{{ url_for('main.meal_calculator') }}" class="text-white hover:text-primary py-2 {% if current_url == '/meal-calculator' %}text-primary font-medium border-b-2 border-primary{% endif %}">Meal Calculator</a>
                     <a href="{{ url_for('main.meal_plans') }}" class="text-white hover:text-primary py-2 {% if current_url == '/meal-plans' %}text-primary font-medium border-b-2 border-primary{% endif %}">Meal Plans</a>
@@ -452,16 +569,16 @@
                     <a href="{{ url_for('main.index') }}#faq" class="text-white hover:text-primary py-2">FAQ</a>
                     
                     <div class="flex items-center space-x-4 pl-6 ml-6 border-l border-gray-600">
-                        <a href="tel:{{ site_settings.get('contact_phone', '+919876543210') }}" class="text-white hover:text-primary" title="Call Us">
+                        <a href="tel:{{ site_settings.get('contact_phone', '+16475732429') }}" class="text-white hover:text-primary" title="Call Us">
                             <i class="fas fa-phone-alt"></i>
                         </a>
-                        <a href="mailto:{{ site_settings.get('contact_email', 'info@healthyrizz.in') }}" class="text-white hover:text-primary" title="Email Us">
+                        <a href="mailto:{{ site_settings.get('contact_email', 'info@fitsmart.ca') }}" class="text-white hover:text-primary" title="Email Us">
                             <i class="fas fa-envelope"></i>
                         </a>
-                        <a href="{{ site_settings.get('facebook_url', 'https://facebook.com/healthyrizz.in') }}" target="_blank" class="text-white hover:text-primary" title="Facebook">
+                        <a href="{{ site_settings.get('facebook_url', 'https://facebook.com/fitsmart') }}" target="_blank" class="text-white hover:text-primary" title="Facebook">
                             <i class="fab fa-facebook-f"></i>
                         </a>
-                        <a href="{{ site_settings.get('instagram_url', 'https://instagram.com/healthyrizz.in') }}" target="_blank" class="text-white hover:text-primary" title="Instagram">
+                        <a href="{{ site_settings.get('instagram_url', 'https://instagram.com/fitsmart.ca') }}" target="_blank" class="text-white hover:text-primary" title="Instagram">
                             <i class="fab fa-instagram"></i>
                         </a>
                         <button onclick="showPWAInstallPopup()" class="text-white hover:text-primary transition-colors duration-300" title="Install App">
@@ -470,8 +587,8 @@
                     </div>
                 </nav>
                 
+                <!-- Desktop profile/login -->
                 <div class="flex items-center">
-                    <!-- User Profile / Login -->
                     <div class="ml-4 flex items-center">
                         {% if current_user.is_authenticated %}
                             <div class="relative">
@@ -480,7 +597,7 @@
                                             class="flex items-center space-x-1 focus:outline-none hover:text-primary cursor-pointer py-2 px-3 rounded-md hover:bg-gray-800"
                                             type="button"
                                             onclick="toggleProfileDropdown(event)">
-                                        <span class="hidden md:inline text-white hover:text-primary mr-2">{{ current_user.name }}</span>
+                                        <span class="text-white hover:text-primary mr-2">{{ current_user.name }}</span>
                                         <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white">
                                             <i class="fas fa-user"></i>
                                         </div>
@@ -488,7 +605,7 @@
                                     </button>
                                     <div id="profile-dropdown" class="profile-dropdown hidden absolute right-0 mt-2 w-48 bg-darker border border-gray-700 rounded-md shadow-lg py-1 z-50">
                                         <a href="{{ url_for('main.profile') }}" class="block px-4 py-2 text-sm text-white hover:bg-primary">My Profile</a>
-                                                                {% if current_user.is_authenticated %}
+                                        {% if current_user.is_authenticated %}
                             <a href="{{ url_for('main.profile') }}#subscriptions" class="block px-4 py-2 text-sm text-white hover:bg-primary">My Subscriptions</a>
                         {% endif %}
                                         <a href="{{ url_for('main.profile') }}#payments" class="block px-4 py-2 text-sm text-white hover:bg-primary">Payment History</a>
@@ -515,25 +632,18 @@
                             </div>
                         {% endif %}
                     </div>
-                    
-                    <!-- Mobile menu button -->
-                    <div class="flex md:hidden ml-2">
-                        <button type="button" 
-                                id="mobile-menu-button" 
-                                class="mobile-menu-button focus:outline-none rounded-md p-2 hover:bg-gray-800 transition-colors duration-300"
-                                aria-expanded="false"
-                                aria-controls="mobile-menu"
-                                aria-label="Toggle navigation menu">
-                            <span class="sr-only">Open main menu</span>
-                            <i class="fas fa-bars text-white text-xl"></i>
-                        </button>
-                    </div>
                 </div>
             </div>
             
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="mobile-menu bg-darker" role="navigation" aria-label="Mobile navigation">
                 <div class="px-4 pt-3 pb-6 space-y-3 shadow-lg border-t border-gray-700">
+                    <!-- Close button for mobile menu -->
+                    <div class="flex justify-end mb-4">
+                        <button id="mobile-menu-close" class="text-white hover:text-primary p-2" aria-label="Close menu">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
                     <a href="{{ url_for('main.index') }}" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md {% if current_url == '/' %}bg-primary-dark text-white font-medium{% endif %}">
                         <i class="fas fa-home mr-3 text-primary"></i>Home
                     </a>
@@ -541,28 +651,9 @@
                         <i class="fas fa-calculator mr-3 text-primary"></i>Meal Calculator
                     </a>
                     
-                    <div class="relative">
-                        <a href="{{ url_for('main.meal_plans') }}" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md {% if current_url == '/meal-plans' %}bg-primary-dark text-white font-medium{% endif %}">
-                            <i class="fas fa-utensils mr-3 text-primary"></i>Meal Plans
-                        </a>
-                        <div class="pl-6 mt-1 space-y-1">
-                            <a href="{{ url_for('main.meal_plans') }}?type=balanced" class="block px-4 py-2 text-light hover:bg-gray-800 rounded-md text-sm">
-                                <i class="fas fa-circle text-primary text-xs mr-2"></i>Balanced Diet
-                            </a>
-                            <a href="{{ url_for('main.meal_plans') }}?type=weight-loss" class="block px-4 py-2 text-light hover:bg-gray-800 rounded-md text-sm">
-                                <i class="fas fa-circle text-primary text-xs mr-2"></i>Weight Loss
-                            </a>
-                            <a href="{{ url_for('main.meal_plans') }}?type=athletic" class="block px-4 py-2 text-light hover:bg-gray-800 rounded-md text-sm">
-                                <i class="fas fa-circle text-primary text-xs mr-2"></i>Athletic Performance
-                            </a>
-                            <a href="{{ url_for('main.meal_plans') }}?type=vegetarian" class="block px-4 py-2 text-light hover:bg-gray-800 rounded-md text-sm">
-                                <i class="fas fa-circle text-primary text-xs mr-2"></i>Vegetarian
-                            </a>
-                            <a href="{{ url_for('main.meal_plans') }}?type=high-protein" class="block px-4 py-2 text-light hover:bg-gray-800 rounded-md text-sm">
-                                <i class="fas fa-circle text-primary text-xs mr-2"></i>High Protein
-                            </a>
-                        </div>
-                    </div>
+                    <a href="{{ url_for('main.meal_plans') }}" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md {% if current_url == '/meal-plans' %}bg-primary-dark text-white font-medium{% endif %}">
+                        <i class="fas fa-utensils mr-3 text-primary"></i>Meal Plans
+                    </a>
                     
                     <a href="{{ url_for('main.blog') }}" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md {% if current_url == '/blog' %}bg-primary-dark text-white font-medium{% endif %}">
                         <i class="fas fa-newspaper mr-3 text-primary"></i>Blog
@@ -583,74 +674,22 @@
                     <!-- Mobile contact info -->
                     <div class="px-4 py-3 rounded-lg bg-gray-800 bg-opacity-50">
                         <h3 class="text-primary font-medium mb-3">Get in Touch</h3>
-                        <a href="tel:{{ site_settings.get('contact_phone', '+14374283393') }}" class="flex items-center text-light mb-3 hover:text-primary">
+                        <a href="tel:{{ site_settings.get('contact_phone', '+16475732429') }}" class="flex items-center text-light mb-3 hover:text-primary">
                             <i class="fas fa-phone-alt mr-3 text-primary"></i>
-                            {{ site_settings.get('contact_phone', '+1 (437) 428-3393') }}
+                            {{ site_settings.get('contact_phone', '+1 (647) 573-2429') }}
                         </a>
-                        <a href="mailto:{{ site_settings.get('contact_email', 'info@healthyrizz.ca') }}" class="flex items-center text-light mb-3 hover:text-primary">
+                        <a href="mailto:{{ site_settings.get('contact_email', 'info@fitsmart.ca') }}" class="flex items-center text-light mb-3 hover:text-primary">
                             <i class="fas fa-envelope mr-3 text-primary"></i>
-                            {{ site_settings.get('contact_email', 'info@healthyrizz.ca') }}
+                            {{ site_settings.get('contact_email', 'info@fitsmart.ca') }}
                         </a>
                         <div class="flex mt-3 space-x-6">
-                            <a href="{{ site_settings.get('facebook_url', 'https://facebook.com/healthyrizz.ca') }}" target="_blank" class="text-light hover:text-primary text-lg">
+                            <a href="{{ site_settings.get('facebook_url', 'https://facebook.com/FitSmart.ca') }}" target="_blank" class="text-light hover:text-primary text-lg">
                                 <i class="fab fa-facebook-f"></i>
                             </a>
-                            <a href="{{ site_settings.get('instagram_url', 'https://instagram.com/healthyrizz.ca') }}" target="_blank" class="text-light hover:text-primary text-lg">
+                            <a href="{{ site_settings.get('instagram_url', 'https://instagram.com/FitSmart.ca') }}" target="_blank" class="text-light hover:text-primary text-lg">
                                 <i class="fab fa-instagram"></i>
                             </a>
                         </div>
-                    </div>
-                    
-                    <div class="border-t border-gray-700 my-3"></div>
-                    
-                    <!-- Mobile login/profile -->
-                    <div class="px-4 py-3">
-                        {% if current_user.is_authenticated %}
-                            <div class="flex items-center mb-3 bg-gray-800 rounded-lg p-3">
-                                <div class="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white mr-3">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div>
-                                    <span class="text-light font-medium block">{{ current_user.name }}</span>
-                                    <span class="text-gray-400 text-sm">{{ current_user.email }}</span>
-                                </div>
-                            </div>
-                            <div class="space-y-1">
-                                <a href="{{ url_for('main.profile') }}" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md">
-                                    <i class="fas fa-user-circle mr-3 text-primary"></i>My Profile
-                                </a>
-                                {% if current_user.is_authenticated %}
-                                    <a href="{{ url_for('main.profile') }}#subscriptions" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md">
-                                        <i class="fas fa-box mr-3 text-primary"></i>My Subscriptions
-                                    </a>
-                                {% endif %}
-                                <a href="{{ url_for('main.profile') }}#payments" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md">
-                                    <i class="fas fa-credit-card mr-3 text-primary"></i>Payment History
-                                </a>
-                                <a href="{{ url_for('main.profile') }}#settings" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md">
-                                    <i class="fas fa-cog mr-3 text-primary"></i>Account Settings
-                                </a>
-                                {% if current_user.is_admin %}
-                                    <div class="border-t border-gray-700 my-2"></div>
-                                    <a href="{{ url_for('admin.admin_dashboard') }}" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md">
-                                        <i class="fas fa-user-shield mr-3 text-primary"></i>Admin Dashboard
-                                    </a>
-                                {% endif %}
-                                <div class="border-t border-gray-700 my-2"></div>
-                                <a href="{{ url_for('main.logout') }}" class="block px-4 py-3 text-light hover:bg-gray-800 rounded-md">
-                                    <i class="fas fa-sign-out-alt mr-3 text-primary"></i>Logout
-                                </a>
-                            </div>
-                        {% else %}
-                            <div class="flex items-center justify-center space-x-3">
-                                <a href="{{ url_for('main.login') }}" class="flex items-center justify-center bg-gray-800 hover:bg-primary text-white rounded-full p-3 transition-colors duration-300" title="Login">
-                                    <i class="fas fa-sign-in-alt text-lg"></i>
-                                </a>
-                                <a href="{{ url_for('main.register') }}" class="flex items-center justify-center bg-primary hover:bg-primary-dark text-white rounded-full p-3 transition-colors duration-300" title="Sign Up">
-                                    <i class="fas fa-user-plus text-lg"></i>
-                                </a>
-                            </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -714,165 +753,298 @@
         {% block content %}{% endblock %}
     </main>
     
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white mt-12">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 gap-y-10">
-                <!-- About -->
-                <div>
-                    <h3 class="text-lg font-medium mb-4 text-light relative">
-                        <span class="relative z-10">About HealthyRizz</span>
-                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-primary"></span>
-                    </h3>
-                    <p class="text-gray-300 mb-4 text-sm md:text-base">{{ site_settings.get('company_tagline', 'HealthyRizz provides fresh, nutritionist-curated meal plans delivered to your doorstep in Ludhiana. We use 100% fresh ingredients to create healthy, delicious meals that help you achieve your health goals.') }}</p>
-                    {% if site_settings.get('show_social_links') == 'True' %}
-                    <div class="flex space-x-5 mt-6">
-                        {% if site_settings.get('facebook_url') %}
-                        <a href="{{ site_settings.get('facebook_url') }}" target="_blank" class="text-gray-400 hover:text-primary transition-colors duration-300 text-xl">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        {% endif %}
-                        {% if site_settings.get('instagram_url') %}
-                        <a href="{{ site_settings.get('instagram_url') }}" target="_blank" class="text-gray-400 hover:text-primary transition-colors duration-300 text-xl">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        {% endif %}
-                        {% if site_settings.get('twitter_url') %}
-                        <a href="{{ site_settings.get('twitter_url') }}" target="_blank" class="text-gray-400 hover:text-primary transition-colors duration-300 text-xl">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        {% endif %}
-                        {% if site_settings.get('linkedin_url') %}
-                        <a href="{{ site_settings.get('linkedin_url') }}" target="_blank" class="text-gray-400 hover:text-primary transition-colors duration-300 text-xl">
-                            <i class="fab fa-linkedin"></i>
-                        </a>
-                        {% endif %}
-                        {% if site_settings.get('youtube_url') %}
-                        <a href="{{ site_settings.get('youtube_url') }}" target="_blank" class="text-gray-400 hover:text-primary transition-colors duration-300 text-xl">
-                            <i class="fab fa-youtube"></i>
-                        </a>
+    <!-- Enhanced Footer - Visible on Both Mobile and Desktop -->
+    <footer class="bg-black text-white mt-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Desktop Footer Layout -->
+            <div class="hidden md:block">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 gap-y-10">
+                    <!-- About -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-4 text-white relative">
+                            <span class="relative z-10">About FitSmart</span>
+                            <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-green-500"></span>
+                        </h3>
+                        <p class="text-gray-300 mb-4 text-sm md:text-base">{{ site_settings.get('company_tagline', 'FitSmart provides fresh, nutritionist-curated meal plans delivered to your doorstep in Ludhiana. We use 100% fresh ingredients to create healthy, delicious meals that help you achieve your health goals.') }}</p>
+                        {% if site_settings.get('show_social_links') == 'True' %}
+                        <div class="flex space-x-5 mt-6">
+                            {% if site_settings.get('facebook_url') %}
+                            <a href="{{ site_settings.get('facebook_url') }}" target="_blank" class="text-gray-400 hover:text-green-500 transition-colors duration-300 text-xl">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            {% endif %}
+                            {% if site_settings.get('instagram_url') %}
+                            <a href="{{ site_settings.get('instagram_url') }}" target="_blank" class="text-gray-400 hover:text-green-500 transition-colors duration-300 text-xl">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            {% endif %}
+                            {% if site_settings.get('twitter_url') %}
+                            <a href="{{ site_settings.get('twitter_url') }}" target="_blank" class="text-gray-400 hover:text-green-500 transition-colors duration-300 text-xl">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            {% endif %}
+                            {% if site_settings.get('linkedin_url') %}
+                            <a href="{{ site_settings.get('linkedin_url') }}" target="_blank" class="text-gray-400 hover:text-green-500 transition-colors duration-300 text-xl">
+                                <i class="fab fa-linkedin"></i>
+                            </a>
+                            {% endif %}
+                            {% if site_settings.get('youtube_url') %}
+                            <a href="{{ site_settings.get('youtube_url') }}" target="_blank" class="text-gray-400 hover:text-green-500 transition-colors duration-300 text-xl">
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                            {% endif %}
+                        </div>
                         {% endif %}
                     </div>
-                    {% endif %}
-                </div>
-                
-                <!-- Meal Plans -->
-                <div>
-                    <h3 class="text-lg font-medium mb-4 text-light relative">
-                        <span class="relative z-10">Meal Plans</span>
-                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-primary"></span>
-                    </h3>
-                    <ul class="space-y-3 footer-links">
-                        <li><a href="{{ url_for('main.meal_plans') }}?type=weight-loss" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Weight Loss</a></li>
-                        <li><a href="{{ url_for('main.meal_plans') }}?type=pcod-pcos" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">PCOD/PCOS</a></li>
-                        <li><a href="{{ url_for('main.meal_plans') }}?type=diabetic-friendly" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Diabetic-Friendly</a></li>
-                        <li><a href="{{ url_for('main.meal_plans') }}?type=balanced" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Balanced Everyday</a></li>
-                        <li><a href="{{ url_for('main.meal_plans') }}?type=clean-eating" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Clean Eating</a></li>
-                    </ul>
-                </div>
-                
-                <!-- Quick Links -->
-                <div>
-                    <h3 class="text-lg font-medium mb-4 text-light relative">
-                        <span class="relative z-10">Quick Links</span>
-                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-primary"></span>
-                    </h3>
-                    <ul class="space-y-3 footer-links">
-                        <li><a href="{{ url_for('main.index') }}" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Home</a></li>
-                        <li><a href="{{ url_for('main.meal_calculator') }}" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Meal Calculator</a></li>
-                        <li><a href="{{ url_for('main.meal_plans') }}" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Meal Plans</a></li>
-                        <li><a href="{{ url_for('main.blog') }}" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">Blog</a></li>
-                        <li><a href="{{ url_for('main.index') }}#faq" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">FAQ</a></li>
-                        <li><a href="#" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1">About Us</a></li>
-                        <li><a href="#" onclick="showPWAInstallPopup()" class="text-gray-300 hover:text-primary transition-colors duration-300 inline-block py-1 flex items-center">
-                            <i class="fas fa-download mr-2"></i>Install App
-                        </a></li>
-                    </ul>
-                </div>
-                
-                <!-- Contact Us -->
-                <div>
-                    <h3 class="text-lg font-medium mb-4 text-light relative">
-                        <span class="relative z-10">Contact Us</span>
-                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-primary"></span>
-                    </h3>
-                    <ul class="space-y-4 mb-6">
-                        <li class="flex items-start">
-                            <i class="fas fa-phone-alt mt-1.5 mr-3 text-primary"></i>
-                            <span class="text-gray-300">{{ site_settings.get('contact_phone', '+91 98765 43210') }}</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-envelope mt-1.5 mr-3 text-primary"></i>
-                            <span class="text-gray-300">{{ site_settings.get('contact_email', 'info@healthyrizz.in') }}</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fas fa-map-marker-alt mt-1.5 mr-3 text-primary"></i>
-                            <span class="text-gray-300">{{ site_settings.get('company_address', 'Ludhiana, Punjab, India') }}</span>
-                        </li>
-                    </ul>
                     
-                    <!-- Newsletter -->
-                    <form action="{{ url_for('main.subscribe_newsletter') }}" method="post" class="mt-5">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                        <label for="newsletter-email" class="block text-sm font-medium mb-2 text-gray-300">Subscribe to our newsletter</label>
-                        <div class="flex">
-                            <input type="email" id="newsletter-email" name="email" placeholder="Your email" required
-                                   class="flex-grow rounded-l-md border-gray-700 bg-dark text-light focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 px-3 py-2 text-sm">
-                            <button type="submit" class="bg-primary hover:bg-primary-dark rounded-r-md text-white px-3 py-2 text-sm transition-colors duration-300">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
+                    <!-- Meal Plans -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-4 text-white relative">
+                            <span class="relative z-10">Meal Plans</span>
+                            <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-green-500"></span>
+                        </h3>
+                        <ul class="space-y-3 footer-links">
+                            <li><a href="{{ url_for('main.meal_plans') }}?type=weight-loss" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Weight Loss</a></li>
+                            <li><a href="{{ url_for('main.meal_plans') }}?type=pcod-pcos" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">PCOD/PCOS</a></li>
+                            <li><a href="{{ url_for('main.meal_plans') }}?type=diabetic-friendly" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Diabetic-Friendly</a></li>
+                            <li><a href="{{ url_for('main.meal_plans') }}?type=balanced" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Balanced Everyday</a></li>
+                            <li><a href="{{ url_for('main.meal_plans') }}?type=clean-eating" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Clean Eating</a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Quick Links -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-4 text-white relative">
+                            <span class="relative z-10">Quick Links</span>
+                            <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-green-500"></span>
+                        </h3>
+                        <ul class="space-y-3 footer-links">
+                            <li><a href="{{ url_for('main.index') }}" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Home</a></li>
+                            <li><a href="{{ url_for('main.meal_calculator') }}" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Meal Calculator</a></li>
+                            <li><a href="{{ url_for('main.meal_plans') }}" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Meal Plans</a></li>
+                            <li><a href="{{ url_for('main.blog') }}" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Blog</a></li>
+                            <li><a href="{{ url_for('main.index') }}#faq" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">FAQ</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">About Us</a></li>
+                            <li><a href="#" onclick="showPWAInstallPopup()" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1 flex items-center">
+                                <i class="fas fa-download mr-2"></i>Install App
+                            </a></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Contact Us -->
+                    <div>
+                        <h3 class="text-lg font-medium mb-4 text-white relative">
+                            <span class="relative z-10">Contact Us</span>
+                            <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-green-500"></span>
+                        </h3>
+                        <ul class="space-y-4 mb-6">
+                            <li class="flex items-start">
+                                <i class="fas fa-phone-alt mt-1.5 mr-3 text-green-500"></i>
+                                <span class="text-gray-300">{{ site_settings.get('contact_phone', '+1 (647) 573-2429') }}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-envelope mt-1.5 mr-3 text-green-500"></i>
+                                <span class="text-gray-300">{{ site_settings.get('contact_email', 'info@fitsmart.ca') }}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-map-marker-alt mt-1.5 mr-3 text-green-500"></i>
+                                <span class="text-gray-300">{{ site_settings.get('company_address', 'Ludhiana, Punjab, India') }}</span>
+                            </li>
+                        </ul>
+                        
+                        <!-- Newsletter -->
+                        <form action="{{ url_for('main.subscribe_newsletter') }}" method="post" class="mt-5">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else "" }}">
+                            <label for="newsletter-email" class="block text-sm font-medium mb-2 text-gray-300">Subscribe to our newsletter</label>
+                            <div class="flex">
+                                <input type="email" id="newsletter-email" name="email" placeholder="Your email" required
+                                       class="flex-grow rounded-l-md border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50 px-3 py-2 text-sm">
+                                <button type="submit" class="bg-green-500 hover:bg-green-600 rounded-r-md text-white px-3 py-2 text-sm transition-colors duration-300">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Footer Layout -->
+            <div class="md:hidden">
+                <!-- Mobile Footer Content -->
+                <div class="space-y-4">
+                    <!-- Company Info -->
+                    <div class="text-center">
+                        <h3 class="text-lg font-medium mb-2 text-white">FitSmart</h3>
+                        <p class="text-gray-300 text-sm mb-3">{{ site_settings.get('company_tagline', 'Fresh, healthy meals delivered to your doorstep.') }}</p>
+                        
+                        <!-- Social Links - Horizontal -->
+                        {% if site_settings.get('show_social_links') == 'True' %}
+                        <div class="flex justify-center items-center space-x-4 mb-4">
+                            {% if site_settings.get('facebook_url') %}
+                            <a href="{{ site_settings.get('facebook_url') }}" target="_blank" class="text-gray-400 hover:text-green-500 transition-colors duration-300 text-lg">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            {% endif %}
+                            {% if site_settings.get('instagram_url') %}
+                            <a href="{{ site_settings.get('instagram_url') }}" target="_blank" class="text-gray-400 hover:text-green-500 transition-colors duration-300 text-lg">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            {% endif %}
+                            {% if site_settings.get('whatsapp_number') %}
+                            <a href="https://wa.me/{{ site_settings.get('whatsapp_number').replace('+', '').replace(' ', '').replace('-', '') }}" target="_blank" class="text-gray-400 hover:text-green-500 transition-colors duration-300 text-lg">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                            {% endif %}
                         </div>
-                    </form>
+                        {% endif %}
+                    </div>
+
+                    <!-- Quick Links - Horizontal Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="text-sm font-medium mb-2 text-white">Meal Plans</h4>
+                            <ul class="space-y-1 text-xs">
+                                <li><a href="{{ url_for('main.meal_plans') }}?type=weight-loss" class="text-gray-300 hover:text-green-500">Weight Loss</a></li>
+                                <li><a href="{{ url_for('main.meal_plans') }}?type=pcod-pcos" class="text-gray-300 hover:text-green-500">PCOD/PCOS</a></li>
+                                <li><a href="{{ url_for('main.meal_plans') }}?type=diabetic-friendly" class="text-gray-300 hover:text-green-500">Diabetic</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium mb-2 text-white">Quick Links</h4>
+                            <ul class="space-y-1 text-xs">
+                                <li><a href="{{ url_for('main.index') }}" class="text-gray-300 hover:text-green-500">Home</a></li>
+                                <li><a href="{{ url_for('main.meal_calculator') }}" class="text-gray-300 hover:text-green-500">Calculator</a></li>
+                                <li><a href="{{ url_for('main.blog') }}" class="text-gray-300 hover:text-green-500">Blog</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Contact Info -->
+                    <div class="text-center">
+                        <h4 class="text-sm font-medium mb-2 text-white">Contact</h4>
+                        <div class="space-y-1 text-xs text-gray-300">
+                            <div>{{ site_settings.get('contact_phone', '+1 (647) 573-2429') }}</div>
+                            <div>{{ site_settings.get('contact_email', 'info@fitsmart.ca') }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Newsletter Mobile -->
+                    <div class="text-center">
+                        <form action="{{ url_for('main.subscribe_newsletter') }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else "" }}">
+                            <label for="newsletter-email-mobile" class="block text-sm font-medium mb-2 text-gray-300">Newsletter</label>
+                            <div class="flex max-w-xs mx-auto">
+                                <input type="email" id="newsletter-email-mobile" name="email" placeholder="Email" required
+                                       class="flex-grow rounded-l-md border-gray-700 bg-gray-800 text-white focus:border-green-500 focus:ring focus:ring-green-500 focus:ring-opacity-50 px-3 py-2 text-xs">
+                                <button type="submit" class="bg-green-500 hover:bg-green-600 rounded-r-md text-white px-3 py-2 text-xs transition-colors duration-300">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
             
-            <!-- Copyright Section -->
-            <div class="border-t border-gray-700 mt-12 pt-8">
-                <div class="flex flex-col md:flex-row justify-between items-center">
-                    <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
-                        <p class="text-gray-400 text-sm">
-                            &copy; {{ now.year }} HealthyRizz. All rights reserved. | Managed by <a href="https://gogroww.in" target="_blank" class="text-primary hover:text-primary-dark transition-colors duration-300">GOGROWW.IN</a>
+            <!-- Copyright Section - Both Mobile and Desktop -->
+            <div class="border-t border-gray-800 mt-6 pt-4">
+                <!-- Mobile Copyright Layout -->
+                <div class="md:hidden">
+                    <div class="space-y-3">
+                        <!-- Copyright Text -->
+                        <div class="text-center">
+                            <p class="text-gray-400 text-xs">
+                                &copy; {{ now.year }} FitSmart. All rights reserved.
+                            </p>
+                            <p class="text-gray-400 text-xs mt-1">
+                                Managed by <a href="https://gogroww.in" target="_blank" class="text-green-500 hover:text-green-400 transition-colors duration-300">GOGROWW.IN</a>
+                            </p>
+                        </div>
+                        
+                        <!-- Badges - Horizontal -->
+                        <div class="flex justify-center items-center space-x-3">
+                            {% if site_settings.get('show_fssai_badge') == 'True' %}
+                            <div class="flex items-center space-x-1 bg-white rounded px-2 py-1 shadow-sm">
+                                <img src="{{ url_for('static', filename='images/FSSAI.png') }}" alt="FSSAI" class="w-5 h-5 object-contain">
+                                <div class="text-xs">
+                                    <div class="font-bold text-gray-800">FSSAI</div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if site_settings.get('show_hygiene_badge') == 'True' %}
+                            <div class="flex items-center space-x-1 bg-white rounded px-2 py-1 shadow-sm">
+                                <div class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-white text-xs"></i>
+                                </div>
+                                <div class="text-xs">
+                                    <div class="font-bold text-gray-800">Hygienic</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Policy Links - Horizontal -->
+                        <div class="flex flex-wrap justify-center items-center space-x-3 text-xs text-gray-400">
+                            <a href="{{ url_for('main.privacy_policy') }}" class="hover:text-green-500 transition-colors duration-300">Privacy</a>
+                            <a href="{{ url_for('main.terms_of_service') }}" class="hover:text-green-500 transition-colors duration-300">Terms</a>
+                            <a href="{{ url_for('main.cancellation_refund_policy') }}" class="hover:text-green-500 transition-colors duration-300">Refund</a>
+                            <a href="{{ url_for('main.shipping_delivery_policy') }}" class="hover:text-green-500 transition-colors duration-300">Shipping</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Copyright Layout -->
+                <div class="hidden md:flex md:flex-row md:justify-between md:items-center md:space-y-0">
+                    <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6 text-center md:text-left">
+                        <p class="text-gray-400 text-xs md:text-sm">
+                            &copy; {{ now.year }} FitSmart. All rights reserved.
                         </p>
+                        <p class="text-gray-400 text-xs md:text-sm">
+                            Managed by <a href="https://gogroww.in" target="_blank" class="text-green-500 hover:text-green-400 transition-colors duration-300">GOGROWW.IN</a>
+                        </p>
+                    </div>
+                    
+                    <!-- Badges -->
+                    <div class="flex flex-wrap justify-center md:justify-end space-x-2 md:space-x-4">
                         {% if site_settings.get('show_fssai_badge') == 'True' %}
-                        <!-- FSSAI Badge -->
-                        <div class="flex items-center space-x-2 bg-white rounded-lg px-3 py-2 shadow-md">
-                            <img src="{{ url_for('static', filename='images/FSSAI.png') }}" alt="FSSAI Logo" class="w-10 h-10 object-contain" loading="lazy">
+                        <div class="flex items-center space-x-1 bg-white rounded px-2 py-1 shadow-sm">
+                            <img src="{{ url_for('static', filename='images/FSSAI.png') }}" alt="FSSAI" class="w-6 h-6 object-contain">
                             <div class="text-xs">
                                 <div class="font-bold text-gray-800">FSSAI</div>
-                                <div class="text-gray-600">Licensed{% if site_settings.get('fssai_license_number') %}: {{ site_settings.get('fssai_license_number') }}{% endif %}</div>
                             </div>
                         </div>
                         {% endif %}
 
                         {% if site_settings.get('show_hygiene_badge') == 'True' %}
-                        <!-- Hygiene Badge -->
-                        <div class="flex items-center space-x-2 bg-white rounded-lg px-3 py-2 shadow-md">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                <i class="fas fa-check-circle text-white text-sm"></i>
+                        <div class="flex items-center space-x-1 bg-white rounded px-2 py-1 shadow-sm">
+                            <div class="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                <i class="fas fa-check-circle text-white text-xs"></i>
                             </div>
                             <div class="text-xs">
                                 <div class="font-bold text-gray-800">Hygienic</div>
-                                <div class="text-gray-600">{{ site_settings.get('hygiene_badge_text', '100% Hygienic') }}</div>
                             </div>
                         </div>
                         {% endif %}
                     </div>
-                    
-                    <div class="flex flex-wrap justify-center md:justify-end space-x-4 text-sm text-gray-400 mt-4 md:mt-0">
-                        <a href="{{ url_for('main.privacy_policy') }}" class="hover:text-primary transition-colors duration-300 mb-2 md:mb-0">Privacy Policy</a>
-                        <a href="{{ url_for('main.terms_of_service') }}" class="hover:text-primary transition-colors duration-300 mb-2 md:mb-0">Terms of Service</a>
-                        <a href="{{ url_for('main.cancellation_refund_policy') }}" class="hover:text-primary transition-colors duration-300 mb-2 md:mb-0">Cancellation & Refund Policy</a>
-                        <a href="{{ url_for('main.shipping_delivery_policy') }}" class="hover:text-primary transition-colors duration-300 mb-2 md:mb-0">Shipping & Delivery Policy</a>
-                        <a href="{{ url_for('main.delivery_locations') }}" class="hover:text-primary transition-colors duration-300 mb-2 md:mb-0">Delivery Areas</a>
-                    </div>
+                </div>
+                
+                <!-- Desktop Policy Links -->
+                <div class="hidden md:flex md:flex-wrap md:justify-center md:justify-end md:space-x-2 md:space-x-4 md:text-xs md:text-gray-400 md:mt-4">
+                    <a href="{{ url_for('main.privacy_policy') }}" class="hover:text-green-500 transition-colors duration-300">Privacy</a>
+                    <a href="{{ url_for('main.terms_of_service') }}" class="hover:text-green-500 transition-colors duration-300">Terms</a>
+                    <a href="{{ url_for('main.cancellation_refund_policy') }}" class="hover:text-green-500 transition-colors duration-300">Refund</a>
+                    <a href="{{ url_for('main.shipping_delivery_policy') }}" class="hover:text-green-500 transition-colors duration-300">Shipping</a>
                 </div>
             </div>
         </div>
     </footer>
     
+    <!-- Remove the fixed login/profile button at the bottom for mobile -->
+    <!-- Add a single fixed login/profile button at the bottom for mobile -->
+    
     <!-- WhatsApp Floating Button -->
     {% if site_settings.get('show_whatsapp_button') == 'True' and site_settings.get('whatsapp_number') %}
-    <div class="fixed bottom-6 right-6 z-50">
+    <div class="fixed bottom-24 right-6 z-50 md:bottom-6">
         <a href="https://wa.me/{{ site_settings.get('whatsapp_number').replace('+', '').replace(' ', '').replace('-', '') }}?text={{ site_settings.get('whatsapp_message', 'Hi! I\'m interested in your healthy meal plans.') | urlencode }}" 
            target="_blank" 
            class="bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-lg transition-all duration-300 transform hover:scale-110 flex items-center justify-center">
@@ -882,6 +1054,8 @@
     {% endif %}
     
     <!-- JavaScript -->
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/testimonials.js') }}"></script>
     {% block extra_js %}{% endblock %}
@@ -894,32 +1068,49 @@
             event.stopPropagation();
             
             const dropdown = document.getElementById('profile-dropdown');
+            const mobileDropdown = document.getElementById('mobile-profile-dropdown');
             const body = document.body;
             
-            if (dropdown.classList.contains('hidden')) {
-                dropdown.classList.remove('hidden');
-                body.classList.add('has-dropdown-open');
-                console.log("Profile dropdown shown");
-            } else {
+            // Handle desktop dropdown
+            if (dropdown && !dropdown.classList.contains('hidden')) {
                 dropdown.classList.add('hidden');
                 body.classList.remove('has-dropdown-open');
-                console.log("Profile dropdown hidden");
+                console.log("Desktop profile dropdown hidden");
+            }
+            
+            // Handle mobile dropdown
+            if (mobileDropdown) {
+                if (mobileDropdown.classList.contains('hidden')) {
+                    mobileDropdown.classList.remove('hidden');
+                    console.log("Mobile profile dropdown shown");
+                } else {
+                    mobileDropdown.classList.add('hidden');
+                    console.log("Mobile profile dropdown hidden");
+                }
             }
         }
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('profile-dropdown');
+            const mobileDropdown = document.getElementById('mobile-profile-dropdown');
             const toggle = document.getElementById('profile-dropdown-toggle');
             
+            // Close desktop dropdown
             if (dropdown && toggle) {
                 if (!dropdown.classList.contains('hidden') && 
                     !toggle.contains(event.target) && 
                     !dropdown.contains(event.target)) {
                     dropdown.classList.add('hidden');
                     document.body.classList.remove('has-dropdown-open');
-                    console.log("Dropdown closed by outside click");
+                    console.log("Desktop dropdown closed by outside click");
                 }
+            }
+            
+            // Close mobile dropdown
+            if (mobileDropdown && !mobileDropdown.contains(event.target) && !event.target.closest('[onclick*="toggleProfileDropdown"]')) {
+                mobileDropdown.classList.add('hidden');
+                console.log("Mobile dropdown closed by outside click");
             }
         });
         
@@ -993,8 +1184,10 @@
         
         // Function to show PWA install popup
         function showPWAInstallPopup() {
-            if (pwaInstallPrompt && pwaInstallPrompt.deferredPrompt) {
-                // Show the PWA install popup
+            // Check if the PWA install prompt class is available and initialized
+            if (window.pwaInstallPrompt && typeof window.pwaInstallPrompt.showInstallPrompt === 'function') {
+                window.pwaInstallPrompt.showInstallPrompt();
+            } else if (pwaInstallPrompt && typeof pwaInstallPrompt.showInstallPrompt === 'function') {
                 pwaInstallPrompt.showInstallPrompt();
             } else if (deferredPrompt) {
                 // Fallback to basic install prompt
@@ -1027,7 +1220,7 @@
             const isDesktop = !isIOS && !isAndroid;
             
             let message = '';
-            let title = 'Install HealthyRizz App';
+            let title = 'Install FitSmart App';
             
             if (isIOS) {
                 message = 'To install the app on your iPhone/iPad:\n\n1. Tap the Share button (📤) in Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to confirm';
@@ -1080,6 +1273,8 @@
             // Initialize PWA install prompt if the class exists
             if (typeof PWAInstallPrompt !== 'undefined') {
                 pwaInstallPrompt = new PWAInstallPrompt();
+                // Also set it on window for global access
+                window.pwaInstallPrompt = pwaInstallPrompt;
             }
         });
     </script>
@@ -1116,8 +1311,104 @@
         </div>
     </div>
     
+    <!-- Tracking Pixels Configuration -->
+    <script>
+        // Global tracking pixel IDs from site settings
+        window.FACEBOOK_PIXEL_ID = '{{ site_settings.get("facebook_pixel_id", "") }}';
+        window.GOOGLE_ANALYTICS_ID = '{{ site_settings.get("google_analytics_id", "") }}';
+    </script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js';
+        import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.11.1/firebase-analytics.js';
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAT2e7cQ8CV6DI_ekF6CQwxeEa2FBGuRrs",
+            authDomain: "fitsmart-web.firebaseapp.com",
+            projectId: "fitsmart-web",
+            storageBucket: "fitsmart-web.firebasestorage.app",
+            messagingSenderId: "233893386700",
+            appId: "1:233893386700:web:b65857d303458570996569",
+            measurementId: "G-KL81PX3VRR"
+        };
+        
+        // Initialize Firebase
+        try {
+            const app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
+            
+            // Make Firebase available globally
+            window.firebaseApp = app;
+            window.firebaseAnalytics = analytics;
+            
+            // Import logEvent for direct use
+            import('https://www.gstatic.com/firebasejs/10.11.1/firebase-analytics.js')
+                .then(({ logEvent }) => {
+                    window.logFirebaseEventDirect = logEvent;
+                });
+            
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Error initializing Firebase:', error);
+        }
+    </script>
+    
+    <!-- Firebase Utilities -->
+    <script src="{{ url_for('static', filename='js/firebase-utils.js') }}"></script>
+    
     <script src="/static/js/pwa-install.js"></script>
     <script src="{{ url_for('static', filename='js/mobile-app-menu.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/holiday-popup.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tracking-pixels.js') }}"></script>
+    
+    <!-- Tracking Events -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Track newsletter signup
+            {% if session.get('track_newsletter_signup') %}
+                if (window.trackingPixels) {
+                    window.trackingPixels.trackNewsletterSignup();
+                }
+            {% endif %}
+            
+            // Track purchase
+            {% if session.get('track_purchase') %}
+                if (window.trackingPixels) {
+                    const purchaseData = {{ session.get('track_purchase') | tojson }};
+                    window.trackingPixels.trackPurchase(purchaseData.value, purchaseData.currency);
+                }
+            {% endif %}
+            
+            // Track contact form submission
+            {% if session.get('track_contact') %}
+                if (window.trackingPixels) {
+                    window.trackingPixels.trackContact();
+                }
+            {% endif %}
+            
+            // Track checkout initiation
+            {% if session.get('track_initiate_checkout') %}
+                if (window.trackingPixels) {
+                    const checkoutData = {{ session.get('track_initiate_checkout') | tojson }};
+                    window.trackingPixels.trackInitiateCheckout(checkoutData.value, checkoutData.currency);
+                }
+            {% endif %}
+            
+            // Track meal plans page view
+            {% if session.get('track_meal_plans_view') %}
+                if (window.trackingPixels) {
+                    const mealPlansData = {{ session.get('track_meal_plans_view') | tojson }};
+                    window.trackingPixels.trackCustomEvent('view_meal_plans', {
+                        plan_count: mealPlansData.plan_count,
+                        filters: mealPlansData.filters
+                    });
+                }
+            {% endif %}
+        });
+    </script>
 </body>
 </html>
 

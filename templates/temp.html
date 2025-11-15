@@ -8,11 +8,8 @@
     <title>{% block title %}Fit Smart - Healthy Meal Delivery{% endblock %}</title>
     
     <!-- Favicon -->
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    {% set favicon_path = site_settings.get('site_favicon', '/static/favicon.ico') %}
+    <link rel="icon" href="{{ favicon_path }}" type="image/x-icon">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -83,7 +80,7 @@
                 <div class="flex items-center">
                     <!-- Logo -->
                     <a href="{{ url_for('main.index') }}" class="flex-shrink-0 flex items-center">
-                        <img class="h-8 w-auto" src="{{ url_for('static', filename='images/healthyrizz-logo.png') }}" alt="Fit Smart Logo">
+                        <img class="h-8 w-auto" src="{{ url_for('static', filename='images/FitSmart-logo.png') }}" alt="Fit Smart Logo">
                     </a>
                 </div>
                 

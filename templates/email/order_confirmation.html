@@ -84,15 +84,15 @@
                 <p><strong>Plan:</strong> {{ order.plan.name }}</p>
                 <p><strong>Frequency:</strong> {{ order.frequency|title }}</p>
                 
-                <p><strong>Subtotal:</strong> ₹{{ order.amount }}</p>
-                <p><strong>GST (5%):</strong> ₹{{ order.gst_amount }}</p>
+                <p><strong>Subtotal:</strong> ${{ order.amount }}</p>
+                <p><strong>HST (13%):</strong> ${{ order.hst_amount if order.hst_amount else order.gst_amount }}</p>
                 
                 {% if order.coupon_code %}
                 <p><strong>Coupon Applied:</strong> {{ order.coupon_code }}</p>
-                <p><strong>Discount:</strong> -₹{{ order.discount_amount }}</p>
+                <p><strong>Discount:</strong> -${{ order.discount_amount }}</p>
                 {% endif %}
                 
-                <p class="total">Total Amount: ₹{{ order.total_amount }}</p>
+                <p class="total">Total Amount: ${{ order.total_amount }}</p>
             </div>
             
             <div class="order-details">

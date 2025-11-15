@@ -6,13 +6,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    # Server configuration for URL generation
+    SERVER_NAME = None  # Allow any hostname for VPS
+    APPLICATION_ROOT = os.getenv('APPLICATION_ROOT', '/')
+    PREFERRED_URL_SCHEME = os.getenv('PREFERRED_URL_SCHEME', 'http')
+
     # Basic Flask configuration
-    SECRET_KEY = os.getenv('SECRET_KEY', 'healthyrizz-super-secret-key-2024-change-in-production')
-    DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+    SECRET_KEY = os.getenv('SECRET_KEY', 'fitsmart-super-secret-key-2024-change-in-production')
+    DEBUG = False  # Production mode
+    VERSION = os.getenv('VERSION', '1.0.0')  # For cache busting
     
     # Database configuration
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(BASE_DIR, "healthyrizz.db")}')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(BASE_DIR, "fitsmart.db")}')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_recycle": 300,
@@ -52,10 +58,28 @@ class Config:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', os.getenv('MAIL_USERNAME'))
     
-    # Razorpay configuration
-    RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', 'rzp_test_default_key_id')
-    RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', 'default_key_secret_for_testing')
-    RAZORPAY_WEBHOOK_SECRET = os.getenv('RAZORPAY_WEBHOOK_SECRET', 'default_webhook_secret_for_testing')  # For webhook verification
+    # Stripe configuration (Primary payment gateway for Canadian market)
+    STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+    STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+    STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')  # For webhook verification
+    
+    # Google OAuth configuration
+    GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+    GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+    GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
+    
+    # Razorpay configuration (Deprecated - kept for backward compatibility)
+    # Note: Razorpay is primarily for Indian market. Use Stripe for Canadian market.
+    RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '')
+    RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '')
+    RAZORPAY_WEBHOOK_SECRET = os.getenv('RAZORPAY_WEBHOOK_SECRET', '')
+    
+    # AI Posting Agent configuration
+    PERPLEXITY_API_KEY = os.getenv('PERPLEXITY_API_KEY')
+    DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
+    AI_POSTING_FREQUENCY = os.getenv('AI_POSTING_FREQUENCY', 'daily')  # daily, weekly, biweekly, monthly
+    AI_CONTENT_TYPES = os.getenv('AI_CONTENT_TYPES', 'blog_post,meal_plan_showcase').split(',')
+    AI_AUTO_POSTING_ENABLED = os.getenv('AI_AUTO_POSTING_ENABLED', 'False').lower() == 'true'
     
     # Rate limiting
     RATELIMIT_DEFAULT = "500 per day, 100 per hour, 20 per minute"
@@ -81,10 +105,18 @@ class Config:
     NEEDS_REFRESH_MESSAGE_CATEGORY = 'warning'
     SESSION_PROTECTION = 'strong'
     
-    # Indian specific settings
-    CURRENCY = 'INR'
-    CURRENCY_SYMBOL = '₹'
-    DATE_FORMAT = '%d/%m/%Y'
+    # Canadian specific settings
+    CURRENCY = 'CAD'
+    CURRENCY_SYMBOL = '$'
+    DATE_FORMAT = '%Y-%m-%d'
     TIME_FORMAT = '%I:%M %p'  # 12-hour format with AM/PM
-    PHONE_REGEX = r'^[6-9]\d{9}$'  # Indian mobile number format
-    PINCODE_REGEX = r'^\d{6}$'  # Indian pincode format
+    PHONE_REGEX = r'^\+?1?\d{10}$'  # Canadian/US mobile number format
+    PINCODE_REGEX = r'^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$'  # Canadian postal code format
+    
+    # Timezone configuration - Eastern Time (ET)
+    TIMEZONE = 'America/Toronto'
+    TIMEZONE_OFFSET = '-05:00'  # EST is UTC-5:00 (or EDT UTC-4:00)
+
+
+# CSRF Configuration
+WTF_CSRF_ENABLED = False

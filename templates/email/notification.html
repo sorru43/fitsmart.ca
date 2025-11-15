@@ -51,7 +51,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="{{ url_for('static', filename='images/logo.png', _external=True) }}" alt="HealthyRizz Logo" class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png', _external=True) }}" alt="FitSmart Logo" class="logo">
             <h1>{{ title }}</h1>
         </div>
         
@@ -63,13 +63,13 @@
             {{ content|safe }}
             
             <p style="text-align: center;">
-                <a href="{{ url_for('index', _external=True) }}" class="button">Visit HealthyRizz</a>
+                <a href="{{ url_for('index', _external=True) }}" class="button">Visit FitSmart</a>
             </p>
         </div>
         
         <div class="footer">
             <p>This email was sent to {{ user.email }}. If you no longer wish to receive notifications, you can update your preferences in your account settings.</p>
-            <p>&copy; {{ now.year }} HealthyRizz. All rights reserved.</p>
+            <p>&copy; {{ now.year }} FitSmart. All rights reserved.</p>
         </div>
     </div>
 </body>

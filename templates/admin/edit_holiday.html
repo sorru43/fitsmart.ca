@@ -1,0 +1,188 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Edit Holiday{% endblock %}
+
+{% block page_title %}Edit Holiday{% endblock %}
+
+{% block content %}
+<div class="bg-dark-lighter rounded-lg p-6">
+    <div class="flex items-center mb-6">
+        <a href="{{ url_for('admin.admin_holidays') }}" class="text-primary hover:text-primary-dark mr-4">
+            <i class="fas fa-arrow-left"></i> Back to Holidays
+        </a>
+        <h2 class="text-2xl font-bold text-white">Edit Holiday: {{ holiday.name }}</h2>
+    </div>
+    
+    <form method="POST" class="space-y-6">
+        <input type="hidden" name="option_count" id="option_count" value="{{ holiday.get_popup_options()|length or 2 }}">
+        
+        <!-- Basic Information -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-white mb-2">Holiday Name *</label>
+                <input type="text" class="w-full px-3 py-2 bg-dark border border-gray-600 rounded-lg text-white focus:border-primary focus:outline-none" 
+                       id="name" name="name" value="{{ holiday.name }}" required>
+            </div>
+            <div>
+                <label for="description" class="block text-sm font-medium text-white mb-2">Description</label>
+                <textarea class="w-full px-3 py-2 bg-dark border border-gray-600 rounded-lg text-white focus:border-primary focus:outline-none" 
+                          id="description" name="description" rows="3" 
+                          placeholder="Brief description of the holiday period">{{ holiday.description or '' }}</textarea>
+            </div>
+        </div>
+
+        <!-- Date Range -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="start_date" class="block text-sm font-medium text-white mb-2">Start Date *</label>
+                <input type="date" class="w-full px-3 py-2 bg-dark border border-gray-600 rounded-lg text-white focus:border-primary focus:outline-none" 
+                       id="start_date" name="start_date" value="{{ holiday.start_date.strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div>
+                <label for="end_date" class="block text-sm font-medium text-white mb-2">End Date *</label>
+                <input type="date" class="w-full px-3 py-2 bg-dark border border-gray-600 rounded-lg text-white focus:border-primary focus:outline-none" 
+                       id="end_date" name="end_date" value="{{ holiday.end_date.strftime('%Y-%m-%d') }}" required>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex items-center">
+                <input type="checkbox" class="w-4 h-4 text-primary bg-dark border-gray-600 rounded focus:ring-primary focus:ring-2" 
+                       id="protect_meals" name="protect_meals" {{ 'checked' if holiday.protect_meals }}>
+                <label for="protect_meals" class="ml-3 text-white">
+                    <span class="font-semibold">Protect Meals</span>
+                    <br><span class="text-sm text-gray-400">Don't deduct meals from user accounts during this holiday</span>
+                </label>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" class="w-4 h-4 text-primary bg-dark border-gray-600 rounded focus:ring-primary focus:ring-2" 
+                       id="show_popup" name="show_popup" {{ 'checked' if holiday.show_popup }}>
+                <label for="show_popup" class="ml-3 text-white">
+                    <span class="font-semibold">Show Popup</span>
+                    <br><span class="text-sm text-gray-400">Display popup notification to users during holiday</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Popup Settings -->
+        <div id="popup-settings" class="space-y-4" style="display: {{ 'block' if holiday.show_popup else 'none' }};">
+            <h5 class="text-lg font-semibold text-white">Popup Settings</h5>
+            <div>
+                <label for="popup_message" class="block text-sm font-medium text-white mb-2">Popup Message</label>
+                <textarea class="w-full px-3 py-2 bg-dark border border-gray-600 rounded-lg text-white focus:border-primary focus:outline-none" 
+                          id="popup_message" name="popup_message" rows="4" 
+                          placeholder="Message to display in the popup notification">{{ holiday.popup_message or '' }}</textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-white mb-2">Popup Options</label>
+                <div id="popup-options" class="space-y-2">
+                    {% set options = holiday.get_popup_options() %}
+                    {% if options %}
+                        {% for option in options %}
+                        <div class="flex items-center space-x-2">
+                            <input type="text" class="flex-1 px-3 py-2 bg-dark border border-gray-600 rounded-lg text-white focus:border-primary focus:outline-none" 
+                                   name="option_{{ loop.index0 }}" value="{{ option }}" placeholder="Option {{ loop.index }}">
+                            <button type="button" class="text-red-400 hover:text-red-600 remove-option" {{ 'style=display:none' if loop.length == 1 }}>
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="flex items-center space-x-2">
+                            <input type="text" class="flex-1 px-3 py-2 bg-dark border border-gray-600 rounded-lg text-white focus:border-primary focus:outline-none" 
+                                   name="option_0" placeholder="Option 1 (e.g., 'I understand')">
+                            <button type="button" class="text-red-400 hover:text-red-600 remove-option" style="display: none;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" class="flex-1 px-3 py-2 bg-dark border border-gray-600 rounded-lg text-white focus:border-primary focus:outline-none" 
+                                   name="option_1" placeholder="Option 2 (e.g., 'Remind me later')">
+                            <button type="button" class="text-red-400 hover:text-red-600 remove-option">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+                <button type="button" class="mt-2 text-primary hover:text-primary-dark text-sm" id="add-option">
+                    <i class="fas fa-plus mr-1"></i> Add Option
+                </button>
+                <p class="text-sm text-gray-400 mt-1">Add buttons/options for users to respond to the popup</p>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="flex space-x-4">
+            <button type="submit" class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg flex items-center transition-colors duration-200">
+                <i class="fas fa-save mr-2"></i> Update Holiday
+            </button>
+            <a href="{{ url_for('admin.admin_holidays') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg flex items-center transition-colors duration-200">
+                <i class="fas fa-times mr-2"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let optionCount = {{ holiday.get_popup_options()|length or 2 }};
+
+// Toggle popup settings visibility
+$('#show_popup').change(function() {
+    if ($(this).is(':checked')) {
+        $('#popup-settings').show();
+    } else {
+        $('#popup-settings').hide();
+    }
+});
+
+// Add new popup option
+$('#add-option').click(function() {
+    const newOption = `
+        <div class="flex items-center space-x-2">
+            <input type="text" class="flex-1 px-3 py-2 bg-dark border border-gray-600 rounded-lg text-white focus:border-primary focus:outline-none" 
+                   name="option_${optionCount}" placeholder="Option ${optionCount + 1}">
+            <button type="button" class="text-red-400 hover:text-red-600 remove-option">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+    $('#popup-options').append(newOption);
+    optionCount++;
+    updateRemoveButtons();
+});
+
+// Remove popup option
+$(document).on('click', '.remove-option', function() {
+    $(this).closest('.flex').remove();
+    updateRemoveButtons();
+});
+
+// Update remove buttons visibility
+function updateRemoveButtons() {
+    const options = $('#popup-options .flex');
+    options.each(function(index) {
+        const removeBtn = $(this).find('.remove-option');
+        if (options.length > 1) {
+            removeBtn.show();
+        } else {
+            removeBtn.hide();
+        }
+    });
+    
+    // Update option count
+    $('#option_count').val(options.length);
+}
+
+// Update end date minimum when start date changes
+$('#start_date').change(function() {
+    $('#end_date').attr('min', $(this).val());
+});
+
+// Initialize
+updateRemoveButtons();
+</script>
+{% endblock %}

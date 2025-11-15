@@ -1,5 +1,5 @@
 from app import create_app, db
-from models import Newsletter, Subscription, User, MealPlan
+from database.models import Newsletter, Subscription, User, MealPlan
 from datetime import datetime
 from sqlalchemy import inspect
 

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}HealthyRizz - Fresh, Healthy Meal Plans in Ludhiana{% endblock %}
+{% block title %}FitSmart - Fresh, Healthy Meal Plans in Ludhiana{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/video-player.css') }}">
@@ -36,7 +36,7 @@
         animation: float 3s ease-in-out infinite;
     }
 
-    /* HealthyRizz specific styles */
+    /* FitSmart specific styles */
     .feature-icon {
         width: 60px;
         height: 60px;
@@ -123,6 +123,71 @@
         margin-bottom: 16px;
         border: 2px solid #10b981;
     }
+    
+    /* Mobile responsive improvements */
+    @media (max-width: 768px) {
+        .hero-gradient-text {
+            font-size: 2.5rem;
+            line-height: 1.2;
+        }
+        
+        .meal-plan-card {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .meal-plan-card h3 {
+            font-size: 1.25rem;
+        }
+        
+        .meal-plan-card .grid-cols-3 {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .testimonial-card {
+            padding: 1rem;
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+        }
+        
+        .meal-plan-card .flex {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .meal-plan-card .flex .flex {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .hero-gradient-text {
+            font-size: 2rem;
+        }
+        
+        .meal-plan-card .grid-cols-3 {
+            grid-template-columns: 1fr;
+        }
+        
+        .feature-icon {
+            width: 45px;
+            height: 45px;
+            font-size: 18px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -139,23 +204,23 @@
   <!-- Overlay -->
   <div class="absolute inset-0 bg-black bg-opacity-60 z-10"></div>
   <!-- Animated Text Overlay -->
-  <div class="relative z-20 flex flex-col items-center justify-center h-full text-center text-white">
-    <h1 class="text-4xl md:text-6xl font-bold mb-6">
+  <div class="relative z-20 flex flex-col items-center justify-center h-full text-center text-white px-4">
+    <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6">
       <span class="hero-gradient-text">Transform</span> Your Health Journey
     </h1>
-    <p class="text-xl md:text-2xl font-medium">{{ site_settings.get('hero_subtitle', 'Fresh, Healthy Meals Delivered to Your Doorstep in Ludhiana') }}</p>
+    <p class="text-lg sm:text-xl md:text-2xl font-medium">{{ site_settings.get('hero_subtitle', 'Fresh, Healthy Meals Delivered to Your Doorstep in Ludhiana') }}</p>
   </div>
 </div>
 
-<!-- Why Choose HealthyRizz Section -->
+<!-- Why Choose FitSmart Section -->
 <section class="py-20 bg-black">
   <div class="container mx-auto px-4">
     <div class="text-center mb-16">
-      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Why Choose HealthyRizz?</h2>
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Why Choose FitSmart?</h2>
       <p class="text-xl text-gray-300 max-w-3xl mx-auto">Discover what makes us different and why thousands of Ludhiana residents trust us for their daily nutrition.</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 feature-grid">
       <!-- Feature 1 -->
       <div class="text-center p-6">
         <div class="feature-icon mx-auto">✅</div>
@@ -236,7 +301,7 @@
       <p class="text-xl text-gray-300 max-w-3xl mx-auto">Choose the perfect plan that aligns with your health goals and lifestyle.</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 meal-plans-grid">
       {% for plan in meal_plans %}
       <div class="meal-plan-card">
         <h3 class="text-2xl font-bold text-white mb-4">{{ plan.name }}</h3>
@@ -266,9 +331,9 @@
         </div>
         <div class="flex justify-between items-center">
           <div class="text-left">
-            <span class="text-green-400 text-lg font-bold">₹{{ "%.0f"|format(plan.price_weekly) }}/week</span>
+            <span class="text-green-400 text-lg font-bold">${{ "%.0f"|format(plan.price_weekly) }}/week</span>
             {% if plan.available_for_trial %}
-            <br><span class="text-gray-400 text-sm">Trial: ₹{{ "%.0f"|format(plan.price_trial) }}</span>
+            <br><span class="text-gray-400 text-sm">Trial: ${{ "%.0f"|format(plan.price_trial) }}</span>
             {% endif %}
           </div>
           <div class="flex flex-col gap-2">
@@ -305,10 +370,10 @@
   <div class="container mx-auto px-4">
     <div class="text-center mb-16">
       <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">How It Works</h2>
-      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Getting started with HealthyRizz is simple. Follow these easy steps to begin your healthy journey.</p>
+      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Getting started with FitSmart is simple. Follow these easy steps to begin your healthy journey.</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 how-it-works-grid">
       <!-- Step 1 -->
       <div class="text-center">
         <div class="step-number mx-auto">1</div>
@@ -345,10 +410,10 @@
   <div class="container mx-auto px-4">
     <div class="text-center mb-16">
       <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">What Our Customers Say</h2>
-      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Real stories from real people who have transformed their health with HealthyRizz.</p>
+      <p class="text-xl text-gray-300 max-w-3xl mx-auto">Real stories from real people who have transformed their health with FitSmart.</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 testimonials-grid">
       <!-- Testimonial 1 -->
       <div class="testimonial-card">
         <div class="flex items-center mb-4">
@@ -356,7 +421,7 @@
             ⭐⭐⭐⭐⭐
           </div>
         </div>
-        <p class="text-gray-300 mb-6">"Lost 5kg in 4 weeks and didn't miss junk food at all! The meals are so delicious and filling. HealthyRizz has completely changed my relationship with food."</p>
+        <p class="text-gray-300 mb-6">"Lost 5kg in 4 weeks and didn't miss junk food at all! The meals are so delicious and filling. FitSmart has completely changed my relationship with food."</p>
         <div class="flex items-center">
           <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold mr-4">S</div>
           <div>
@@ -390,7 +455,7 @@
             ⭐⭐⭐⭐⭐
           </div>
         </div>
-        <p class="text-gray-300 mb-6">"Tasty, fresh, and filling. The diabetic-friendly meals have helped me maintain stable sugar levels. Highly recommend HealthyRizz for anyone serious about their health!"</p>
+        <p class="text-gray-300 mb-6">"Tasty, fresh, and filling. The diabetic-friendly meals have helped me maintain stable sugar levels. Highly recommend FitSmart for anyone serious about their health!"</p>
         <div class="flex items-center">
           <div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-bold mr-4">R</div>
           <div>
@@ -424,7 +489,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.1.0/dist/typed.umd.js"></script>
 <script src="{{ url_for('static', filename='js/video-player.js') }}"></script>
 
 <script>

@@ -1,6 +1,6 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}Shipping Labels Management - HealthyRizz Admin{% endblock %}
+{% block title %}Shipping Labels Management - FitSmart Admin{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
@@ -32,6 +32,10 @@
                     <a href="{{ url_for('admin.admin_generate_labels', date=selected_date.strftime('%Y-%m-%d')) }}" 
                        class="btn-secondary" target="_blank">
                         <i class="fas fa-print mr-2"></i>Generate Labels
+                    </a>
+                    <a href="{{ url_for('admin.admin_generate_barcode_labels', date=selected_date.strftime('%Y-%m-%d')) }}" 
+                       class="btn-secondary" target="_blank">
+                        <i class="fas fa-barcode mr-2"></i>Barcode Labels (4x4)
                     </a>
                 </div>
             </form>

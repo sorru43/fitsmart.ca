@@ -1,0 +1,376 @@
+/* Mobile Responsiveness Improvements for HealthyRizz */
+/* This file provides targeted mobile improvements without conflicts */
+
+/* Checkout page specific mobile improvements */
+@media (max-width: 768px) {
+    /* Mobile order summary positioning */
+    .checkout-container .block.sm\\:hidden {
+        order: -1;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Form input improvements for mobile */
+    .checkout-form input,
+    .checkout-form select,
+    .checkout-form textarea {
+        font-size: 16px; /* Prevents iOS zoom */
+        padding: 0.875rem;
+        min-height: 44px;
+    }
+    
+    /* Location dropdowns - stack vertically on mobile */
+    .location-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    /* Coupon section - stack vertically on mobile */
+    .coupon-section {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .coupon-section input {
+        width: 100%;
+    }
+    
+    .coupon-section button {
+        width: 100%;
+        min-height: 44px;
+    }
+    
+    /* Payment button - full width on mobile */
+    #pay-button {
+        width: 100%;
+        min-height: 48px;
+        font-size: 1rem;
+    }
+}
+
+/* Meal plans page specific mobile improvements */
+@media (max-width: 768px) {
+    /* Filter buttons - better mobile layout */
+    .filter-buttons {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .filter-btn {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: 120px;
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        font-size: 0.875rem;
+        min-height: 44px;
+    }
+    
+    /* Meal plan cards - better mobile spacing */
+    .meal-plan-card {
+        margin: 0 0.5rem 1rem 0.5rem;
+    }
+    
+    .meal-plan-card .p-5 {
+        padding: 1rem;
+    }
+    
+    /* Action buttons - stack vertically on mobile */
+    .action-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .subscribe-btn, .trial-btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 48px;
+        font-size: 1rem;
+    }
+    
+    /* Frequency selector - center on mobile */
+    .frequency-selector {
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    
+    .frequency-option {
+        padding: 0.75rem 1rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* Profile page specific mobile improvements */
+@media (max-width: 768px) {
+    /* Tab navigation - stack vertically on mobile */
+    .profile-tabs {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .profile-tabs button {
+        width: 100%;
+        text-align: left;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        min-height: 44px;
+    }
+    
+    /* Stats grid - responsive on mobile */
+    .profile-stats {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    /* Quick actions - stack vertically on mobile */
+    .profile-actions {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    /* Profile action buttons - full width on mobile */
+    .profile-actions button,
+    .profile-actions a {
+        width: 100%;
+        min-height: 44px;
+    }
+}
+
+/* Index page specific mobile improvements */
+@media (max-width: 768px) {
+    /* Hero section - better mobile text sizing */
+    .hero-gradient-text {
+        font-size: 2.5rem;
+        line-height: 1.2;
+    }
+    
+    /* Feature grid - responsive on mobile */
+    .feature-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    /* Meal plans section - responsive on mobile */
+    .meal-plans-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    /* How it works - responsive on mobile */
+    .how-it-works-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    /* Testimonials - responsive on mobile */
+    .testimonials-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    /* Feature icons - smaller on mobile */
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    /* Step numbers - smaller on mobile */
+    .step-number {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+}
+
+/* General mobile improvements */
+@media (max-width: 768px) {
+    /* Container padding */
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    /* Typography adjustments */
+    h1 {
+        font-size: 1.75rem;
+        line-height: 1.2;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+        line-height: 1.3;
+    }
+    
+    h3 {
+        font-size: 1.25rem;
+        line-height: 1.4;
+    }
+    
+    /* Form improvements */
+    input, select, textarea {
+        font-size: 16px; /* Prevents iOS zoom */
+        padding: 0.75rem;
+        min-height: 44px;
+    }
+    
+    /* Button improvements */
+    button, .btn {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+    
+    /* Card improvements */
+    .card, .bg-dark, .bg-darker {
+        margin-bottom: 1rem;
+        padding: 1rem;
+    }
+    
+    /* Grid improvements */
+    .grid {
+        gap: 1rem;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    h2 {
+        font-size: 1.25rem;
+    }
+    
+    /* Stack elements vertically on very small screens */
+    .flex {
+        flex-direction: column;
+    }
+    
+    .flex > * {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Improve touch targets */
+    button, .btn, a {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Single column grids on very small screens */
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Tablet improvements */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+    
+    /* Improve grid layouts for tablets */
+    .grid-cols-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Touch-friendly improvements */
+@media (max-width: 768px) {
+    /* Increase touch targets */
+    a, button, input[type="button"], input[type="submit"], input[type="reset"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Improve scrolling */
+    .scroll-container {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+    
+    /* Prevent text selection on buttons */
+    button, .btn {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 768px) {
+    /* Improve focus indicators */
+    button:focus,
+    input:focus,
+    select:focus,
+    textarea:focus,
+    a:focus {
+        outline: 2px solid #4CAF50;
+        outline-offset: 2px;
+    }
+    
+    /* Improve text readability */
+    body {
+        line-height: 1.6;
+    }
+    
+    p {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Utility classes for mobile */
+@media (max-width: 768px) {
+    .mobile-hidden {
+        display: none;
+    }
+    
+    .mobile-block {
+        display: block;
+    }
+    
+    .mobile-flex {
+        display: flex;
+    }
+    
+    .mobile-flex-col {
+        flex-direction: column;
+    }
+    
+    .mobile-w-full {
+        width: 100%;
+    }
+    
+    .mobile-text-center {
+        text-align: center;
+    }
+    
+    .mobile-text-sm {
+        font-size: 0.875rem;
+    }
+    
+    .mobile-p-4 {
+        padding: 1rem;
+    }
+    
+    .mobile-mb-4 {
+        margin-bottom: 1rem;
+    }
+} 

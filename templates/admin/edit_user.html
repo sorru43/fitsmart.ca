@@ -1,6 +1,6 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}Edit Customer - HealthyRizz{% endblock %}
+{% block title %}Edit Customer - FitSmart{% endblock %}
 {% block page_title %}Edit Customer{% endblock %}
 
 {% block content %}
@@ -50,7 +50,7 @@
                         {{ form.is_admin(class="mr-2") }}
                         <label for="is_admin" class="text-gray-700 font-bold">Admin Portal Access</label>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Grant access to the HealthyRizz administration portal</p>
+                    <p class="text-xs text-gray-500 mt-1">Grant access to the FitSmart administration portal</p>
                     {% if form.is_admin.errors %}
                         {% for error in form.is_admin.errors %}
                             <p class="text-red-500 text-xs italic">{{ error }}</p>

@@ -23,7 +23,7 @@
     </div>
     
     <!-- Order Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <div class="bg-dark-lighter border border-gray-700 rounded-lg p-4">
             <div class="flex items-center">
                 <div class="bg-dark p-3 rounded-full mr-4">
@@ -32,6 +32,30 @@
                 <div>
                     <h3 class="text-lg font-semibold text-white">{{ orders|length }}</h3>
                     <p class="text-sm text-gray-300">Total Orders</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-dark-lighter border border-gray-700 rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="bg-dark p-3 rounded-full mr-4">
+                    <i class="fas fa-times-circle text-orange-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white">{{ skipped|length }}</h3>
+                    <p class="text-sm text-gray-300">Skipped Meals</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-dark-lighter border border-gray-700 rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="bg-dark p-3 rounded-full mr-4">
+                    <i class="fas fa-calculator text-blue-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-white">{{ orders|length - skipped|length }}</h3>
+                    <p class="text-sm text-gray-300">Net Meals to Prepare</p>
                 </div>
             </div>
         </div>
@@ -59,22 +83,10 @@
                 </div>
             </div>
         </div>
-        
-        <div class="bg-dark-lighter border border-gray-700 rounded-lg p-4">
-            <div class="flex items-center">
-                <div class="bg-dark p-3 rounded-full mr-4">
-                    <i class="fas fa-egg text-purple-500"></i>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold text-white">{{ skipped|length }}</h3>
-                    <p class="text-sm text-gray-300">Skipped Deliveries</p>
-                </div>
-            </div>
-        </div>
     </div>
     
     <!-- Actions -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         <a href="{{ url_for('admin.admin_export_orders', date=selected_date.strftime('%Y-%m-%d')) }}" class="text-center block bg-dark-lighter border border-gray-700 hover:bg-dark rounded-lg p-4">
             <div class="mb-2">
                 <i class="fas fa-file-csv text-indigo-500 text-2xl"></i>
@@ -87,6 +99,13 @@
                 <i class="fas fa-tags text-pink-500 text-2xl"></i>
             </div>
             <div class="text-white font-medium">Print Shipping Labels</div>
+        </a>
+        
+        <a href="{{ url_for('admin.admin_generate_barcode_labels', date=selected_date.strftime('%Y-%m-%d')) }}" class="text-center block bg-dark-lighter border border-gray-700 hover:bg-dark rounded-lg p-4">
+            <div class="mb-2">
+                <i class="fas fa-barcode text-green-500 text-2xl"></i>
+            </div>
+            <div class="text-white font-medium">Print Barcode Labels (4x4)</div>
         </a>
         
         <div class="relative text-center block bg-dark-lighter border border-gray-700 hover:bg-dark rounded-lg p-4" 
@@ -288,74 +307,63 @@
     <div class="tab-content hidden" id="skipped-tab">
         {% if skipped %}
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-gray-700">
+                <thead class="bg-dark">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                             Customer
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                             Meal Plan
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Location
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Delivery Address
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Skipped On
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Skip Type
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                            Notes
                         </th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-dark-lighter divide-y divide-gray-700">
                     {% for item in skipped %}
-                    <tr>
+                    <tr class="hover:bg-dark">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">
-                                        {{ item.user_name }}
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        {{ item.phone }}
-                                    </div>
-                                </div>
-                            </div>
+                            <div class="text-sm font-medium text-white">{{ item.user_name }}</div>
+                            <div class="text-sm text-gray-300">{{ item.user_email }}</div>
+                            <div class="text-sm text-gray-300">{{ item.user_phone }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ item.meal_plan_name }}</div>
-                            <div class="text-xs text-gray-500">
-                                {% if item.is_vegetarian %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                    Vegetarian
+                            <div class="text-sm text-white">{{ item.meal_plan_name }}</div>
+                            <div class="text-sm text-gray-300">
+                                {% if item.skip_type == 'customer_skipped' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                    Customer Skipped
                                 </span>
                                 {% else %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                    Non-Veg
-                                </span>
-                                {% endif %}
-                                
-                                {% if item.includes_breakfast %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                    +Breakfast
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Admin Cancelled
                                 </span>
                                 {% endif %}
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ item.city }}, {{ item.province }}</div>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-white">{{ item.delivery_address }}</div>
+                            <div class="text-sm text-gray-300">{{ item.delivery_city }}, {{ item.delivery_state }} {{ item.delivery_postal_code }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-500">{{ item.skipped_on }}</div>
+                            <div class="text-sm text-white">
+                                {% if item.skip_type == 'customer_skipped' %}
+                                <span class="text-orange-400">Customer Skipped</span>
+                                {% else %}
+                                <span class="text-red-400">Admin Cancelled</span>
+                                {% endif %}
+                            </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <form action="{{ url_for('admin.admin_update_delivery_status', delivery_id=item.delivery_id) }}" method="post" class="inline">
-                                <input type="hidden" name="status" value="pending">
-                                <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Are you sure you want to unskip this delivery?')">
-                                    <i class="fas fa-undo"></i> Unskip
-                                </button>
-                            </form>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-300">{{ item.notes }}</div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -365,7 +373,7 @@
         {% else %}
         <div class="text-center py-8">
             <i class="fas fa-info-circle text-gray-400 text-4xl mb-3"></i>
-            <p class="text-gray-500">No skipped deliveries for {{ selected_date.strftime('%A, %B %d, %Y') }}</p>
+            <p class="text-gray-300">No skipped deliveries for {{ selected_date.strftime('%A, %B %d, %Y') }}</p>
         </div>
         {% endif %}
     </div>

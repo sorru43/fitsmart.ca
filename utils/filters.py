@@ -7,8 +7,15 @@ def timeago(date):
     if not date:
         return ''
     
-    now = datetime.utcnow()
-    diff = now - date
+    try:
+        from utils.timezone_utils import get_current_ist_time, convert_to_ist
+        now = get_current_ist_time()
+        date_ist = convert_to_ist(date)
+        diff = now - date_ist
+    except ImportError:
+        # Fallback to UTC if timezone utils not available
+        now = datetime.utcnow()
+        diff = now - date
     
     if diff.days > 365:
         years = diff.days // 365

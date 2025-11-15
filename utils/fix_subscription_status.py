@@ -1,6 +1,6 @@
 from app import create_app, db
 from sqlalchemy import text
-from models import SubscriptionStatus
+from database.models import SubscriptionStatus
 
 def fix_subscription_status():
     app = create_app()

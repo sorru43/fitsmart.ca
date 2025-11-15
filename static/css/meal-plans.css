@@ -1,15 +1,22 @@
-/* Meal Plans Specific Styles */
+/* Meal Plans Specific Styles - Black Theme */
 
-/* Enhanced meal cards with animations */
+/* Enhanced meal cards with black theme */
 .meal-card {
     opacity: 1 !important;
     transform: none !important;
-    transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
-    background-color: #171717 !important;
-    border: 1px solid #2d2d2d !important;
+    transition: all 0.3s ease;
+    background-color: #1f2937 !important;
+    border: 1px solid #374151 !important;
     position: relative;
     overflow: hidden;
-    border-radius: 1rem !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.meal-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+    border-color: #4cb97a !important;
 }
 
 /* Card glow effect */
@@ -20,10 +27,14 @@
     left: 0;
     width: 100%;
     height: 100%;
-    box-shadow: 0 0 0 0 rgba(55, 151, 119, 0);
+    box-shadow: 0 0 0 0 rgba(76, 185, 122, 0);
     border-radius: 0.75rem;
-    transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    transition: all 0.3s ease;
     z-index: -1;
+}
+
+.meal-card:hover::after {
+    box-shadow: 0 0 0 8px rgba(76, 185, 122, 0.1);
 }
 
 /* Top gradient line animation */
@@ -33,300 +44,229 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 4px;
-    background: linear-gradient(to right, #00913a, #4cb97a, #00913a);
+    height: 3px;
+    background: linear-gradient(90deg, #4cb97a, #22c55e, #4cb97a);
     background-size: 200% 100%;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.5s ease;
-    z-index: 2;
-    animation: gradientBG 3s ease infinite;
+    animation: gradientMove 3s ease infinite;
+    z-index: 1;
 }
 
-@keyframes gradientBG {
+@keyframes gradientMove {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
 
-/* Ensure proper text colors */
-.meal-card h3 {
-    color: #4cb97a !important;
-    font-weight: 700 !important;
-    transition: all 0.3s ease;
+/* Popular plan styling */
+.meal-card.popular {
+    border: 2px solid #4cb97a !important;
+    box-shadow: 0 8px 25px rgba(76, 185, 122, 0.2) !important;
 }
 
-.meal-card p {
-    color: #E5E5E5 !important;
-    transition: all 0.3s ease;
+.meal-card.popular::before {
+    height: 4px;
+    background: linear-gradient(90deg, #4cb97a, #22c55e, #16a34a, #4cb97a);
 }
 
-.meal-card .text-gray-500,
-.meal-card .text-gray-600 {
-    color: #9CA3AF !important;
-    transition: all 0.3s ease;
-}
-
-.meal-card .font-semibold {
-    color: #4cb97a !important;
-    transition: all 0.3s ease;
-}
-
-/* Enhanced nutrition box styling */
+/* Nutrition box styling for black theme */
 .nutrition-box {
-    background-color: rgba(31, 41, 55, 0.5) !important;
-    border: 1px solid rgba(55, 151, 119, 0.2) !important;
+    background-color: #374151 !important;
+    border: 1px solid #4b5563 !important;
     border-radius: 0.5rem;
     padding: 0.75rem;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    backdrop-filter: blur(5px);
-    position: relative;
-    overflow: hidden;
-}
-
-.nutrition-box::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(55, 151, 119, 0.1) 0%, transparent 100%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: all 0.3s ease;
 }
 
 .nutrition-box:hover {
-    background-color: rgba(31, 41, 55, 0.7) !important;
-    transform: translateY(-3px);
-    border-color: rgba(55, 151, 119, 0.4) !important;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.nutrition-box:hover::before {
-    opacity: 1;
-}
-
-.nutrition-box span {
-    color: #E5E5E5 !important;
-    position: relative;
-    z-index: 2;
-}
-
-/* Enhanced hover animation */
-.meal-card:hover {
-    transform: translateY(-12px) !important;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
-    border-color: rgba(55, 151, 119, 0.5) !important;
-}
-
-.meal-card:hover::before {
-    transform: scaleX(1);
-}
-
-.meal-card:hover::after {
-    box-shadow: 0 15px 30px rgba(55, 151, 119, 0.3);
-}
-
-.meal-card:hover h3 {
+    background-color: #4b5563 !important;
     transform: translateY(-2px);
-    color: #4ade80 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Make sure text is visible */
-.meal-card h3, 
-.meal-card p, 
-.meal-card span, 
-.meal-card div {
-    opacity: 1 !important;
-}
-
-/* Enhanced plan pricing animation */
-@keyframes priceChange {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.price-change-animation {
-    animation: priceChange 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* Price shine effect */
-.meal-card .price-amount {
-    position: relative;
-    overflow: hidden;
+/* Plan tags */
+.plan-tag {
+    background-color: #4cb97a;
+    color: white;
+    font-weight: 500;
     transition: all 0.3s ease;
 }
 
-.meal-card:hover .price-amount {
-    color: #4ade80 !important;
-    text-shadow: 0 0 10px rgba(55, 151, 119, 0.3);
+.plan-tag:hover {
+    background-color: #22c55e;
+    transform: scale(1.05);
 }
 
-/* Button animations */
-.meal-card button[type="submit"] {
+/* Checkout button styling */
+.btn-checkout {
+    background: linear-gradient(135deg, #4cb97a, #22c55e);
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #00913a 0%, #4cb97a 100%) !important;
-    border: none !important;
-    transition: all 0.4s ease !important;
-    z-index: 1;
 }
 
-.meal-card button[type="submit"]::before {
+.btn-checkout:hover {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(76, 185, 122, 0.3);
+}
+
+.btn-checkout::before {
     content: '';
     position: absolute;
     top: 0;
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: all 0.4s ease;
-    z-index: -1;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
 }
 
-.meal-card button[type="submit"]:hover::before {
+.btn-checkout:hover::before {
     left: 100%;
-    transition: 0.7s;
 }
 
-.meal-card button[type="submit"]:hover {
-    box-shadow: 0 5px 15px rgba(55, 151, 119, 0.5) !important;
-    transform: translateY(-3px) !important;
-    background: linear-gradient(135deg, #4cb97a 0%, #00913a 100%) !important;
-}
-
-/* Enhanced featured plan styling */
-.featured-plan {
-    border: 2px solid #379777 !important;
-    box-shadow: 0 20px 35px rgba(55, 151, 119, 0.4) !important;
-    background-color: #1a1a1a !important;
-    transform: scale(1.05) !important;
-    position: relative;
-    z-index: 10;
-}
-
-.featured-plan::after {
-    content: '';
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    bottom: -5px;
-    left: -5px;
-    background: linear-gradient(135deg, rgba(55, 151, 119, 0.1), transparent);
-    border-radius: 1.2rem;
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-
-.featured-plan:hover {
-    transform: scale(1.05) translateY(-15px) !important;
-    box-shadow: 0 30px 40px rgba(55, 151, 119, 0.5) !important;
-}
-
-.featured-plan:hover::after {
-    opacity: 1;
-}
-
-.featured-plan-badge {
-    background-color: #379777 !important;
-    color: #FFFFFF !important;
-}
-
-.plan-tag {
-    background-color: #E5F6EF !important;
-    color: #379777 !important;
-}
-
-.plan-feature-badge {
-    background-color: #FFFFFF !important;
-    color: #379777 !important;
-    border: 1px solid #379777 !important;
-}
-
-.plan-price {
-    color: #379777 !important;
-}
-
-.btn-checkout {
-    background: linear-gradient(135deg, #379777 0%, #2D7D65 100%) !important;
-    color: white !important;
-    border: none !important;
-    transition: all 0.3s ease !important;
-}
-
-.btn-checkout:hover {
-    background: linear-gradient(135deg, #2D7D65 0%, #216D55 100%) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px rgba(55, 151, 119, 0.4) !important;
-}
-
-.compare-plans-btn {
-    color: #379777 !important;
-    border-color: #379777 !important;
-}
-
-.compare-plans-btn:hover {
-    background-color: #379777 !important;
-    color: #FFFFFF !important;
-}
-
-.meal-detail-table {
-    border-color: #333333 !important;
-}
-
-.meal-detail-table th {
-    background-color: #1E4D3E !important;
-    color: #FFFFFF !important;
-}
-
-.meal-detail-table td {
-    border-color: #333333 !important;
-}
-
-.meal-filter {
-    background-color: #f5f5f5 !important;
-    border: 1px solid #dddddd !important;
-    color: #333333 !important;
-}
-
-.meal-filter:focus {
-    border-color: #379777 !important;
-    box-shadow: 0 0 0 3px rgba(55, 151, 119, 0.2) !important;
-}
-
-/* Fix for form inputs in dark theme */
-select, input, textarea {
-    background-color: #222 !important;
-    color: #fff !important;
-    border-color: #444 !important;
-}
-
-select:focus, input:focus, textarea:focus {
-    border-color: #379777 !important;
-    box-shadow: 0 0 0 3px rgba(55, 151, 119, 0.2) !important;
-}
-
-.nutrition-icon {
+/* Price styling */
+.price-display {
+    color: #4cb97a;
+    font-weight: 700;
     transition: all 0.3s ease;
-    background-color: var(--primary-color, #379777); /* Always show background */
-    color: white !important;
-    box-shadow: 0 2px 8px rgba(55, 151, 119, 0.15);
 }
 
-.nutrition-icon i {
-    color: white !important;
-    transition: color 0.3s ease;
+.price-display:hover {
+    transform: scale(1.05);
 }
 
-.meal-plan-card:hover .nutrition-icon {
-    transform: scale(1.1);
-    background-color: var(--primary-dark, #26775a);
-    box-shadow: 0 4px 16px rgba(55, 151, 119, 0.25);
+/* Meal type icons */
+.meal-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.5rem;
 }
 
-.meal-plan-card:hover .nutrition-icon i {
-    color: #fff;
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .meal-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .nutrition-box {
+        padding: 0.5rem;
+    }
+}
+
+/* Loading animation for cards */
+@keyframes cardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.meal-card {
+    animation: cardFadeIn 0.6s ease forwards;
+}
+
+.meal-card:nth-child(1) { animation-delay: 0.1s; }
+.meal-card:nth-child(2) { animation-delay: 0.2s; }
+.meal-card:nth-child(3) { animation-delay: 0.3s; }
+.meal-card:nth-child(4) { animation-delay: 0.4s; }
+.meal-card:nth-child(5) { animation-delay: 0.5s; }
+.meal-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* Popular badge animation */
+.popular-badge {
+    background: linear-gradient(135deg, #4cb97a, #22c55e);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(76, 185, 122, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(76, 185, 122, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(76, 185, 122, 0); }
+}
+
+/* Save badge */
+.save-badge {
+    background: linear-gradient(135deg, #ef4444, #f87171);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    margin-left: 0.5rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0); }
+}
+
+/* Filter buttons */
+.filter-btn {
+    background-color: #374151;
+    border: 1px solid #4b5563;
+    color: #d1d5db;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background-color: #4cb97a;
+    border-color: #4cb97a;
+    color: white;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+    .meal-card {
+        margin: 0 0.5rem 1rem 0.5rem;
+    }
+    
+    .nutrition-box {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Text colors for black theme */
+.meal-card h3 {
+    color: #ffffff !important;
+}
+
+.meal-card p {
+    color: #d1d5db !important;
+}
+
+.meal-card .text-gray-300 {
+    color: #d1d5db !important;
+}
+
+.meal-card .text-white {
+    color: #ffffff !important;
+}
+
+/* Background colors for black theme */
+.bg-gray-800 {
+    background-color: #1f2937 !important;
+}
+
+.bg-gray-700 {
+    background-color: #374151 !important;
+}
+
+.bg-gray-900 {
+    background-color: #111827 !important;
+}
+
+.bg-black {
+    background-color: #000000 !important;
 }

@@ -1,13 +1,13 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}Add Hero Slide - HealthyRizz{% endblock %}
+{% block title %}Add Hero Slide - FitSmart{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold mb-6">Add New Hero Slide</h1>
 
     <div class="bg-white p-6 rounded-lg shadow-md">
-        <form method="POST" action="{{ url_for('admin.add_hero_slide') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('admin.admin_add_hero_slide') }}" enctype="multipart/form-data">
             {{ form.hidden_tag() }}
 
             <div class="mb-4">
@@ -21,8 +21,18 @@
             </div>
             
             <div class="mb-4">
-                {{ form.image.label(class="block text-gray-700 text-sm font-bold mb-2") }}
-                {{ form.image(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
+                <label class="block text-gray-700 text-sm font-bold mb-2">Image Options</label>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-600 text-sm mb-1">Image URL (or upload file below)</label>
+                        {{ form.image(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline", placeholder="https://example.com/image.jpg") }}
+                    </div>
+                    <div>
+                        <label class="block text-gray-600 text-sm mb-1">Upload Image File</label>
+                        {{ form.image_file(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
+                        <p class="text-xs text-gray-500 mt-1">Supported formats: JPG, PNG, GIF, WebP (Max 5MB)</p>
+                    </div>
+                </div>
             </div>
             
             <div class="mb-4">
@@ -42,7 +52,7 @@
 
             <div class="flex items-center justify-between">
                 {{ form.submit(class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline") }}
-                <a href="{{ url_for('admin.media') }}" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                <a href="{{ url_for('admin.admin_media') }}" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
                     Cancel
                 </a>
             </div>

@@ -1,6 +1,6 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}Subscriptions Management - HealthyRizz{% endblock %}
+{% block title %}Subscriptions Management - FitSmart{% endblock %}
 
 {% block page_title %}Subscriptions Management{% endblock %}
 
@@ -29,18 +29,18 @@
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
                                     <div class="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
-                                        <span class="text-white font-medium">{{ subscription.user.username[0].upper() }}</span>
+                                        <span class="text-white font-medium">{{ (subscription.user.name or subscription.user.username or 'U')[0].upper() }}</span>
                                     </div>
                                 </div>
                                 <div class="ml-4">
-                                    <div class="text-sm font-medium text-white">{{ subscription.user.name or subscription.user.username }}</div>
+                                    <div class="text-sm font-medium text-white">{{ subscription.user.name or subscription.user.username or 'Unknown User' }}</div>
                                     <div class="text-sm text-gray-400">{{ subscription.user.email }}</div>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ subscription.meal_plan.name }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ subscription.frequency.value|capitalize }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">₹{{ "%.2f"|format(subscription.price) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${{ "%.2f"|format(subscription.price) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% if subscription.status.value == 'active' %}
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
@@ -54,7 +54,9 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ subscription.start_date.strftime('%b %d, %Y') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {% if subscription.current_period_end %}
+                            {% if subscription.next_delivery_date %}
+                                {{ subscription.next_delivery_date.strftime('%b %d, %Y') }}
+                            {% elif subscription.current_period_end %}
                                 {{ subscription.current_period_end.strftime('%b %d, %Y') }}
                             {% else %}
                                 N/A

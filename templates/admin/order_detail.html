@@ -1,4 +1,4 @@
-{% extends "admin/base.html" %}
+{% extends "admin/base_admin.html" %}
 
 {% block title %}Order #{{ order.id }} - Admin{% endblock %}
 
@@ -54,7 +54,7 @@
                             </tr>
                             <tr>
                                 <th>Amount:</th>
-                                <td>₹{{ "%.2f"|format(order.amount) }}</td>
+                                <td>${{ "%.2f"|format(order.amount) }}</td>
                             </tr>
                             <tr>
                                 <th>Status:</th>

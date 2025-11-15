@@ -1,0 +1,98 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Win-Back Campaign{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-white mb-2">
+                    <i class="fas fa-heart text-primary mr-2"></i>
+                    Win-Back Campaign
+                </h1>
+                <p class="text-gray-400">Re-engage inactive users</p>
+            </div>
+            <a href="{{ url_for('email_campaign.email_campaigns_dashboard') }}" 
+               class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Campaign Form -->
+        <div class="bg-dark-lighter rounded-lg border border-gray-700">
+            <div class="bg-dark p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-paper-plane text-primary mr-2"></i>
+                    Send Win-Back Campaign
+                </h3>
+            </div>
+            <div class="p-6">
+                <form method="POST" class="space-y-6">
+                    <div class="bg-orange-900 bg-opacity-20 border border-orange-700 rounded-lg p-4">
+                        <h4 class="text-orange-300 font-semibold mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>Campaign Info
+                        </h4>
+                        <p class="text-gray-300 text-sm">
+                            This will send win-back emails to inactive users (no activity in 30+ days), including:
+                        </p>
+                        <ul class="text-gray-300 text-sm mt-2 space-y-1">
+                            <li>• Personalized comeback message</li>
+                            <li>• Special discount for returning customers</li>
+                            <li>• New meal plan offerings</li>
+                            <li>• Easy re-subscription process</li>
+                        </ul>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                            <i class="fas fa-paper-plane mr-2"></i>Send Win-Back Campaign
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Inactive Users -->
+        <div class="bg-dark-lighter rounded-lg border border-gray-700">
+            <div class="bg-dark p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-user-clock text-primary mr-2"></i>
+                    Inactive Users
+                </h3>
+            </div>
+            <div class="p-6">
+                {% if inactive_users %}
+                    <div class="space-y-3">
+                        {% for user in inactive_users %}
+                        <div class="flex items-center justify-between p-3 bg-dark rounded-lg border border-gray-700">
+                            <div>
+                                <p class="text-white font-semibold">{{ user.name or 'No Name' }}</p>
+                                <p class="text-gray-400 text-sm">{{ user.email }}</p>
+                                <p class="text-gray-500 text-xs">Last active: {{ user.created_at.strftime('%Y-%m-%d') }}</p>
+                            </div>
+                            <span class="bg-orange-500 text-white px-2 py-1 rounded text-xs">Inactive</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-4 p-3 bg-orange-900 bg-opacity-20 border border-orange-700 rounded-lg">
+                        <p class="text-orange-300 text-sm">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            {{ inactive_users|length }} users inactive for 30+ days
+                        </p>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-user-check text-green-500 text-4xl mb-4"></i>
+                        <p class="text-green-400">Great news!</p>
+                        <p class="text-gray-400">All users are currently active</p>
+                        <p class="text-gray-500 text-sm">No win-back campaign needed</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

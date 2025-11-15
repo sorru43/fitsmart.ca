@@ -1,5 +1,5 @@
 /**
- * Theme Switcher for HealthyRizz
+ * Theme Switcher for FitSmart
  * Handles switching between light and dark themes
  */
 

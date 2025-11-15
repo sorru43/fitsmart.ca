@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test</title>
+</head>
+<body>
+    <h1>Simple Test Page</h1>
+    <p>If you can see this, the route is working.</p>
+    
+    <form method="POST" action="/trial-request/1">
+        <input type="text" name="name" placeholder="Name" required><br><br>
+        <input type="email" name="email" placeholder="Email" required><br><br>
+        <input type="tel" name="phone" placeholder="Phone" required><br><br>
+        <textarea name="address" placeholder="Address" required></textarea><br><br>
+        <select name="province" required>
+            <option value="">Select State</option>
+            <option value="Maharashtra">Maharashtra</option>
+        </select><br><br>
+        <select name="city" required>
+            <option value="">Select City</option>
+            <option value="Mumbai">Mumbai</option>
+        </select><br><br>
+        <select name="area" required>
+            <option value="">Select Area</option>
+            <option value="Andheri">Andheri</option>
+        </select><br><br>
+        <input type="text" name="postal_code" placeholder="PIN Code" required><br><br>
+        <input type="date" name="preferred_date" required><br><br>
+        <textarea name="notes" placeholder="Notes"></textarea><br><br>
+        <input type="hidden" name="meal_plan_id" value="1">
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html> 

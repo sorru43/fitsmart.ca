@@ -36,6 +36,79 @@ class PushSubscription(db.Model):
             }
         })
 
+class Holiday(db.Model):
+    """Holiday periods for meal delivery service"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    protect_meals = db.Column(db.Boolean, default=True)  # Don't deduct meals during holiday
+    show_popup = db.Column(db.Boolean, default=True)  # Show popup to users
+    popup_message = db.Column(db.Text, nullable=True)
+    popup_options = db.Column(db.Text, nullable=True)  # JSON string of options
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    def __repr__(self):
+        return f"<Holiday {self.name}: {self.start_date} to {self.end_date}>"
+    
+    @property
+    def is_current(self):
+        """Check if holiday is currently active"""
+        today = datetime.now().date()
+        return self.is_active and self.start_date <= today <= self.end_date
+    
+    @property
+    def is_upcoming(self):
+        """Check if holiday is upcoming"""
+        today = datetime.now().date()
+        return self.is_active and self.start_date > today
+    
+    @property
+    def is_past(self):
+        """Check if holiday is in the past"""
+        today = datetime.now().date()
+        return self.end_date < today
+    
+    @property
+    def days_remaining(self):
+        """Get days remaining in holiday"""
+        if not self.is_current:
+            return 0
+        return (self.end_date - datetime.now().date()).days
+    
+    def get_popup_options(self):
+        """Get popup options as list"""
+        if not self.popup_options:
+            return []
+        try:
+            return json.loads(self.popup_options)
+        except:
+            return []
+    
+    def set_popup_options(self, options_list):
+        """Set popup options from list"""
+        self.popup_options = json.dumps(options_list)
+    
+    @classmethod
+    def get_current_holiday(cls):
+        """Get currently active holiday"""
+        return cls.query.filter(
+            cls.is_active == True,
+            cls.start_date <= datetime.now().date(),
+            cls.end_date >= datetime.now().date()
+        ).first()
+    
+    @classmethod
+    def get_upcoming_holidays(cls, limit=5):
+        """Get upcoming holidays"""
+        return cls.query.filter(
+            cls.is_active == True,
+            cls.start_date > datetime.now().date()
+        ).order_by(cls.start_date).limit(limit).all()
+
 class Notification(db.Model):
     """Notification history and tracking"""
     id = db.Column(db.Integer, primary_key=True)
@@ -119,73 +192,71 @@ class DeliveryStatus(enum.Enum):
     CANCELLED = "cancelled"
 
 class User(UserMixin, db.Model):
+    """User model for authentication and profile management"""
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
-    name = db.Column(db.String(100), nullable=True)  # Add proper name field
+    username = db.Column(db.String(64), index=True, unique=True, nullable=True)  # Made nullable for OAuth users
     email = db.Column(db.String(100), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=True)
+    password_hash = db.Column(db.String(256), nullable=True)  # Made nullable for OAuth users
+    google_id = db.Column(db.String(100), unique=True, nullable=True, index=True)  # Google OAuth ID
     created_at = db.Column(db.DateTime, default=datetime.now)
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     
-    # Address fields
-    address = db.Column(db.String(200), nullable=True)
-    city = db.Column(db.String(100), nullable=True)
-    province = db.Column(db.String(50), nullable=True)
-    postal_code = db.Column(db.String(20), nullable=True)
-    phone = db.Column(db.String(20), nullable=True)
-    
-    # Update property accessors for backward compatibility
+    # Profile fields
+    address = db.Column(db.String(200))
+    city = db.Column(db.String(100))
+    province = db.Column(db.String(50))
+    postal_code = db.Column(db.String(20))
+    phone = db.Column(db.String(20))
+    name = db.Column(db.String(100))
+    email_verified = db.Column(db.Boolean, default=False)
+
+    # Relationship to orders - fixed to match actual database
+    orders = db.relationship('Order', backref='user', lazy=True, foreign_keys='Order.user_id')
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
     @property
-    def display_name(self):
-        """Return name if available, otherwise username"""
-        return self.name if self.name else self.username
-        
-    @display_name.setter
-    def display_name(self, value):
-        self.name = value
-    
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
+
     def set_password(self, password):
-        """Set password hash using pbkdf2:sha256"""
-        if not password:
-            raise ValueError("Password cannot be empty")
-        self.password_hash = generate_password_hash(
-            password,
-            method='pbkdf2:sha256:50000',
-            salt_length=16
-        )
-        
+        self.password_hash = generate_password_hash(password)
+
     def check_password(self, password):
-        """Check password against hash"""
-        if not self.password_hash:
-            return False
-        try:
-            return check_password_hash(self.password_hash, password)
-        except Exception as e:
-            current_app.logger.error(f"Error checking password: {str(e)}")
-            return False
-        
-    @staticmethod
-    def create_user(email, username=None, password=None, **kwargs):
-        """Create a new user with proper validation"""
-        if not username:
-            username = email.split('@')[0]  # Use email prefix as username if not provided
-            
-        # Check if username is already taken
-        if User.query.filter_by(username=username).first():
-            # Append a random number to make it unique
-            username = f"{username}{random.randint(1000, 9999)}"
-            
-        user = User(
-            username=username,
-            email=email,
-            **kwargs
-        )
-        
-        if password:
-            user.set_password(password)
-            
-        return user
+        return check_password_hash(self.password_hash, password)
+
+class Order(db.Model):
+    """Order model for tracking customer orders"""
+    __table_args__ = {'extend_existing': True}  # Prevent duplicate table errors
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Links to User
+    meal_plan_id = db.Column(db.Integer, db.ForeignKey('meal_plan.id'), nullable=True)  # Meal plan foreign key
+    total_amount = db.Column(db.Float, nullable=False)  # Order amount (renamed from amount for clarity)
+    amount = db.Column(db.Float, nullable=False)  # Keep for backward compatibility
+    status = db.Column(db.String(20), default='pending')
+    payment_status = db.Column(db.String(20), default='pending')  # pending, captured, failed
+    payment_id = db.Column(db.String(100), nullable=True)  # Razorpay payment ID
+    order_id = db.Column(db.String(100), nullable=True)  # Razorpay order ID
+    delivery_address = db.Column(db.Text)
+    delivery_instructions = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+    # Add relationship to meal plan
+    meal_plan = db.relationship('MealPlan', backref=db.backref('orders', lazy=True))
+
+    def __repr__(self):
+        return f'<Order {self.id}>'
 
 class DeliveryLocation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -218,7 +289,44 @@ class DeliveryLocation(db.Model):
         
         return location is not None
 
+class SampleMenuItem(db.Model):
+    """Model for sample menu items in meal plans"""
+    id = db.Column(db.Integer, primary_key=True)
+    meal_plan_id = db.Column(db.Integer, db.ForeignKey('meal_plan.id'), nullable=False)
+    meal_plan = db.relationship('MealPlan', backref=db.backref('sample_menu_items', lazy=True, cascade='all, delete-orphan'))
+    
+    # Menu item details
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    meal_type = db.Column(db.String(50), nullable=False)  # breakfast, lunch, dinner, snack
+    day_of_week = db.Column(db.Integer, nullable=True)  # 1-7 for Monday-Sunday, null for any day
+    image_url = db.Column(db.String(500), nullable=True)
+    calories = db.Column(db.Integer, nullable=True)
+    protein = db.Column(db.Float, nullable=True)
+    carbs = db.Column(db.Float, nullable=True)
+    fat = db.Column(db.Float, nullable=True)
+    
+    # Display order
+    display_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    def __repr__(self):
+        return f"<SampleMenuItem {self.name} - {self.meal_type}>"
+    
+    @property
+    def day_name(self):
+        """Get the day name for display"""
+        if self.day_of_week is None:
+            return "Any Day"
+        days = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        return days[self.day_of_week] if 1 <= self.day_of_week <= 7 else "Any Day"
+
 class MealPlan(db.Model):
+    __table_args__ = {'extend_existing': True}  # Prevent duplicate table errors
+    
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
@@ -246,7 +354,25 @@ class MealPlan(db.Model):
     available_for_trial = db.Column(db.Boolean, default=False)
     image_url = db.Column(db.String(255))
     is_popular = db.Column(db.Boolean, default=False)
+    
+    # Enhanced meal type options
     includes_breakfast = db.Column(db.Boolean, default=True)
+    includes_lunch = db.Column(db.Boolean, default=True)
+    includes_dinner = db.Column(db.Boolean, default=True)
+    includes_snacks = db.Column(db.Boolean, default=False)
+    
+    # Meal timing details
+    breakfast_time = db.Column(db.String(20), default="7:00-9:00 AM")  # Delivery time window for breakfast
+    lunch_time = db.Column(db.String(20), default="12:00-2:00 PM")    # Delivery time window for lunch
+    dinner_time = db.Column(db.String(20), default="6:00-8:00 PM")    # Delivery time window for dinner
+    
+    # Meal plan type for better categorization
+    meal_plan_type = db.Column(db.String(30), default='all_day')  # 'breakfast_only', 'lunch_only', 'dinner_only', 'breakfast_lunch', 'lunch_dinner', 'breakfast_dinner', 'all_day'
+    
+    # Additional nutritional info
+    fiber = db.Column(db.String(20), nullable=True)
+    sodium = db.Column(db.String(20), nullable=True)
+    sugar = db.Column(db.String(20), nullable=True)
     
     def get_price_weekly(self):
         """Get weekly price"""
@@ -284,6 +410,81 @@ class MealPlan(db.Model):
         if self.is_high_protein:
             tags.append('High Protein')
         return tags
+    
+    @property
+    def included_meals(self):
+        """Return a list of included meals for display"""
+        meals = []
+        if self.includes_breakfast:
+            meals.append('Breakfast')
+        if self.includes_lunch:
+            meals.append('Lunch')
+        if self.includes_dinner:
+            meals.append('Dinner')
+        if self.includes_snacks:
+            meals.append('Snacks')
+        return meals
+    
+    @property
+    def meal_plan_description(self):
+        """Return a user-friendly description of what meals are included"""
+        included = self.included_meals
+        if len(included) == 0:
+            return "Custom meal plan"
+        elif len(included) == 1:
+            return f"{included[0]} only"
+        elif len(included) == 2:
+            return f"{included[0]} & {included[1]}"
+        elif len(included) == 3 and not self.includes_snacks:
+            return "All 3 meals (Breakfast, Lunch & Dinner)"
+        else:
+            return "Complete meal plan with " + ", ".join(included[:-1]) + f" & {included[-1]}"
+    
+    @property
+    def delivery_times_description(self):
+        """Return delivery time information"""
+        times = []
+        if self.includes_breakfast:
+            times.append(f"Breakfast: {self.breakfast_time}")
+        if self.includes_lunch:
+            times.append(f"Lunch: {self.lunch_time}")
+        if self.includes_dinner:
+            times.append(f"Dinner: {self.dinner_time}")
+        return " | ".join(times)
+    
+    def get_sample_menu_by_day(self):
+        """Get sample menu items organized by day of week"""
+        menu_by_day = {}
+        for item in self.sample_menu_items:
+            if item.is_active:
+                day = item.day_of_week or 0  # 0 for any day
+                if day not in menu_by_day:
+                    menu_by_day[day] = {}
+                if item.meal_type not in menu_by_day[day]:
+                    menu_by_day[day][item.meal_type] = []
+                menu_by_day[day][item.meal_type].append(item)
+        
+        # Sort items by display_order
+        for day in menu_by_day:
+            for meal_type in menu_by_day[day]:
+                menu_by_day[day][meal_type].sort(key=lambda x: x.display_order)
+        
+        return menu_by_day
+    
+    def get_sample_menu_by_meal_type(self):
+        """Get sample menu items organized by meal type"""
+        menu_by_type = {}
+        for item in self.sample_menu_items:
+            if item.is_active:
+                if item.meal_type not in menu_by_type:
+                    menu_by_type[item.meal_type] = []
+                menu_by_type[item.meal_type].append(item)
+        
+        # Sort items by display_order
+        for meal_type in menu_by_type:
+            menu_by_type[meal_type].sort(key=lambda x: x.display_order)
+        
+        return menu_by_type
 
 class CouponCode(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -430,7 +631,8 @@ class TrialRequest(db.Model):
     phone = db.Column(db.String(20), nullable=False)
     address = db.Column(db.String(255), nullable=False)
     city = db.Column(db.String(100), nullable=False)
-    province = db.Column(db.String(2), nullable=False)
+    province = db.Column(db.String(100), nullable=False)  # Changed from String(2) to String(100) for full state names
+    area = db.Column(db.String(100), nullable=False)  # Added area field
     postal_code = db.Column(db.String(7), nullable=False)
     meal_plan_id = db.Column(db.Integer, db.ForeignKey('meal_plan.id'), nullable=False)
     meal_plan = db.relationship('MealPlan', backref=db.backref('trial_requests', lazy=True))
@@ -557,6 +759,7 @@ class Subscription(db.Model):
     price = db.Column(db.Numeric(10, 2), nullable=False)  # Price at the time of subscription
     delivery_days = db.Column(db.String(20), default="0,1,2,3,4")  # Days of the week for delivery (0=Monday, 6=Sunday)
     vegetarian_days = db.Column(db.String(20), default="")  # Days of the week for vegetarian meals
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=True)  # Link to originating order
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     # Added delivery address fields
@@ -612,7 +815,7 @@ class Subscription(db.Model):
         current_date = datetime.now().date()
         
         # Skip today if it's past cutoff time (5 hours before standard delivery time which is 6 PM)
-        cutoff_hour = 11  # 11 AM (5 hours before 4 PM delivery start)
+        cutoff_hour = 11  # 11 AM (7 hours before 6 PM delivery start)
         if datetime.now().hour >= cutoff_hour:
             current_date += timedelta(days=1)
             
@@ -654,7 +857,7 @@ class Subscription(db.Model):
             
         # Check if delivery is in the future and after cutoff
         current_date = datetime.now().date()
-        cutoff_hour = 11  # 11 AM (5 hours before 4 PM delivery start)
+        cutoff_hour = 11  # 11 AM (7 hours before 6 PM delivery start)
         
         if delivery_date == current_date and datetime.now().hour >= cutoff_hour:
             return False, "Cannot skip a delivery after the cutoff time (11 AM on delivery day)"
@@ -678,7 +881,7 @@ class Subscription(db.Model):
             
         # Check if delivery is in the future and after cutoff
         current_date = datetime.now().date()
-        cutoff_hour = 11  # 11 AM (5 hours before 4 PM delivery start)
+        cutoff_hour = 11  # 11 AM (7 hours before 6 PM delivery start)
         
         if delivery_date == current_date and datetime.now().hour >= cutoff_hour:
             return False, "Cannot change a delivery after the cutoff time (11 AM on delivery day)"
@@ -763,8 +966,8 @@ class WaterIntakeReminder(db.Model):
     daily_target_ml = db.Column(db.Integer, nullable=True)  # Daily water intake target in ml (optional)
     wake_up_time = db.Column(db.Time, nullable=True)  # User's wake up time
     sleep_time = db.Column(db.Time, nullable=True)    # User's sleep time
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     
     # Relationships
     user = db.relationship('User', backref=db.backref('water_reminders', lazy=True))
@@ -808,27 +1011,6 @@ class Meal(db.Model):
     diet_type_id = db.Column(db.Integer, db.ForeignKey('diet_type.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     order_items = db.relationship('OrderItem', backref='meal', lazy=True)
-
-class Customer(db.Model):
-    """Customer model for order management"""
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    phone = db.Column(db.String(20))
-    address = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    orders = db.relationship('Order', backref='customer', lazy=True)
-
-class Order(db.Model):
-    """Order model for tracking customer orders"""
-    id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
-    total_amount = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(20), default='pending')
-    delivery_address = db.Column(db.Text)
-    delivery_instructions = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    items = db.relationship('OrderItem', backref='order', lazy=True)
 
 class OrderItem(db.Model):
     """Order item model for tracking individual items in orders"""
@@ -1076,6 +1258,12 @@ class WhyChooseSection(db.Model):
 
     def __repr__(self):
         return f'<WhyChooseSection {self.id}>'
+
+
+# Removed duplicate NewsletterSubscription class - using Newsletter class above
+# Removed duplicate Coupon class - using CouponCode class above
+
+# Removed duplicate Delivery class - using the comprehensive one above
 
 class FullWidthSection(db.Model):
     """Model for a new full-width image section (comes after Why Choose section)"""

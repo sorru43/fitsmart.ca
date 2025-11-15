@@ -1,0 +1,190 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Email Campaign Analytics{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-white mb-2">
+                    <i class="fas fa-chart-bar text-primary mr-2"></i>
+                    Email Campaign Analytics
+                </h1>
+                <p class="text-gray-400">Track and analyze your email campaign performance</p>
+            </div>
+            <a href="{{ url_for('email_campaign.email_campaigns_dashboard') }}" 
+               class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-dark-lighter rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Total Emails Sent</p>
+                    <p class="text-2xl font-bold text-white">{{ engagement_data.total_emails_sent }}</p>
+                </div>
+                <div class="bg-blue-500 rounded-full p-3">
+                    <i class="fas fa-paper-plane text-white"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-lighter rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Emails Opened</p>
+                    <p class="text-2xl font-bold text-white">{{ engagement_data.emails_opened }}</p>
+                </div>
+                <div class="bg-green-500 rounded-full p-3">
+                    <i class="fas fa-eye text-white"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-lighter rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Emails Clicked</p>
+                    <p class="text-2xl font-bold text-white">{{ engagement_data.emails_clicked }}</p>
+                </div>
+                <div class="bg-yellow-500 rounded-full p-3">
+                    <i class="fas fa-mouse-pointer text-white"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-dark-lighter rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Conversions</p>
+                    <p class="text-2xl font-bold text-white">{{ engagement_data.conversions }}</p>
+                </div>
+                <div class="bg-purple-500 rounded-full p-3">
+                    <i class="fas fa-shopping-cart text-white"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Performance -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Campaign Statistics -->
+        <div class="bg-dark-lighter rounded-lg border border-gray-700">
+            <div class="bg-dark p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-chart-line text-primary mr-2"></i>
+                    Campaign Performance
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Open Rate</h4>
+                            <p class="text-gray-400 text-sm">Percentage of emails opened</p>
+                        </div>
+                        <span class="text-2xl font-bold text-green-400">
+                            {{ "%.1f"|format((stats.open_rate * 100) if stats else 0) }}%
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Click Rate</h4>
+                            <p class="text-gray-400 text-sm">Percentage of emails clicked</p>
+                        </div>
+                        <span class="text-2xl font-bold text-blue-400">
+                            {{ "%.1f"|format((stats.click_rate * 100) if stats else 0) }}%
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Conversion Rate</h4>
+                            <p class="text-gray-400 text-sm">Percentage that led to purchases</p>
+                        </div>
+                        <span class="text-2xl font-bold text-purple-400">
+                            {{ "%.1f"|format((engagement_data.conversions / engagement_data.total_emails_sent * 100) if engagement_data.total_emails_sent > 0 else 0) }}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campaign Types -->
+        <div class="bg-dark-lighter rounded-lg border border-gray-700">
+            <div class="bg-dark p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-list text-primary mr-2"></i>
+                    Campaign Types
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-dark rounded-lg border border-gray-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-user-plus text-blue-400 mr-3"></i>
+                            <span class="text-white">Welcome Series</span>
+                        </div>
+                        <span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Active</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-dark rounded-lg border border-gray-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-tag text-green-400 mr-3"></i>
+                            <span class="text-white">Promotional</span>
+                        </div>
+                        <span class="bg-green-500 text-white px-2 py-1 rounded text-xs">Active</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-dark rounded-lg border border-gray-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-shopping-cart text-red-400 mr-3"></i>
+                            <span class="text-white">Abandoned Cart</span>
+                        </div>
+                        <span class="bg-red-500 text-white px-2 py-1 rounded text-xs">Active</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-dark rounded-lg border border-gray-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-heart text-orange-400 mr-3"></i>
+                            <span class="text-white">Win-Back</span>
+                        </div>
+                        <span class="bg-orange-500 text-white px-2 py-1 rounded text-xs">Active</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-dark rounded-lg border border-gray-700">
+                        <div class="flex items-center">
+                            <i class="fas fa-share-alt text-purple-400 mr-3"></i>
+                            <span class="text-white">Referral Program</span>
+                        </div>
+                        <span class="bg-purple-500 text-white px-2 py-1 rounded text-xs">Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-dark-lighter rounded-lg border border-gray-700 mt-8">
+        <div class="bg-dark p-4 border-b border-gray-700">
+            <h3 class="text-lg font-semibold text-white">
+                <i class="fas fa-history text-primary mr-2"></i>
+                Recent Campaign Activity
+            </h3>
+        </div>
+        <div class="p-6">
+            <div class="text-center py-8">
+                <i class="fas fa-chart-line text-gray-500 text-4xl mb-4"></i>
+                <p class="text-gray-400">No recent campaign activity</p>
+                <p class="text-gray-500 text-sm">Campaign data will appear here as you send emails</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

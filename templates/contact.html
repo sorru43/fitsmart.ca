@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Contact Us - Healthyrizz{% endblock %}
+{% block title %}Contact Us - FitSmart{% endblock %}
 
 {% block meta %}
-<meta name="description" content="Get in touch with Healthyrizz for location requests, franchise opportunities, expert consultations, and general inquiries. We're here to help you on your health journey.">
-<meta name="keywords" content="contact healthyrizz, franchise opportunity, nutrition consultation, meal delivery, health expert">
-<meta property="og:title" content="Contact Us - Healthyrizz">
-<meta property="og:description" content="Get in touch with Healthyrizz for location requests, franchise opportunities, expert consultations, and general inquiries.">
+<meta name="description" content="Get in touch with FitSmart for location requests, franchise opportunities, expert consultations, and general inquiries. We're here to help you on your health journey.">
+<meta name="keywords" content="contact FitSmart, franchise opportunity, nutrition consultation, meal delivery, health expert">
+<meta property="og:title" content="Contact Us - FitSmart">
+<meta property="og:description" content="Get in touch with FitSmart for location requests, franchise opportunities, expert consultations, and general inquiries.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{{ request.url }}">
 <meta property="og:image" content="{{ site_settings.get('site_logo', '/static/images/logo white.png') }}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Contact Us - Healthyrizz">
-<meta name="twitter:description" content="Get in touch with Healthyrizz for location requests, franchise opportunities, expert consultations, and general inquiries.">
+<meta name="twitter:title" content="Contact Us - FitSmart">
+<meta name="twitter:description" content="Get in touch with FitSmart for location requests, franchise opportunities, expert consultations, and general inquiries.">
 {% endblock %}
 
 {% block content %}
@@ -207,7 +207,7 @@
                                 </div>
                                 <div>
                                     <p class="text-gray-300 text-sm">Phone</p>
-                                    <p class="text-white font-semibold">+91 98765 43210</p>
+                                    <p class="text-white font-semibold">{{ site_settings.get('contact_phone', '+1 (647) 573-2429') }}</p>
                                 </div>
                             </div>
                             <div class="flex items-center">
@@ -216,7 +216,7 @@
                                 </div>
                                 <div>
                                     <p class="text-gray-300 text-sm">Email</p>
-                                    <p class="text-white font-semibold">info@healthyrizz.in</p>
+                                    <p class="text-white font-semibold">FitSmart.in@gmail.com</p>
                                 </div>
                             </div>
                             <div class="flex items-center">
@@ -299,7 +299,7 @@
                 
                 <div class="bg-gray-800 rounded-lg p-6">
                     <h3 class="text-lg font-semibold text-white mb-3">What are the franchise requirements?</h3>
-                    <p class="text-gray-300">We look for passionate entrepreneurs with investment capacity of ₹5-50+ Lakhs. Business experience is preferred but not mandatory.</p>
+                    <p class="text-gray-300">We look for passionate entrepreneurs with investment capacity of $5-50+ Lakhs. Business experience is preferred but not mandatory.</p>
                 </div>
                 
                 <div class="bg-gray-800 rounded-lg p-6">

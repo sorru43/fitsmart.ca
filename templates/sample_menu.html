@@ -1,0 +1,819 @@
+{% extends 'base.html' %}
+
+{% block title %}Sample Menu - {{ meal_plan.name }} - FitSmart{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* CSS RESET - REMOVE ALL CONFLICTS */
+    .sample-menu-container *,
+    .sample-menu-container *::before,
+    .sample-menu-container *::after {
+        box-sizing: border-box !important;
+    }
+
+    /* MEAL TYPE ROW LAYOUT - EACH MEAL TYPE IN SEPARATE ROW */
+    .meal-type-row {
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 1px solid #374151;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .meal-type-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #10b981;
+    }
+
+    .meal-type-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #f8f9fa;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .meal-type-icon {
+        font-size: 2.5rem;
+        filter: drop-shadow(0 0 10px currentColor);
+    }
+
+    /* HORIZONTAL GRID FOR MEAL ITEMS WITHIN EACH ROW */
+    .meal-items-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+        gap: 1.5rem !important;
+        width: 100% !important;
+    }
+
+    /* MEAL ITEM CARDS */
+    .meal-item-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid #374151;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .meal-item-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2);
+        border-color: #10b981;
+    }
+
+    .meal-item-content {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .meal-item-image {
+        flex-shrink: 0;
+        width: 4rem;
+        height: 4rem;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #374151;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .meal-item-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .meal-item-image i {
+        font-size: 1.5rem;
+        color: #9ca3af;
+    }
+
+    .meal-item-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .meal-item-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #f8f9fa;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .meal-item-description {
+        font-size: 0.9rem;
+        color: #9ca3af;
+        margin: 0 0 1rem 0;
+        line-height: 1.5;
+    }
+
+    .meal-item-nutrition {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        border-radius: 8px;
+        padding: 0.75rem;
+        margin-top: 0.75rem;
+    }
+
+    .nutrition-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .nutrition-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .nutrition-value {
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .nutrition-label {
+        font-size: 0.75rem;
+        opacity: 0.9;
+        margin-top: 0.25rem;
+    }
+
+    /* Container styles */
+    .sample-menu-container {
+        background: #0f0f23;
+        min-height: 100vh;
+        padding: 2rem 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .sample-menu-header {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 1px solid #10b981;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .sample-menu-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #10b981;
+        margin-bottom: 1rem;
+    }
+
+    .sample-menu-subtitle {
+        font-size: 1.1rem;
+        color: #d1d5db;
+        margin-bottom: 2rem;
+    }
+
+    .sample-menu-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .sample-menu-stat {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .sample-menu-stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #10b981;
+        margin-bottom: 0.5rem;
+    }
+
+    .sample-menu-stat-label {
+        font-size: 0.9rem;
+        color: #9ca3af;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .sample-menu-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .sample-menu-tab {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        color: #d1d5db;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .sample-menu-tab.active {
+        background: #10b981;
+        color: white;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .sample-menu-tab:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    }
+
+    .sample-menu-cta {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 1px solid #10b981;
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        margin-top: 3rem;
+        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1);
+    }
+
+    .sample-menu-cta-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #f8f9fa;
+        margin-bottom: 1rem;
+    }
+
+    .sample-menu-cta-text {
+        font-size: 1.1rem;
+        color: #d1d5db;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .sample-menu-btn {
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0 0.5rem;
+    }
+
+    .sample-menu-btn:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .sample-menu-btn-trial {
+        background: #f59e0b;
+    }
+
+    .sample-menu-btn-trial:hover {
+        background: #d97706;
+    }
+
+    /* Responsive breakpoints for meal items grid */
+    @media (max-width: 1200px) {
+        .meal-items-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .meal-items-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .meal-items-grid {
+            grid-template-columns: 1fr !important;
+        }
+        
+        .meal-type-title {
+            font-size: 1.5rem;
+        }
+        
+        .meal-type-icon {
+            font-size: 2rem;
+        }
+    }
+
+    /* ENHANCED MOBILE RESPONSIVE DESIGN */
+    @media (max-width: 768px) {
+        .sample-menu-container {
+            padding: 1rem 0;
+            min-height: auto;
+            margin-bottom: 2rem;
+        }
+
+        .sample-menu-header {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sample-menu-title {
+            font-size: 1.8rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .sample-menu-subtitle {
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sample-menu-stats {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .sample-menu-stat {
+            padding: 1rem;
+        }
+
+        .sample-menu-stat-value {
+            font-size: 1.5rem;
+        }
+
+        .sample-menu-stat-label {
+            font-size: 0.8rem;
+        }
+
+        .sample-menu-tabs {
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .sample-menu-tab {
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .meal-type-row {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+        }
+
+        .meal-type-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .meal-type-title {
+            font-size: 1.4rem;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .meal-type-icon {
+            font-size: 1.8rem;
+        }
+
+        .meal-items-grid {
+            gap: 1rem !important;
+        }
+
+        .meal-item-card {
+            padding: 1rem;
+        }
+
+        .meal-item-content {
+            gap: 0.75rem;
+        }
+
+        .meal-item-image {
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .meal-item-name {
+            font-size: 1.1rem;
+        }
+
+        .meal-item-description {
+            font-size: 0.85rem;
+        }
+
+        .nutrition-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .sample-menu-cta {
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .sample-menu-cta-title {
+            font-size: 1.5rem;
+        }
+
+        .sample-menu-cta-text {
+            font-size: 1rem;
+        }
+
+        .sample-menu-btn {
+            display: block;
+            margin: 0.5rem 0;
+            text-align: center;
+            width: 100%;
+            max-width: 300px;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .sample-menu-container {
+            padding: 0.5rem 0;
+        }
+
+        .sample-menu-header {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .sample-menu-title {
+            font-size: 1.5rem;
+        }
+
+        .sample-menu-stats {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .sample-menu-stat {
+            padding: 0.75rem;
+        }
+
+        .meal-type-row {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .meal-type-title {
+            font-size: 1.2rem;
+        }
+
+        .meal-type-icon {
+            font-size: 1.5rem;
+        }
+
+        .meal-item-card {
+            padding: 0.75rem;
+        }
+
+        .meal-item-content {
+            gap: 0.5rem;
+        }
+
+        .meal-item-image {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+
+        .meal-item-name {
+            font-size: 1rem;
+        }
+
+        .meal-item-description {
+            font-size: 0.8rem;
+        }
+
+        .nutrition-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .sample-menu-cta {
+            padding: 1rem;
+        }
+
+        .sample-menu-cta-title {
+            font-size: 1.3rem;
+        }
+
+        .sample-menu-cta-text {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* FIX FOOTER DISPLAY ISSUE */
+    @media (max-width: 768px) {
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sample-menu-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ensure footer doesn't overlap */
+        footer {
+            position: relative !important;
+            bottom: auto !important;
+            margin-top: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sample-menu-container">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="sample-menu-header">
+            <div class="flex items-center justify-center mb-4">
+                <a href="{{ url_for('main.meal_plans') }}" class="sample-menu-btn" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+                    <i class="fas fa-arrow-left"></i> Back to Meal Plans
+                </a>
+            </div>
+            <h1 class="sample-menu-title">
+                Sample Menu: {{ meal_plan.name }}
+            </h1>
+            <p class="sample-menu-subtitle">
+                Discover what you'll receive with this meal plan. Each item is carefully crafted to meet your nutritional needs.
+            </p>
+            
+            <!-- Stats -->
+            <div class="sample-menu-stats">
+                <div class="sample-menu-stat">
+                    <div class="sample-menu-stat-value">{{ meal_plan.calories }}</div>
+                    <div class="sample-menu-stat-label">Calories</div>
+                </div>
+                <div class="sample-menu-stat">
+                    <div class="sample-menu-stat-value">{{ meal_plan.protein }}</div>
+                    <div class="sample-menu-stat-label">Protein</div>
+                </div>
+                <div class="sample-menu-stat">
+                    <div class="sample-menu-stat-value">${{ "%.2f"|format(meal_plan.price_weekly) }}</div>
+                    <div class="sample-menu-stat-label">Per Week</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="sample-menu-tabs">
+            <button class="sample-menu-tab active" onclick="showView('meal-type')">
+                <i class="fas fa-utensils mr-2"></i>By Meal Type
+            </button>
+            <button class="sample-menu-tab" onclick="showView('day')">
+                <i class="fas fa-calendar mr-2"></i>By Day
+            </button>
+        </div>
+
+        <!-- Meal Type View -->
+        <div id="meal-type-view" class="view-section">
+            {% for meal_type, items in sample_menu_by_type.items() %}
+            {% if items %}
+            <div class="meal-type-row">
+                <div class="meal-type-header">
+                    <h3 class="meal-type-title">
+                        {% if meal_type == 'breakfast' %}
+                            <i class="fas fa-sun text-yellow-400 meal-type-icon"></i>
+                        {% elif meal_type == 'lunch' %}
+                            <i class="fas fa-cloud-sun text-orange-400 meal-type-icon"></i>
+                        {% elif meal_type == 'dinner' %}
+                            <i class="fas fa-moon text-blue-400 meal-type-icon"></i>
+                        {% else %}
+                            <i class="fas fa-apple-alt text-green-400 meal-type-icon"></i>
+                        {% endif %}
+                        {{ meal_type|title }}
+                    </h3>
+                </div>
+                
+                <div class="meal-items-grid">
+                    {% for item in items %}
+                    <div class="meal-item-card">
+                        <div class="meal-item-content">
+                            <div class="meal-item-image">
+                                {% if item.image_url %}
+                                    <img src="{{ item.image_url }}" alt="{{ item.name }}">
+                                {% else %}
+                                    <i class="fas fa-utensils"></i>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="meal-item-text">
+                                <h4 class="meal-item-name">{{ item.name }}</h4>
+                                {% if item.description %}
+                                    <p class="meal-item-description">{{ item.description }}</p>
+                                {% endif %}
+                                
+                                {% if item.calories or item.protein or item.carbs or item.fat %}
+                                <div class="meal-item-nutrition">
+                                    <div class="nutrition-grid">
+                                        {% if item.calories %}
+                                        <div class="nutrition-item">
+                                            <div class="nutrition-value">{{ item.calories }}</div>
+                                            <div class="nutrition-label">Calories</div>
+                                        </div>
+                                        {% endif %}
+                                        {% if item.protein %}
+                                        <div class="nutrition-item">
+                                            <div class="nutrition-value">{{ item.protein }}g</div>
+                                            <div class="nutrition-label">Protein</div>
+                                        </div>
+                                        {% endif %}
+                                        {% if item.carbs %}
+                                        <div class="nutrition-item">
+                                            <div class="nutrition-value">{{ item.carbs }}g</div>
+                                            <div class="nutrition-label">Carbs</div>
+                                        </div>
+                                        {% endif %}
+                                        {% if item.fat %}
+                                        <div class="nutrition-item">
+                                            <div class="nutrition-value">{{ item.fat }}g</div>
+                                            <div class="nutrition-label">Fat</div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Day View -->
+        <div id="day-view" class="view-section hidden">
+            {% for day_num, meals in sample_menu_by_day.items() %}
+            {% if meals %}
+            <div class="meal-type-row">
+                <div class="meal-type-header">
+                    <h3 class="meal-type-title">
+                        <i class="fas fa-calendar-day text-primary meal-type-icon"></i>
+                        {% if day_num == 0 %}
+                            Any Day
+                        {% else %}
+                            {% set days = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] %}
+                            {{ days[day_num] }}
+                        {% endif %}
+                    </h3>
+                </div>
+                
+                <div class="meal-items-grid">
+                    {% for meal_type, items in meals.items() %}
+                    {% for item in items %}
+                    <div class="meal-item-card">
+                        <div class="meal-item-content">
+                            <div class="meal-item-image">
+                                {% if item.image_url %}
+                                    <img src="{{ item.image_url }}" alt="{{ item.name }}">
+                                {% else %}
+                                    <i class="fas fa-utensils"></i>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="meal-item-text">
+                                <h4 class="meal-item-name">
+                                    {% if meal_type == 'breakfast' %}
+                                        <i class="fas fa-sun text-yellow-400"></i>
+                                    {% elif meal_type == 'lunch' %}
+                                        <i class="fas fa-cloud-sun text-orange-400"></i>
+                                    {% elif meal_type == 'dinner' %}
+                                        <i class="fas fa-moon text-blue-400"></i>
+                                    {% else %}
+                                        <i class="fas fa-apple-alt text-green-400"></i>
+                                    {% endif %}
+                                    {{ item.name }}
+                                </h4>
+                                
+                                {% if item.description %}
+                                    <p class="meal-item-description">{{ item.description }}</p>
+                                {% endif %}
+                                
+                                {% if item.calories or item.protein or item.carbs or item.fat %}
+                                <div class="meal-item-nutrition">
+                                    <div class="nutrition-grid">
+                                        {% if item.calories %}
+                                        <div class="nutrition-item">
+                                            <div class="nutrition-value">{{ item.calories }}</div>
+                                            <div class="nutrition-label">Calories</div>
+                                        </div>
+                                        {% endif %}
+                                        {% if item.protein %}
+                                        <div class="nutrition-item">
+                                            <div class="nutrition-value">{{ item.protein }}g</div>
+                                            <div class="nutrition-label">Protein</div>
+                                        </div>
+                                        {% endif %}
+                                        {% if item.carbs %}
+                                        <div class="nutrition-item">
+                                            <div class="nutrition-value">{{ item.carbs }}g</div>
+                                            <div class="nutrition-label">Carbs</div>
+                                        </div>
+                                        {% endif %}
+                                        {% if item.fat %}
+                                        <div class="nutrition-item">
+                                            <div class="nutrition-value">{{ item.fat }}g</div>
+                                            <div class="nutrition-label">Fat</div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Call to Action -->
+        <div class="sample-menu-cta">
+            <h2 class="sample-menu-cta-title">Ready to Start Your Healthy Journey?</h2>
+            <p class="sample-menu-cta-text">Join thousands of satisfied customers who have transformed their lives with our personalized meal plans.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{{ url_for('main.subscribe', plan_id=meal_plan.id, frequency='weekly') }}" 
+                   class="sample-menu-btn">
+                    <i class="fas fa-arrow-right"></i>
+                    Subscribe Now
+                </a>
+                {% if meal_plan.available_for_trial %}
+                <a href="{{ url_for('main.trial_request', plan_id=meal_plan.id) }}" 
+                   class="sample-menu-btn sample-menu-btn-trial">
+                    <i class="fas fa-gift"></i>
+                    Try 1-Day Trial
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showView(viewType) {
+    // Hide all view sections
+    document.querySelectorAll('.view-section').forEach(section => {
+        section.classList.add('hidden');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.sample-menu-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected view
+    if (viewType === 'meal-type') {
+        document.getElementById('meal-type-view').classList.remove('hidden');
+        document.querySelectorAll('.sample-menu-tab')[0].classList.add('active');
+    } else {
+        document.getElementById('day-view').classList.remove('hidden');
+        document.querySelectorAll('.sample-menu-tab')[1].classList.add('active');
+    }
+}
+
+// Initialize with meal type view
+document.addEventListener('DOMContentLoaded', function() {
+    showView('meal-type');
+});
+</script>
+{% endblock %} 

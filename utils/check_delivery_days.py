@@ -1,5 +1,5 @@
 from app import create_app
-from models import Subscription, SubscriptionStatus
+from database.models import Subscription, SubscriptionStatus
 from datetime import datetime
 
 def check_delivery_days():

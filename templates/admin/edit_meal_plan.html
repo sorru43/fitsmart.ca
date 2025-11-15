@@ -66,7 +66,7 @@
             
             <!-- Weekly Price -->
             <div>
-                <label for="price_weekly" class="block text-sm font-medium text-white mb-1">Weekly Price (₹) <span class="text-red-500">*</span></label>
+                <label for="price_weekly" class="block text-sm font-medium text-white mb-1">Weekly Price ($) <span class="text-red-500">*</span></label>
                 <input type="number" step="0.01" id="price_weekly" name="price_weekly" value="{{ meal_plan.price_weekly }}" required
                     class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
                     placeholder="e.g. 999.99">
@@ -74,7 +74,7 @@
             
             <!-- Monthly Price -->
             <div>
-                <label for="price_monthly" class="block text-sm font-medium text-white mb-1">Monthly Price (₹) <span class="text-red-500">*</span></label>
+                <label for="price_monthly" class="block text-sm font-medium text-white mb-1">Monthly Price ($) <span class="text-red-500">*</span></label>
                 <input type="number" step="0.01" id="price_monthly" name="price_monthly" value="{{ meal_plan.price_monthly }}" required
                     class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
                     placeholder="e.g. 3499.99">
@@ -82,7 +82,7 @@
             
             <!-- Trial Price -->
             <div>
-                <label for="price_trial" class="block text-sm font-medium text-white mb-1">Trial Price (₹) <span class="text-red-500">*</span></label>
+                <label for="price_trial" class="block text-sm font-medium text-white mb-1">Trial Price ($) <span class="text-red-500">*</span></label>
                 <input type="number" step="0.01" id="price_trial" name="price_trial" value="{{ meal_plan.price_trial }}" required
                     class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-white"
                     placeholder="e.g. 499.99">
@@ -129,6 +129,51 @@
                 <p class="mt-1 text-sm text-white">Range or exact value of carbohydrates per day</p>
             </div>
             
+            <!-- Meal Configuration -->
+            <div class="md:col-span-2">
+                <h3 class="text-lg font-medium border-b border-gray-200 pb-2 mb-4 mt-4 text-white">Meal Configuration</h3>
+            </div>
+            
+            <!-- Meal Options -->
+            <div class="md:col-span-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="includes_breakfast" name="includes_breakfast" value="true" {% if meal_plan.includes_breakfast %}checked{% endif %}
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="includes_breakfast" class="ml-2 block text-sm text-white">Includes Breakfast</label>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="includes_lunch" name="includes_lunch" value="true" {% if meal_plan.includes_lunch %}checked{% endif %}
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="includes_lunch" class="ml-2 block text-sm text-white">Includes Lunch</label>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="includes_dinner" name="includes_dinner" value="true" {% if meal_plan.includes_dinner %}checked{% endif %}
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="includes_dinner" class="ml-2 block text-sm text-white">Includes Dinner</label>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="includes_snacks" name="includes_snacks" value="true" {% if meal_plan.includes_snacks %}checked{% endif %}
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="includes_snacks" class="ml-2 block text-sm text-white">Includes Snacks</label>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-white mb-2">Meal Count Preview</h4>
+                        <div class="text-sm text-gray-300 space-y-1">
+                            <div id="meals-per-day">Meals per day: <span class="font-medium">3</span></div>
+                            <div id="weekly-meals">Weekly meals: <span class="font-medium">15</span> (5 days × 3 meals)</div>
+                            <div id="monthly-meals">Monthly meals: <span class="font-medium">60</span> (4 weeks × 15 meals)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Additional Options -->
             <div class="md:col-span-2">
                 <h3 class="text-lg font-medium border-b border-gray-200 pb-2 mb-4 mt-4 text-white">Additional Options</h3>
@@ -166,4 +211,54 @@
         </div>
     </form>
 </div>
+
+<script>
+// Dynamic meal count calculation
+function updateMealCount() {
+    const breakfast = document.querySelector('input[name="includes_breakfast"]').checked;
+    const lunch = document.querySelector('input[name="includes_lunch"]').checked;
+    const dinner = document.querySelector('input[name="includes_dinner"]').checked;
+    const snacks = document.querySelector('input[name="includes_snacks"]').checked;
+    
+    let mealsPerDay = 0;
+    const includedMeals = [];
+    
+    if (breakfast) {
+        mealsPerDay++;
+        includedMeals.push('Breakfast');
+    }
+    if (lunch) {
+        mealsPerDay++;
+        includedMeals.push('Lunch');
+    }
+    if (dinner) {
+        mealsPerDay++;
+        includedMeals.push('Dinner');
+    }
+    if (snacks) {
+        mealsPerDay++;
+        includedMeals.push('Snacks');
+    }
+    
+    const weeklyMeals = mealsPerDay * 5; // 5 days per week
+    const monthlyMeals = weeklyMeals * 4; // 4 weeks per month
+    
+    // Update the preview
+    document.getElementById('meals-per-day').innerHTML = `Meals per day: <span class="font-medium">${mealsPerDay}</span> (${includedMeals.join(', ')})`;
+    document.getElementById('weekly-meals').innerHTML = `Weekly meals: <span class="font-medium">${weeklyMeals}</span> (5 days × ${mealsPerDay} meals)`;
+    document.getElementById('monthly-meals').innerHTML = `Monthly meals: <span class="font-medium">${monthlyMeals}</span> (4 weeks × ${weeklyMeals} meals)`;
+}
+
+// Add event listeners to meal checkboxes
+document.addEventListener('DOMContentLoaded', function() {
+    const mealCheckboxes = document.querySelectorAll('input[name="includes_breakfast"], input[name="includes_lunch"], input[name="includes_dinner"], input[name="includes_snacks"]');
+    
+    mealCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateMealCount);
+    });
+    
+    // Initialize the count
+    updateMealCount();
+});
+</script>
 {% endblock %}

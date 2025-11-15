@@ -1,409 +1,643 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}Edit Blog Post - HealthyRizz Admin{% endblock %}
-
-{% block page_title %}Edit Blog Post{% endblock %}
-
-{% block extra_css %}
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<style>
-    #editor {
-        height: 400px;
-        margin-bottom: 1rem;
-    }
-    .ql-editor {
-        min-height: 350px;
-        font-size: 16px;
-        line-height: 1.6;
-    }
-    .ql-toolbar {
-        border-top: 1px solid #ccc;
-        border-left: 1px solid #ccc;
-        border-right: 1px solid #ccc;
-        border-bottom: none;
-        border-radius: 4px 4px 0 0;
-    }
-    .ql-container {
-        border: 1px solid #ccc;
-        border-radius: 0 0 4px 4px;
-    }
-    .content-preview {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        padding: 1rem;
-        margin-top: 1rem;
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    .html-editor {
-        display: none;
-        width: 100%;
-        min-height: 400px;
-        font-family: 'Courier New', monospace;
-        font-size: 14px;
-        line-height: 1.4;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        background: #f8f9fa;
-        resize: vertical;
-    }
-    .editor-mode-buttons {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-    }
-    .mode-btn {
-        padding: 8px 16px;
-        border: 1px solid #ccc;
-        background: #fff;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-    }
-    .mode-btn.active {
-        background: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
-    .mode-btn:hover {
-        background: #f8f9fa;
-    }
-    .mode-btn.active:hover {
-        background: #0056b3;
-    }
-    .html-toolbar {
-        display: none;
-        margin-bottom: 10px;
-        padding: 10px;
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-    }
-    .html-toolbar button {
-        margin-right: 5px;
-        padding: 4px 8px;
-        font-size: 12px;
-        background: #fff;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-        cursor: pointer;
-    }
-    .html-toolbar button:hover {
-        background: #e9ecef;
-    }
-</style>
-{% endblock %}
+{% block title %}Edit Blog Post - FitSmart Admin{% endblock %}
 
 {% block admin_content %}
+<style>
+/* Visual Editor Toolbar Styles */
+.visual-toolbar {
+        background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.format-btn {
+    padding: 6px 10px;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #495057;
+    transition: all 0.2s;
+    min-width: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.format-btn:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.format-btn:active {
+    background: #dee2e6;
+    transform: translateY(1px);
+}
+
+.format-btn i {
+    font-size: 12px;
+}
+
+/* Rich Text Editor Styles */
+#rich-editor {
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+    line-height: 1.6;
+    font-size: 16px;
+    color: #333;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 15px;
+    outline: none;
+}
+
+#rich-editor:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+#rich-editor h1, #rich-editor h2, #rich-editor h3 {
+    margin: 20px 0 10px 0;
+    color: #333;
+}
+
+#rich-editor p {
+    margin: 10px 0;
+}
+
+#rich-editor ul, #rich-editor ol {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+#rich-editor blockquote {
+    border-left: 4px solid #007bff;
+    margin: 20px 0;
+    padding: 10px 20px;
+    background: #f8f9fa;
+    font-style: italic;
+}
+
+#rich-editor pre {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 15px 0;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+}
+
+#rich-editor table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15px 0;
+}
+
+#rich-editor table th,
+#rich-editor table td {
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+#rich-editor table th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+#rich-editor img {
+    max-width: 100%;
+    height: auto;
+    margin: 10px 0;
+}
+
+/* Toolbar Groups */
+.visual-toolbar > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+}
+
+.visual-toolbar > div:not(:last-child) {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .visual-toolbar > div {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .format-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    }
+</style>
+
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Edit Blog Post</h1>
-        <div class="flex space-x-4">
             <a href="{{ url_for('admin.admin_blog') }}" class="btn-secondary">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Blog
             </a>
         </div>
-    </div>
 
-    <div class="bg-white rounded-lg shadow">
-        <form method="POST" enctype="multipart/form-data" class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Title -->
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                    <input type="text" name="title" value="{{ post.title }}" required
-                           class="form-input w-full" placeholder="Enter post title">
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="content" id="content-input">
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <input type="text" name="title" class="form-input" placeholder="Enter blog post title..." value="{{ post.title }}" required>
                 </div>
 
-                <!-- Category -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                    <select name="category" class="form-select w-full">
-                        <option value="">Select Category</option>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                <select name="category" class="form-input" required>
+                    <option value="">Select a category</option>
                         {% for category in categories %}
                         <option value="{{ category }}" {% if post.category == category %}selected{% endif %}>{{ category }}</option>
                         {% endfor %}
+                    <option value="custom" {% if post.category not in categories %}selected{% endif %}>Add Custom Category</option>
                     </select>
+                <input type="text" name="custom_category" placeholder="Enter custom category..." class="form-input mt-2 {% if post.category not in categories %}block{% else %}hidden{% endif %}" id="custom-category-field" value="{% if post.category not in categories %}{{ post.category }}{% endif %}">
                 </div>
 
-                <!-- Tags -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                    <input type="text" name="tags" value="{{ post.tags }}"
-                           class="form-input w-full" placeholder="Enter tags (comma-separated)">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Content *</label>
+                
+                <!-- Simple Editor Toggle -->
+                <div class="mb-3">
+                    <button type="button" id="toggle-editor" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Switch to HTML Editor
+                    </button>
                 </div>
 
-                <!-- Featured Image -->
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
-                    {% if post.featured_image %}
-                    <div class="mb-2">
-                        <img src="{{ post.featured_image }}" alt="Current featured image" class="h-32 w-32 object-cover rounded">
+                <!-- Visual Editor (Rich Text Editor) -->
+                <div id="visual-editor">
+                    <!-- Visual Editor Toolbar -->
+                    <div class="visual-toolbar mb-3 p-3 bg-gray-100 rounded border">
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <!-- Text Formatting -->
+                            <div class="flex items-center space-x-1">
+                                <button type="button" onclick="formatText('bold')" class="format-btn" title="Bold (Ctrl+B)">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" onclick="formatText('italic')" class="format-btn" title="Italic (Ctrl+I)">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" onclick="formatText('underline')" class="format-btn" title="Underline (Ctrl+U)">
+                                    <i class="fas fa-underline"></i>
+                                </button>
+                                <button type="button" onclick="formatText('strikethrough')" class="format-btn" title="Strikethrough">
+                                    <i class="fas fa-strikethrough"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Headings -->
+                            <div class="flex items-center space-x-1">
+                                <button type="button" onclick="formatText('h1')" class="format-btn" title="Heading 1">
+                                    <i class="fas fa-heading"></i>1
+                                </button>
+                                <button type="button" onclick="formatText('h2')" class="format-btn" title="Heading 2">
+                                    <i class="fas fa-heading"></i>2
+                                </button>
+                                <button type="button" onclick="formatText('h3')" class="format-btn" title="Heading 3">
+                                    <i class="fas fa-heading"></i>3
+                                </button>
+                            </div>
+                            
+                            <!-- Lists -->
+                            <div class="flex items-center space-x-1">
+                                <button type="button" onclick="formatText('ul')" class="format-btn" title="Bullet List">
+                                    <i class="fas fa-list-ul"></i>
+                                </button>
+                                <button type="button" onclick="formatText('ol')" class="format-btn" title="Numbered List">
+                                    <i class="fas fa-list-ol"></i>
+                                </button>
                     </div>
-                    {% endif %}
-                    <input type="file" name="image" accept="image/*" class="form-input w-full">
+                            
+                            <!-- Alignment -->
+                            <div class="flex items-center space-x-1">
+                                <button type="button" onclick="formatText('align-left')" class="format-btn" title="Align Left">
+                                    <i class="fas fa-align-left"></i>
+                                </button>
+                                <button type="button" onclick="formatText('align-center')" class="format-btn" title="Align Center">
+                                    <i class="fas fa-align-center"></i>
+                                </button>
+                                <button type="button" onclick="formatText('align-right')" class="format-btn" title="Align Right">
+                                    <i class="fas fa-align-right"></i>
+                                </button>
                 </div>
 
-                <!-- Content -->
-                <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                    <input type="hidden" name="content" id="content-input" value="{{ post.content }}">
-                    
-                    <!-- Editor Mode Buttons -->
-                    <div class="editor-mode-buttons">
-                        <button type="button" class="mode-btn active" id="visual-mode-btn">
-                            <i class="fas fa-eye mr-1"></i>Visual Editor
+                            <!-- Links and Media -->
+                            <div class="flex items-center space-x-1">
+                                <button type="button" onclick="insertLink()" class="format-btn" title="Insert Link">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                                <button type="button" onclick="insertImage()" class="format-btn" title="Insert Image">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                                <button type="button" onclick="insertVideo()" class="format-btn" title="Insert Video">
+                                    <i class="fas fa-video"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Special Elements -->
+                            <div class="flex items-center space-x-1">
+                                <button type="button" onclick="formatText('blockquote')" class="format-btn" title="Blockquote">
+                                    <i class="fas fa-quote-left"></i>
+                                </button>
+                                <button type="button" onclick="formatText('code')" class="format-btn" title="Code Block">
+                                    <i class="fas fa-code"></i>
                         </button>
-                        <button type="button" class="mode-btn" id="html-mode-btn">
-                            <i class="fas fa-code mr-1"></i>HTML Editor
-                        </button>
-                    </div>
-                    
-                    <!-- HTML Toolbar -->
-                    <div class="html-toolbar" id="html-toolbar">
-                        <button type="button" onclick="insertHTMLTag('h1')">H1</button>
-                        <button type="button" onclick="insertHTMLTag('h2')">H2</button>
-                        <button type="button" onclick="insertHTMLTag('h3')">H3</button>
-                        <button type="button" onclick="insertHTMLTag('p')">Paragraph</button>
-                        <button type="button" onclick="insertHTMLTag('div')">Div</button>
-                        <button type="button" onclick="insertHTMLTag('span')">Span</button>
-                        <button type="button" onclick="insertHTMLTag('strong')">Bold</button>
-                        <button type="button" onclick="insertHTMLTag('em')">Italic</button>
-                        <button type="button" onclick="insertHTMLTag('ul')">List</button>
-                        <button type="button" onclick="insertHTMLTag('table')">Table</button>
-                        <button type="button" onclick="insertHTMLTag('img')">Image</button>
-                        <button type="button" onclick="insertHTMLTag('a')">Link</button>
-                        <button type="button" onclick="insertHTMLTag('br')">Line Break</button>
-                    </div>
-                    
-                    <!-- Visual Editor -->
-                    <div id="visual-editor">
-                        <div id="editor"></div>
-                    </div>
-                    
-                    <!-- HTML Editor -->
-                    <textarea id="html-editor" class="html-editor" placeholder="Write your HTML code here..."></textarea>
-                    
-                    <div class="flex space-x-2 mt-2">
-                        <button type="button" id="preview-btn" class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
-                            <i class="fas fa-eye mr-1"></i>Preview
-                        </button>
-                        <button type="button" id="hide-preview-btn" class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 hidden">
-                            <i class="fas fa-edit mr-1"></i>Edit
+                                <button type="button" onclick="insertTable()" class="format-btn" title="Insert Table">
+                                    <i class="fas fa-table"></i>
                         </button>
                     </div>
-                    <div id="content-preview" class="content-preview hidden"></div>
+                    
+                            <!-- Clear Formatting -->
+                            <div class="flex items-center space-x-1">
+                                <button type="button" onclick="clearFormatting()" class="format-btn text-red-600" title="Clear Formatting">
+                                    <i class="fas fa-eraser"></i>
+                                </button>
+                            </div>
+                    </div>
+                    
+                        <!-- Meal Plan Insertion for Visual Editor -->
+                        <div class="mt-3 pt-3 border-t border-gray-300">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Insert Meal Plan:</label>
+                            <div class="flex items-center space-x-2">
+                                <select id="visual-meal-plan-select" class="form-select text-sm" style="width: auto;">
+                                    <option value="">Select a meal plan...</option>
+                                    {% for plan in meal_plans %}
+                                    <option value="{{ plan.id }}">{{ plan.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" onclick="insertMealPlanVisual()" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                                    Insert Meal Plan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Rich Text Editor -->
+                    <div id="rich-editor" class="w-full h-96 p-3 border border-gray-300 rounded-md bg-white" contenteditable="true" placeholder="Write your blog post content here...">{{ post.content|safe }}</div>
+                    
+                    <!-- Fallback textarea (hidden) -->
+                    <textarea id="visual-textarea" class="w-full h-96 p-3 border border-gray-300 rounded-md hidden" placeholder="Write your blog post content here...">{{ post.content }}</textarea>
+                </div>
+                
+                <!-- HTML Editor -->
+                <div id="html-editor-section" class="hidden">
+                    <div class="mb-3 p-3 bg-gray-100 rounded border">
+                        <h4 class="font-medium mb-2">HTML Editor</h4>
+                        <p class="text-sm text-gray-600 mb-3">You can write HTML code here. Use the buttons below to add common HTML tags.</p>
+                        
+                        <!-- HTML Toolbar -->
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <button type="button" onclick="addHTMLTag('h1')" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">H1</button>
+                            <button type="button" onclick="addHTMLTag('h2')" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">H2</button>
+                            <button type="button" onclick="addHTMLTag('h3')" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">H3</button>
+                            <button type="button" onclick="addHTMLTag('p')" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">Paragraph</button>
+                            <button type="button" onclick="addHTMLTag('strong')" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">Bold</button>
+                            <button type="button" onclick="addHTMLTag('em')" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">Italic</button>
+                            <button type="button" onclick="addHTMLTag('ul')" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">List</button>
+                            <button type="button" onclick="addHTMLTag('a')" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">Link</button>
+                            <button type="button" onclick="addHTMLTag('img')" class="px-2 py-1 bg-gray-600 text-white rounded text-xs">Image</button>
+                            <button type="button" onclick="clearHTML()" class="px-2 py-1 bg-red-600 text-white rounded text-xs">Clear</button>
+                        </div>
+                        
+                        <!-- Meal Plan Insertion -->
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Insert Meal Plan:</label>
+                            <div class="flex items-center space-x-2">
+                                <select id="meal-plan-select" class="form-select text-sm" style="width: auto;">
+                                    <option value="">Select a meal plan...</option>
+                                    {% for plan in meal_plans %}
+                                    <option value="{{ plan.id }}">{{ plan.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="button" onclick="insertMealPlan()" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                                    Insert Meal Plan
+                        </button>
+                            </div>
+                        </div>
+                        
+                        <!-- HTML Textarea -->
+                        <textarea id="html-textarea" class="w-full h-96 p-3 border border-gray-300 rounded-md font-mono text-sm" placeholder="Write your HTML code here...">{{ post.content }}</textarea>
+                    </div>
+                </div>
                 </div>
 
-                <!-- Publish Status -->
-                <div class="col-span-2">
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" name="is_published" value="true"
-                               {% if post.is_published %}checked{% endif %}
-                               class="form-checkbox h-4 w-4 text-primary">
-                        <span class="text-sm font-medium text-gray-700">Publish immediately</span>
-                    </label>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
+                <input type="file" name="image" accept="image/*" class="form-input">
+                {% if post.featured_image %}
+                <div class="mt-2">
+                    <img src="{{ post.featured_image }}" alt="Current featured image" class="h-32 w-32 object-cover rounded">
+                    <p class="text-sm text-gray-500 mt-1">Current image</p>
                 </div>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                <input type="text" name="tags" class="form-input" placeholder="Enter tags separated by commas" value="{{ post.tags or '' }}">
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" id="is_published" name="is_published" value="true" {% if post.is_published %}checked{% endif %} class="mr-2">
+                <label for="is_published" class="text-sm font-medium text-gray-700">Published</label>
             </div>
 
-            <div class="mt-6 flex justify-end space-x-4">
-                <a href="{{ url_for('admin.admin_blog') }}" class="btn-secondary">Cancel</a>
-                <button type="submit" class="btn-primary">Save Changes</button>
+            <div class="flex justify-end space-x-4">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save mr-2"></i>Update Blog Post
+                </button>
             </div>
         </form>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
-<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let quill;
-    let currentMode = 'visual';
+    const toggleBtn = document.getElementById('toggle-editor');
+    const visualEditor = document.getElementById('visual-editor');
+    const htmlSection = document.getElementById('html-editor-section');
+    const visualTextarea = document.getElementById('visual-textarea');
+    const htmlTextarea = document.getElementById('html-textarea');
+    const richEditor = document.getElementById('rich-editor');
+    const contentInput = document.getElementById('content-input');
+    const categorySelect = document.querySelector('select[name="category"]');
+    const customCategoryField = document.getElementById('custom-category-field');
     
-    // Initialize Quill editor
-    function initQuill() {
-        quill = new Quill('#editor', {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    [{ 'align': [] }],
-                    ['link', 'image', 'video'],
-                    ['code-block'],
-                    ['clean']
-                ]
-            },
-            placeholder: 'Write your blog post content here...'
+    let isHTMLMode = false;
+    
+    // Initialize rich text editor
+    if (richEditor) {
+        richEditor.focus();
+        
+        // Add placeholder behavior
+        richEditor.addEventListener('focus', function() {
+            if (this.textContent === '') {
+                this.textContent = '';
+            }
+        });
+        
+        richEditor.addEventListener('blur', function() {
+            if (this.textContent === '') {
+                this.innerHTML = '<p><br></p>';
+            }
         });
     }
     
-    initQuill();
-    
-    // Set existing content
-    const existingContent = document.getElementById('content-input').value;
-    if (existingContent) {
-        quill.root.innerHTML = existingContent;
-        document.getElementById('html-editor').value = existingContent;
-    }
-    
-    // Mode switching
-    const visualModeBtn = document.getElementById('visual-mode-btn');
-    const htmlModeBtn = document.getElementById('html-mode-btn');
-    const visualEditor = document.getElementById('visual-editor');
-    const htmlEditor = document.getElementById('html-editor');
-    const htmlToolbar = document.getElementById('html-toolbar');
-    
-    visualModeBtn.addEventListener('click', function() {
-        if (currentMode !== 'visual') {
-            // Save HTML content to visual editor
-            const htmlContent = htmlEditor.value;
-            quill.root.innerHTML = htmlContent;
+    // Toggle between visual and HTML editor
+    toggleBtn.addEventListener('click', function() {
+        if (isHTMLMode) {
+            // Switch to visual mode
+            visualEditor.classList.remove('hidden');
+            htmlSection.classList.add('hidden');
+            toggleBtn.textContent = 'Switch to HTML Editor';
+            toggleBtn.className = 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700';
+            isHTMLMode = false;
+        } else {
+            // Switch to HTML mode
+            visualEditor.classList.add('hidden');
+            htmlSection.classList.remove('hidden');
+            toggleBtn.textContent = 'Switch to Visual Editor';
+            toggleBtn.className = 'px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700';
+            isHTMLMode = true;
             
-            // Switch modes
-            visualEditor.style.display = 'block';
-            htmlEditor.style.display = 'none';
-            htmlToolbar.style.display = 'none';
-            
-            visualModeBtn.classList.add('active');
-            htmlModeBtn.classList.remove('active');
-            currentMode = 'visual';
-        }
-    });
-    
-    htmlModeBtn.addEventListener('click', function() {
-        if (currentMode !== 'html') {
-            // Save visual content to HTML editor
-            const visualContent = quill.root.innerHTML;
-            htmlEditor.value = visualContent;
-            
-            // Switch modes
-            visualEditor.style.display = 'none';
-            htmlEditor.style.display = 'block';
-            htmlToolbar.style.display = 'block';
-            
-            htmlModeBtn.classList.add('active');
-            visualModeBtn.classList.remove('active');
-            currentMode = 'html';
-        }
-    });
-    
-    // HTML toolbar functions
-    window.insertHTMLTag = function(tag) {
-        if (currentMode === 'html') {
-            const textarea = document.getElementById('html-editor');
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const selectedText = textarea.value.substring(start, end);
-            
-            let insertText = '';
-            switch(tag) {
-                case 'h1':
-                    insertText = `<h1>${selectedText || 'Heading 1'}</h1>`;
-                    break;
-                case 'h2':
-                    insertText = `<h2>${selectedText || 'Heading 2'}</h2>`;
-                    break;
-                case 'h3':
-                    insertText = `<h3>${selectedText || 'Heading 3'}</h3>`;
-                    break;
-                case 'p':
-                    insertText = `<p>${selectedText || 'Paragraph text'}</p>`;
-                    break;
-                case 'div':
-                    insertText = `<div>${selectedText || 'Content'}</div>`;
-                    break;
-                case 'span':
-                    insertText = `<span>${selectedText || 'Inline text'}</span>`;
-                    break;
-                case 'strong':
-                    insertText = `<strong>${selectedText || 'Bold text'}</strong>`;
-                    break;
-                case 'em':
-                    insertText = `<em>${selectedText || 'Italic text'}</em>`;
-                    break;
-                case 'ul':
-                    insertText = `<ul>\n  <li>${selectedText || 'List item'}</li>\n</ul>`;
-                    break;
-                case 'table':
-                    insertText = `<table border="1">\n  <tr>\n    <td>${selectedText || 'Cell content'}</td>\n  </tr>\n</table>`;
-                    break;
-                case 'img':
-                    insertText = `<img src="image-url.jpg" alt="${selectedText || 'Image description'}" style="max-width: 100%; height: auto;">`;
-                    break;
-                case 'a':
-                    insertText = `<a href="url" target="_blank">${selectedText || 'Link text'}</a>`;
-                    break;
-                case 'br':
-                    insertText = '<br>';
-                    break;
+            // Convert visual content to HTML if switching for the first time
+            if (!htmlTextarea.value.trim()) {
+                htmlTextarea.value = visualTextarea.value;
             }
-            
-            textarea.value = textarea.value.substring(0, start) + insertText + textarea.value.substring(end);
-            textarea.focus();
-            textarea.setSelectionRange(start + insertText.length, start + insertText.length);
         }
-    };
-
-    // Preview functionality
-    const previewBtn = document.getElementById('preview-btn');
-    const hidePreviewBtn = document.getElementById('hide-preview-btn');
-    const contentPreview = document.getElementById('content-preview');
-    const editor = document.querySelector('#editor');
-
-    previewBtn.addEventListener('click', function() {
-        let content;
-        if (currentMode === 'visual') {
-            content = quill.root.innerHTML;
-        } else {
-            content = htmlEditor.value;
-        }
-        
-        contentPreview.innerHTML = content;
-        contentPreview.classList.remove('hidden');
-        visualEditor.style.display = 'none';
-        htmlEditor.style.display = 'none';
-        previewBtn.classList.add('hidden');
-        hidePreviewBtn.classList.remove('hidden');
     });
-
-    hidePreviewBtn.addEventListener('click', function() {
-        contentPreview.classList.add('hidden');
-        if (currentMode === 'visual') {
-            visualEditor.style.display = 'block';
-        } else {
-            htmlEditor.style.display = 'block';
-        }
-        hidePreviewBtn.classList.add('hidden');
-        previewBtn.classList.remove('hidden');
-    });
-
-    // Form submission - get content from current mode
-    const form = document.querySelector('form');
-    const contentInput = document.getElementById('content-input');
     
-    form.addEventListener('submit', function(e) {
-        let content;
-        if (currentMode === 'visual') {
-            content = quill.root.innerHTML;
+    // Category selection logic
+    categorySelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customCategoryField.classList.remove('hidden');
         } else {
-            content = htmlEditor.value;
+            customCategoryField.classList.add('hidden');
+        }
+    });
+    
+    // Form submission
+    document.querySelector('form').addEventListener('submit', function(e) {
+        let content = '';
+        
+        // Get content based on current mode
+        if (isHTMLMode) {
+            const htmlTextarea = document.getElementById('html-textarea');
+            content = htmlTextarea ? htmlTextarea.value : '';
+        } else {
+            const richEditor = document.getElementById('rich-editor');
+            const visualTextarea = document.getElementById('visual-textarea');
+            
+            if (richEditor && richEditor.innerHTML.trim()) {
+                content = richEditor.innerHTML;
+            } else if (visualTextarea) {
+                content = visualTextarea.value;
+            }
         }
         
-        contentInput.value = content;
+        // Set the content in the hidden input
+        const contentInput = document.getElementById('content-input');
+        if (contentInput) {
+            contentInput.value = content;
+        }
         
-        if (!content.trim()) {
+        // Validate content
+        if (!content.trim() || content === '<p><br></p>') {
             e.preventDefault();
             alert('Please enter some content for your blog post.');
             return;
         }
+        
+        // Debug logging
+        console.log('Form submitting with content:', content);
+        console.log('Is HTML mode:', isHTMLMode);
+        console.log('Content length:', content.length);
     });
 });
+
+// Visual Editor Functions
+function formatText(command) {
+    const richEditor = document.getElementById('rich-editor');
+    if (!richEditor) return;
+    
+    document.execCommand(command, false, null);
+    richEditor.focus();
+}
+
+function insertLink() {
+    const url = prompt('Enter URL:');
+    if (url) {
+        document.execCommand('createLink', false, url);
+    }
+}
+
+function insertImage() {
+    const url = prompt('Enter image URL:');
+    if (url) {
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        range.insertNode(img);
+    }
+}
+
+function insertVideo() {
+    const url = prompt('Enter video URL:');
+    if (url) {
+        const video = document.createElement('video');
+        video.src = url;
+        video.controls = true;
+        video.style.maxWidth = '100%';
+        video.style.height = 'auto';
+        
+        const selection = window.getSelection();
+        const range = selection.getRangeAt(0);
+        range.insertNode(video);
+    }
+}
+
+function insertTable() {
+    const rows = prompt('Enter number of rows:', '3');
+    const cols = prompt('Enter number of columns:', '3');
+    
+    if (rows && cols) {
+        let tableHTML = '<table border="1" style="border-collapse: collapse; width: 100%;">';
+        for (let i = 0; i < rows; i++) {
+            tableHTML += '<tr>';
+            for (let j = 0; j < cols; j++) {
+                tableHTML += '<td style="padding: 8px; border: 1px solid #ddd;">Cell</td>';
+            }
+            tableHTML += '</tr>';
+        }
+        tableHTML += '</table>';
+        
+        document.execCommand('insertHTML', false, tableHTML);
+    }
+}
+
+function clearFormatting() {
+    document.execCommand('removeFormat', false, null);
+}
+
+function insertMealPlanVisual() {
+    const select = document.getElementById('visual-meal-plan-select');
+    const planId = select.value;
+    
+    if (!planId) {
+        alert('Please select a meal plan first.');
+        return;
+    }
+    
+    const mealPlans = {{ meal_plans|tojson }};
+    const plan = mealPlans.find(p => p.id == planId);
+    
+    if (plan) {
+        const mealPlanHTML = `
+            <div style="border: 2px solid #007bff; border-radius: 8px; padding: 15px; margin: 15px 0; background: #f8f9fa;">
+                <h3 style="color: #007bff; margin-bottom: 10px;">${plan.name}</h3>
+                <p style="margin-bottom: 10px;">${plan.description}</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
+                    <div><strong>Calories:</strong> ${plan.calories}</div>
+                    <div><strong>Protein:</strong> ${plan.protein}g</div>
+                    <div><strong>Carbs:</strong> ${plan.carbs}g</div>
+                    <div><strong>Fat:</strong> ${plan.fat}g</div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <strong>Weekly Price:</strong> $${plan.price_weekly}
+                </div>
+            </div>
+        `;
+        
+        document.execCommand('insertHTML', false, mealPlanHTML);
+    }
+}
+
+// HTML Editor Functions
+function addHTMLTag(tag) {
+    const textarea = document.getElementById('html-textarea');
+    const startTag = `<${tag}>`;
+    const endTag = `</${tag}>`;
+    
+    if (tag === 'img') {
+        const url = prompt('Enter image URL:');
+        if (url) {
+            textarea.value += `<img src="${url}" alt="Image" style="max-width: 100%; height: auto;">`;
+        }
+    } else if (tag === 'a') {
+        const url = prompt('Enter link URL:');
+        const text = prompt('Enter link text:');
+        if (url && text) {
+            textarea.value += `<a href="${url}">${text}</a>`;
+        }
+    } else {
+        textarea.value += startTag + 'Your text here' + endTag;
+    }
+    
+    textarea.focus();
+}
+
+function clearHTML() {
+    document.getElementById('html-textarea').value = '';
+}
+
+function insertMealPlan() {
+    const select = document.getElementById('meal-plan-select');
+    const planId = select.value;
+    
+    if (!planId) {
+        alert('Please select a meal plan first.');
+        return;
+    }
+    
+    const mealPlans = {{ meal_plans|tojson }};
+    const plan = mealPlans.find(p => p.id == planId);
+    
+    if (plan) {
+        const mealPlanHTML = `
+<div style="border: 2px solid #007bff; border-radius: 8px; padding: 15px; margin: 15px 0; background: #f8f9fa;">
+    <h3 style="color: #007bff; margin-bottom: 10px;">${plan.name}</h3>
+    <p style="margin-bottom: 10px;">${plan.description}</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
+        <div><strong>Calories:</strong> ${plan.calories}</div>
+        <div><strong>Protein:</strong> ${plan.protein}g</div>
+        <div><strong>Carbs:</strong> ${plan.carbs}g</div>
+        <div><strong>Fat:</strong> ${plan.fat}g</div>
+    </div>
+    <div style="margin-top: 10px;">
+        <strong>Weekly Price:</strong> $${plan.price_weekly}
+    </div>
+</div>`;
+        
+        const textarea = document.getElementById('html-textarea');
+        textarea.value += mealPlanHTML;
+        textarea.focus();
+    }
+}
 </script>
 {% endblock %}

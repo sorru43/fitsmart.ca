@@ -1,0 +1,88 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Test HTML Editor - FitSmart Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Test HTML Editor</h1>
+        <a href="{{ url_for('admin.admin_blog') }}" class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Blog
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Simple HTML Editor Test</h2>
+        
+        <!-- Test HTML Editor -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">HTML Editor Test:</label>
+            <textarea id="test-html-editor" class="w-full h-64 p-3 border border-gray-300 rounded-md bg-white text-gray-900" 
+                      placeholder="Type here to test if the HTML editor is working..."></textarea>
+        </div>
+        
+        <!-- Test Buttons -->
+        <div class="mb-4">
+            <button type="button" onclick="testInsert()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2">
+                Test Insert
+            </button>
+            <button type="button" onclick="testFocus()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 mr-2">
+                Test Focus
+            </button>
+            <button type="button" onclick="testClick()" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                Test Click
+            </button>
+        </div>
+        
+        <!-- Debug Info -->
+        <div class="mt-4 p-3 bg-gray-100 rounded">
+            <h3 class="font-semibold">Debug Information:</h3>
+            <div id="debug-info">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editor = document.getElementById('test-html-editor');
+    const debugInfo = document.getElementById('debug-info');
+    
+    // Test functions
+    window.testInsert = function() {
+        editor.value += '\n<!-- Test insert at ' + new Date().toLocaleTimeString() + ' -->';
+        updateDebugInfo();
+    };
+    
+    window.testFocus = function() {
+        editor.focus();
+        updateDebugInfo();
+    };
+    
+    window.testClick = function() {
+        editor.click();
+        updateDebugInfo();
+    };
+    
+    function updateDebugInfo() {
+        debugInfo.innerHTML = `
+            <p><strong>Editor Element:</strong> ${editor ? 'Found' : 'Not found'}</p>
+            <p><strong>Editor Value:</strong> ${editor ? editor.value.length : 0} characters</p>
+            <p><strong>Editor Disabled:</strong> ${editor ? editor.disabled : 'N/A'}</p>
+            <p><strong>Editor ReadOnly:</strong> ${editor ? editor.readOnly : 'N/A'}</p>
+            <p><strong>Editor Style Display:</strong> ${editor ? editor.style.display : 'N/A'}</p>
+            <p><strong>Editor Visible:</strong> ${editor ? (editor.offsetWidth > 0 && editor.offsetHeight > 0) : 'N/A'}</p>
+            <p><strong>Editor Focused:</strong> ${editor ? (document.activeElement === editor) : 'N/A'}</p>
+        `;
+    }
+    
+    // Add event listeners
+    editor.addEventListener('input', updateDebugInfo);
+    editor.addEventListener('click', updateDebugInfo);
+    editor.addEventListener('focus', updateDebugInfo);
+    editor.addEventListener('blur', updateDebugInfo);
+    
+    // Initial debug info
+    updateDebugInfo();
+});
+</script>
+{% endblock %} 

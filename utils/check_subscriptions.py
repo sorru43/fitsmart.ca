@@ -1,5 +1,5 @@
 from app import create_app
-from models import Subscription, SubscriptionStatus, User, MealPlan
+from database.models import Subscription, SubscriptionStatus, User, MealPlan
 from datetime import datetime, date
 
 def check_all_subscriptions():

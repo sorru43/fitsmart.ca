@@ -1,0 +1,109 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Abandoned Cart Campaign{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-white mb-2">
+                    <i class="fas fa-shopping-cart text-primary mr-2"></i>
+                    Abandoned Cart Campaign
+                </h1>
+                <p class="text-gray-400">Recover abandoned shopping carts</p>
+            </div>
+            <a href="{{ url_for('email_campaign.email_campaigns_dashboard') }}" 
+               class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Campaign Form -->
+        <div class="bg-dark-lighter rounded-lg border border-gray-700">
+            <div class="bg-dark p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-paper-plane text-primary mr-2"></i>
+                    Send Abandoned Cart Recovery
+                </h3>
+            </div>
+            <div class="p-6">
+                <form method="POST" class="space-y-6">
+                    <div class="bg-red-900 bg-opacity-20 border border-red-700 rounded-lg p-4">
+                        <h4 class="text-red-300 font-semibold mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>Campaign Info
+                        </h4>
+                        <p class="text-gray-300 text-sm">
+                            This will send abandoned cart recovery emails to users who left items in their cart, including:
+                        </p>
+                        <ul class="text-gray-300 text-sm mt-2 space-y-1">
+                            <li>• Reminder of items left in cart</li>
+                            <li>• Special discount to complete purchase</li>
+                            <li>• Limited time offer</li>
+                            <li>• Direct link to complete checkout</li>
+                        </ul>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                            <i class="fas fa-paper-plane mr-2"></i>Send Recovery Emails
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Abandoned Cart Info -->
+        <div class="bg-dark-lighter rounded-lg border border-gray-700">
+            <div class="bg-dark p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-chart-line text-primary mr-2"></i>
+                    Cart Recovery Statistics
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="p-4 bg-dark rounded-lg border border-gray-700">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-white font-semibold">Recovery Rate</h4>
+                            <span class="bg-blue-500 text-white px-2 py-1 rounded text-xs">15-25%</span>
+                        </div>
+                        <p class="text-gray-400 text-sm">Typical recovery rate for abandoned cart emails</p>
+                    </div>
+
+                    <div class="p-4 bg-dark rounded-lg border border-gray-700">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-white font-semibold">Best Timing</h4>
+                            <span class="bg-green-500 text-white px-2 py-1 rounded text-xs">1-3 hours</span>
+                        </div>
+                        <p class="text-gray-400 text-sm">Optimal time to send recovery emails</p>
+                    </div>
+
+                    <div class="p-4 bg-dark rounded-lg border border-gray-700">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-white font-semibold">Discount Strategy</h4>
+                            <span class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">10-15%</span>
+                        </div>
+                        <p class="text-gray-400 text-sm">Recommended discount to encourage completion</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg">
+                    <h4 class="text-blue-300 font-semibold mb-2">
+                        <i class="fas fa-lightbulb mr-2"></i>Tips for Success
+                    </h4>
+                    <ul class="text-gray-300 text-sm space-y-1">
+                        <li>• Send within 1-3 hours of abandonment</li>
+                        <li>• Include specific items left in cart</li>
+                        <li>• Offer limited-time discount</li>
+                        <li>• Make checkout process easy</li>
+                        <li>• Follow up with reminder emails</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

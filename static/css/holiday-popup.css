@@ -1,0 +1,306 @@
+/* Holiday Popup Styles - Themed for HealthyRizz.in */
+
+/* Overlay */
+.holiday-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.holiday-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Popup Container */
+.holiday-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: linear-gradient(135deg, #151515 0%, #1a1a1a 100%);
+    border: 2px solid #10b981;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(16, 185, 129, 0.3);
+    max-width: 500px;
+    width: 90%;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    overflow: hidden;
+}
+
+.holiday-popup.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Header */
+.holiday-popup-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.holiday-popup-header h3 {
+    color: #ffffff;
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.holiday-popup-header h3 i {
+    font-size: 1.2rem;
+    color: #ffffff;
+}
+
+.holiday-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #ffffff;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.holiday-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* Body */
+.holiday-popup-body {
+    padding: 25px;
+    color: #ffffff;
+}
+
+.holiday-description {
+    color: #e5e7eb;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    font-weight: 400;
+}
+
+.holiday-message {
+    background: rgba(16, 185, 129, 0.1);
+    border-left: 4px solid #10b981;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #d1fae5;
+}
+
+.holiday-info {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.holiday-info p {
+    margin: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    color: #d1d5db;
+}
+
+.holiday-info p i {
+    color: #10b981;
+    width: 16px;
+    text-align: center;
+}
+
+/* Footer */
+.holiday-popup-footer {
+    padding: 0 25px 25px;
+}
+
+.holiday-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.holiday-option-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    color: #ffffff;
+    padding: 15px 20px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.holiday-option-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.holiday-option-btn:hover::before {
+    left: 100%;
+}
+
+.holiday-option-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.holiday-option-btn:active {
+    transform: translateY(0);
+}
+
+/* Success Message */
+.holiday-success {
+    text-align: center;
+    padding: 30px 20px;
+}
+
+.holiday-success i {
+    font-size: 3rem;
+    color: #10b981;
+    margin-bottom: 15px;
+}
+
+.holiday-success p {
+    font-size: 1.1rem;
+    color: #d1fae5;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .holiday-popup {
+        width: 95%;
+        max-width: none;
+        margin: 20px;
+    }
+    
+    .holiday-popup-header {
+        padding: 15px 20px;
+    }
+    
+    .holiday-popup-header h3 {
+        font-size: 1.2rem;
+    }
+    
+    .holiday-popup-body {
+        padding: 20px;
+    }
+    
+    .holiday-popup-footer {
+        padding: 0 20px 20px;
+    }
+    
+    .holiday-option-btn {
+        padding: 12px 16px;
+        font-size: 0.95rem;
+    }
+}
+
+/* Animation Keyframes */
+@keyframes popupSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8) rotate(-5deg);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    }
+}
+
+@keyframes overlayFadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(5px);
+    }
+}
+
+/* Enhanced animations */
+.holiday-overlay.show {
+    animation: overlayFadeIn 0.3s ease;
+}
+
+.holiday-popup.show {
+    animation: popupSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Loading state */
+.holiday-popup.loading {
+    pointer-events: none;
+}
+
+.holiday-popup.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+/* Custom scrollbar for popup content */
+.holiday-popup-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.holiday-popup-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.holiday-popup-body::-webkit-scrollbar-thumb {
+    background: #10b981;
+    border-radius: 3px;
+}
+
+.holiday-popup-body::-webkit-scrollbar-thumb:hover {
+    background: #059669;
+}

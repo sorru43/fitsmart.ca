@@ -6,24 +6,13 @@ import json
 import logging
 from flask import request, jsonify, current_app
 from main import app
-from database.models import db, User
+from database.models import db, User, PushSubscription
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # Initialize push subscription storage
 subscriptions = []
-
-class PushSubscription(db.Model):
-    """Push notification subscription model"""
-    __tablename__ = 'push_subscriptions'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    endpoint = db.Column(db.String(500), nullable=False)
-    p256dh = db.Column(db.String(500), nullable=False)
-    auth = db.Column(db.String(500), nullable=False)
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
 
 # Create push_subscriptions table if it doesn't exist
 with app.app_context():
@@ -182,4 +171,30 @@ def get_vapid_public_key():
             'error': 'VAPID keys not configured. Use generate_vapid_keys.py to create them.'
         }), 500
     
-    return jsonify({'publicKey': vapid_public_key}), 200
+    return jsonify({'success': True, 'publicKey': vapid_public_key}), 200
+
+@app.route('/api/remove-subscription', methods=['POST'])
+def remove_subscription():
+    """Remove a push notification subscription from the database"""
+    try:
+        data = request.json
+        
+        if not data or not data.get('endpoint'):
+            return jsonify({'success': False, 'error': 'Missing endpoint'}), 400
+        
+        endpoint = data.get('endpoint')
+        
+        # Find and remove the subscription
+        subscription = PushSubscription.query.filter_by(endpoint=endpoint).first()
+        
+        if subscription:
+            db.session.delete(subscription)
+            db.session.commit()
+            logger.info(f"Removed push subscription: {endpoint}")
+            return jsonify({'success': True}), 200
+        else:
+            return jsonify({'success': False, 'error': 'Subscription not found'}), 404
+        
+    except Exception as e:
+        logger.error(f"Error removing push subscription: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Meal Plans - HealthyRizz{% endblock %}
+{% block title %}Meal Plans - FitSmart{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/meal-plans.css') }}">
@@ -129,7 +129,7 @@
 
     @media (max-width: 768px) {
         .meal-plan-card {
-            margin: 0 1rem;
+            margin: 0 0.5rem 1rem 0.5rem;
         }
 
         .action-row {
@@ -145,6 +145,8 @@
         .subscribe-btn, .trial-btn {
             width: 100%;
             justify-content: center;
+            min-height: 48px;
+            font-size: 1rem;
         }
 
         .filter-buttons {
@@ -154,8 +156,37 @@
         }
 
         .filter-btn {
-            width: calc(50% - 0.5rem);
+            flex: 1 1 calc(50% - 0.25rem);
+            min-width: 120px;
             text-align: center;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.875rem;
+            min-height: 44px;
+        }
+        
+        .frequency-selector {
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .frequency-option {
+            padding: 0.75rem 1rem;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .meal-plan-card .p-5 {
+            padding: 1rem;
+        }
+        
+        .meal-plan-card h2 {
+            font-size: 1.25rem;
+        }
+        
+        .meal-plan-card p {
+            font-size: 0.875rem;
         }
     }
 
@@ -263,6 +294,21 @@
                     </div>
                     <p class="text-gray-300 mb-5 text-sm sm:text-base">{{ plan.description }}</p>
                     
+                    <!-- Meal Count Information -->
+                    <div class="bg-gray-800 rounded-lg p-3 mb-4">
+                        <div class="flex items-center mb-2">
+                            <div class="nutrition-icon w-6 h-6 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mr-2">
+                                <i class="fas fa-utensils text-primary text-sm"></i>
+                            </div>
+                            <span class="text-gray-200 font-medium">Meal Plan Details</span>
+                        </div>
+                        <div class="text-sm text-gray-300 space-y-1">
+                            <div>• {{ plan.included_meals|length }} meals per day ({{ plan.included_meals|join(', ') }})</div>
+                            <div>• 5 days per week (Monday to Friday)</div>
+                            <div>• Weekly: {{ plan.included_meals|length * 5 }} meals | Monthly: {{ plan.included_meals|length * 20 }} meals</div>
+                        </div>
+                    </div>
+                    
                     <div class="space-y-3 mb-6">
                         <div class="flex items-center">
                             <div class="nutrition-icon w-8 h-8 rounded-full bg-primary bg-opacity-10 flex items-center justify-center mr-3">
@@ -306,7 +352,7 @@
                         {% endif %}
                     </div>
                     
-                    <div class="action-row flex items-center justify-between pt-4 border-t border-gray-800">
+                    <div class="action-row flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-gray-800 meal-plan-actions space-y-4 sm:space-y-0">
                         <div class="price-container">
                             <!-- Simple Frequency Selection -->
                             <div class="frequency-selector mb-3">
@@ -325,14 +371,19 @@
                             <!-- Price Display -->
                             <div class="price-display">
                                 <div class="text-lg font-bold text-primary selected-price" data-weekly="{{ plan.get_price_weekly() }}" data-monthly="{{ plan.get_price_monthly() }}">
-                                    ₹{{ "%.2f"|format(plan.get_price_weekly()) }}
+                                    ${{ "%.2f"|format(plan.get_price_weekly()) }}
                                 </div>
                                 <div class="text-xs text-gray-400 selected-frequency">per week</div>
                             </div>
                         </div>
-                        <div class="flex flex-col gap-2">
+                        <div class="flex flex-col gap-2 w-full sm:w-auto">
+                            <a href="{{ url_for('main.sample_menu', plan_id=plan.id) }}" 
+                               class="inline-flex items-center justify-center px-4 py-3 border border-gray-600 text-sm font-medium rounded-lg text-gray-300 bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-300 w-full sm:w-auto">
+                                <span>Check Sample Menu</span>
+                                <i class="fas fa-utensils ml-2"></i>
+                            </a>
                             <a href="{{ url_for('main.subscribe', plan_id=plan.id, frequency='weekly') }}" 
-                               class="subscribe-btn inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300"
+                               class="subscribe-btn inline-flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300 w-full sm:w-auto"
                                data-plan-id="{{ plan.id }}"
                                data-frequency="weekly">
                                 <span>Subscribe Now</span>
@@ -340,9 +391,9 @@
                             </a>
                             {% if plan.available_for_trial %}
                             <a href="{{ url_for('main.trial_request', plan_id=plan.id) }}" 
-                               class="trial-btn inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition duration-300"
+                               class="trial-btn inline-flex items-center justify-center px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition duration-300 w-full sm:w-auto"
                                data-plan-id="{{ plan.id }}">
-                                <span class="trial-price-text">Try 1-Day Trial (₹{{ "%.2f"|format(plan.get_price_trial()) }})</span>
+                                <span class="trial-price-text">Try 1-Day Trial (${{ "%.2f"|format(plan.get_price_trial()) }})</span>
                                 <i class="fas fa-gift ml-2"></i>
                             </a>
                             {% endif %}
@@ -498,13 +549,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // Update price display and frequency text
                     if (this.value === 'weekly') {
-                        priceDisplay.textContent = `₹${parseFloat(weeklyPrice).toFixed(2)}`;
+                        priceDisplay.textContent = `$${parseFloat(weeklyPrice).toFixed(2)}`;
                         frequencyDisplay.textContent = 'per week';
-                        console.log(`Updated to weekly: ₹${weeklyPrice}`);
+                        console.log(`Updated to weekly: $${weeklyPrice}`);
                     } else {
-                        priceDisplay.textContent = `₹${parseFloat(monthlyPrice).toFixed(2)}`;
+                        priceDisplay.textContent = `$${parseFloat(monthlyPrice).toFixed(2)}`;
                         frequencyDisplay.textContent = 'per month';
-                        console.log(`Updated to monthly: ₹${monthlyPrice}`);
+                        console.log(`Updated to monthly: $${monthlyPrice}`);
                     }
                     
                     // Update subscribe button URL

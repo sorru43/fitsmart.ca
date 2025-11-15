@@ -46,7 +46,7 @@
                             <div class="flex justify-between text-gray-300">
                                 <span>Amount:</span>
                                 <div class="text-sm text-gray-600">
-                                    <span class="font-medium">Price:</span> ₹{{ "%.2f"|format(subscription.price) }}/{{ subscription.frequency.value }}
+                                    <span class="font-medium">Price:</span> ${{ "%.2f"|format(subscription.price) }}/{{ subscription.frequency.value }}
                                 </div>
                             </div>
                             
@@ -62,7 +62,7 @@
                             
                             <div class="flex justify-between text-gray-300">
                                 <span>Amount:</span>
-                                <span class="font-semibold text-white">₹{{ "%.2f"|format(order.amount) }}</span>
+                                <span class="font-semibold text-white">${{ "%.2f"|format(order.amount) }}</span>
                             </div>
                             
                             <div class="text-yellow-500 text-sm">

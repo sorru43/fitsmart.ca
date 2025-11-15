@@ -1,0 +1,1047 @@
+/* Mobile-specific styles for HealthyRizz */
+@media (max-width: 768px) {
+    /* General mobile adjustments */
+    body {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    /* Header and navigation */
+    .navbar {
+        padding: 0.5rem 0;
+        height: 3rem !important;
+        min-height: 3rem !important;
+        max-height: 3rem !important;
+    }
+
+    .navbar-brand {
+        font-size: 1.1rem;
+        height: 2.5rem !important;
+        max-height: 2.5rem !important;
+    }
+
+    /* Mobile header alignment fixes - Exact container sizes */
+    .flex.md\\:hidden.items-center.justify-between.h-10 {
+        align-items: center !important;
+        height: 2.5rem !important;
+        min-height: 2.5rem !important;
+        max-height: 2.5rem !important;
+        padding: 0 1rem !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+
+    /* Target the specific mobile header container */
+    .mobile-header-container {
+        justify-content: space-between !important;
+        align-items: center !important;
+        display: flex !important;
+        width: 100% !important;
+        height: 2.5rem !important;
+        min-height: 2.5rem !important;
+        max-height: 2.5rem !important;
+        padding: 0 1rem !important;
+        box-sizing: border-box !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+
+    /* Logo styling - Exact sizes */
+    .mobile-header-container a {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        height: 1.5rem !important;
+        max-height: 1.5rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 0 0 auto !important;
+        order: 1 !important;
+    }
+
+    .mobile-header-container img {
+        height: 2.5rem !important;
+        max-height: 2.5rem !important;
+        width: auto !important;
+        object-fit: contain !important;
+    }
+
+    /* Burger menu button styling - Exact sizes */
+    .mobile-menu-button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 1.5rem !important;
+        width: 1.5rem !important;
+        min-height: 1.5rem !important;
+        max-height: 1.5rem !important;
+        margin: 0 !important;
+        padding: 0.25rem !important;
+        background: transparent !important;
+        border: none !important;
+        color: white !important;
+        font-size: 0.875rem !important;
+        cursor: pointer !important;
+        z-index: 1001 !important;
+        position: relative !important;
+        border-radius: 0.375rem !important;
+        transition: all 0.2s ease !important;
+        flex-shrink: 0 !important;
+        order: 2 !important;
+    }
+
+
+
+    /* OVERRIDE ANY TAILWIND OR OTHER CSS THAT MIGHT AFFECT ALIGNMENT */
+    .flex.md\\:hidden.items-center.justify-between.h-10 * {
+        box-sizing: border-box !important;
+    }
+
+    /* FORCE CONTAINER TO BE ROW DIRECTION */
+    .flex.md\\:hidden.items-center.justify-between.h-10,
+    .mobile-header-container {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+    }
+
+    /* REMOVE ANY MARGINS OR PADDING THAT MIGHT CAUSE ALIGNMENT ISSUES */
+    .flex.md\\:hidden.items-center.justify-between.h-10 > div {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* FORCE VERTICAL CENTERING */
+    .flex.md\\:hidden.items-center.justify-between.h-10,
+    .flex.md\\:hidden.items-center.justify-between.h-10 > div,
+    .flex.md\\:hidden.items-center.justify-between.h-10 > div > * {
+        align-items: center !important;
+        vertical-align: middle !important;
+    }
+
+
+
+
+
+    /* OVERRIDE ANY POTENTIAL CONFLICTS FROM OTHER CSS FILES */
+    header .flex.md\\:hidden.items-center.justify-between.h-10,
+    header .mobile-header-container {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        height: 2.5rem !important;
+        min-height: 2.5rem !important;
+        max-height: 2.5rem !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+    }
+
+    /* FORCE LOGO AND BURGER TO BE IN SAME ROW */
+    header .flex.md\\:hidden.items-center.justify-between.h-10 > div,
+    header .mobile-header-container > div {
+        display: flex !important;
+        align-items: center !important;
+        height: 1.5rem !important;
+        max-height: 1.5rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* FIX HERO SECTION - CONSISTENT FIXED SIZE */
+    .hero-section {
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
+        position: relative !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* FIX HERO BACKGROUND CONTAINER */
+    .hero-bg {
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
+        position: relative !important;
+    }
+
+    /* FIX HERO SLIDER CONTAINER */
+    .relative.h-screen {
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
+        position: relative !important;
+    }
+
+    /* FIX HERO IMAGE CONTAINER */
+    .relative.h-screen .absolute.inset-0 {
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
+    }
+
+    /* FIX HERO IMAGES */
+    .hero-slide {
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+        object-fit: cover !important;
+        object-position: center !important;
+    }
+
+    /* FIX HERO CONTENT OVERLAY */
+    .relative.h-screen .relative.z-20 {
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-direction: column !important;
+    }
+
+    /* FIX HERO TEXT SIZES FOR MOBILE */
+    .hero-gradient-text {
+        font-size: 2.5rem !important;
+        line-height: 1.2 !important;
+        text-align: center !important;
+    }
+
+    /* FIX HERO SUBTITLE */
+    .relative.h-screen p {
+        font-size: 1.1rem !important;
+        line-height: 1.4 !important;
+        text-align: center !important;
+        max-width: 90% !important;
+        margin: 0 auto !important;
+    }
+
+    /* FIX HERO LOGO POSITIONING */
+    .absolute.top-8.left-1\/2.transform.-translate-x-1\/2.z-20 {
+        top: 2rem !important;
+        height: 4rem !important;
+        width: 4rem !important;
+    }
+
+    .absolute.top-8.left-1\/2.transform.-translate-x-1\/2.z-20 img {
+        height: 4rem !important;
+        width: 4rem !important;
+        object-fit: contain !important;
+    }
+
+    /* PREVENT HERO SECTION FROM CAUSING LAYOUT SHIFTS */
+    .hero-section,
+    .hero-bg,
+    .relative.h-screen {
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* FIX HERO SECTION PADDING */
+    .hero-section .container {
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 1rem !important;
+    }
+
+    /* FIX HERO GRID LAYOUT */
+    .hero-section .grid {
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* FIX HERO TEXT CONTAINER */
+    .hero-section .space-y-6,
+    .hero-section .space-y-8 {
+        text-align: center !important;
+        max-width: 90% !important;
+        margin: 0 auto !important;
+    }
+
+    /* FIX HERO BUTTONS */
+    .hero-section .flex.flex-col.sm\\:flex-row {
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 1rem !important;
+    }
+
+    .hero-section .flex.flex-col.sm\\:flex-row a {
+        min-width: 200px !important;
+        text-align: center !important;
+    }
+
+    /* HIDE FILTERS ON MOBILE - MEAL PLANS PAGE */
+    .filter-buttons {
+        display: none !important;
+    }
+
+    /* HIDE ADVANCED FILTER FORM ON MOBILE */
+    .max-w-4xl.mx-auto.mb-10.animate-fade-in-delay-3 {
+        display: none !important;
+    }
+
+    /* MAKE MEAL PLAN CARDS SHORTER ON MOBILE */
+    .meal-plan-card {
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
+        border-radius: 0.75rem !important;
+        min-height: auto !important;
+        max-height: none !important;
+    }
+
+    /* REDUCE CARD PADDING ON MOBILE */
+    .meal-plan-card .p-5,
+    .meal-plan-card .p-6 {
+        padding: 0.75rem !important;
+    }
+
+    /* MAKE CARD TITLE SMALLER ON MOBILE */
+    .meal-plan-card h2 {
+        font-size: 1.125rem !important;
+        line-height: 1.3 !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* MAKE CARD DESCRIPTION SHORTER ON MOBILE */
+    .meal-plan-card p {
+        font-size: 0.875rem !important;
+        line-height: 1.4 !important;
+        margin-bottom: 0.75rem !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+
+    /* COMPACT MEAL COUNT INFO ON MOBILE */
+    .meal-plan-card .grid.grid-cols-2.gap-4 {
+        gap: 0.5rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+
+    .meal-plan-card .grid.grid-cols-2.gap-4 .bg-gray-800 {
+        padding: 0.5rem !important;
+    }
+
+    .meal-plan-card .grid.grid-cols-2.gap-4 .text-lg {
+        font-size: 1rem !important;
+    }
+
+    .meal-plan-card .grid.grid-cols-2.gap-4 .text-sm {
+        font-size: 0.75rem !important;
+    }
+
+    /* COMPACT NUTRITION INFO ON MOBILE - 2x2 GRID */
+    .meal-plan-card .space-y-3 {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.5rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+
+    .meal-plan-card .space-y-3 .flex.items-center {
+        margin: 0 !important;
+        padding: 0.5rem !important;
+        background: rgba(31, 41, 55, 0.3) !important;
+        border-radius: 0.375rem !important;
+        border: 1px solid rgba(55, 151, 119, 0.1) !important;
+    }
+
+    .meal-plan-card .space-y-3 .nutrition-icon {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        font-size: 0.75rem !important;
+        margin-right: 0.5rem !important;
+    }
+
+    .meal-plan-card .space-y-3 .text-gray-200 {
+        font-size: 0.75rem !important;
+        font-weight: 500 !important;
+    }
+
+    /* COMPACT FREQUENCY SELECTOR ON MOBILE */
+    .frequency-selector {
+        margin-bottom: 0.75rem !important;
+        gap: 0.25rem !important;
+    }
+
+    .frequency-option {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.875rem !important;
+        min-height: 40px !important;
+    }
+
+    /* COMPACT PRICE SECTION ON MOBILE */
+    .price-container {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .price-container .text-2xl {
+        font-size: 1.25rem !important;
+    }
+
+    .price-container .text-sm {
+        font-size: 0.75rem !important;
+    }
+
+    /* COMPACT ACTION BUTTONS ON MOBILE */
+    .action-row {
+        gap: 0.5rem !important;
+        margin-top: 0.75rem !important;
+    }
+
+    .subscribe-btn,
+    .trial-btn {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.875rem !important;
+        min-height: 40px !important;
+    }
+
+    /* COMPACT TAGS ON MOBILE */
+    .meal-plan-card .flex.flex-wrap.gap-2 {
+        gap: 0.25rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+
+    .meal-plan-card .tag {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* REDUCE OVERALL CARD SPACING ON MOBILE */
+    .meal-plan-card > div {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .meal-plan-card > div:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* COMPACT POPULAR BADGE ON MOBILE */
+    .meal-plan-card .bg-primary.text-white.px-3.py-1 {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* REDUCE GRID GAP ON MOBILE */
+    .grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3 {
+        gap: 1rem !important;
+    }
+
+    /* COMPACT PAGE HEADER ON MOBILE */
+    .bg-darker.pt-12.pb-16 {
+        padding-top: 2rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+    .bg-darker.pt-12.pb-16 h1 {
+        font-size: 2rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .bg-darker.pt-12.pb-16 p {
+        font-size: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    /* IMPROVE TERMS AND CONDITIONS STYLING - SIGNUP PAGE */
+    /* HORIZONTAL TERMS AND CONDITIONS WITH CHECKBOX - SIGNUP PAGE */
+    .flex.items-center {
+        display: flex !important;
+        align-items: center !important;
+        margin: 1rem 0 !important;
+        padding: 0.75rem !important;
+        background: rgba(31, 41, 55, 0.3) !important;
+        border: 1px solid rgba(75, 85, 99, 0.3) !important;
+        border-radius: 0.5rem !important;
+        transition: all 0.2s ease !important;
+        position: relative !important;
+    }
+
+    /* FORCE CHECKBOX VISIBILITY */
+    .flex.items-center input[type="checkbox"] {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        width: 1rem !important;
+        height: 1rem !important;
+        border-radius: 0.25rem !important;
+        border: 2px solid #4b5563 !important;
+        background-color: #1f2937 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        margin-right: 0.75rem !important;
+        order: 1 !important;
+    }
+
+    .flex.items-center:hover {
+        background: rgba(31, 41, 55, 0.5) !important;
+        border-color: rgba(16, 185, 129, 0.3) !important;
+    }
+
+    .flex.items-center input#terms {
+        width: 1rem !important;
+        height: 1rem !important;
+        border-radius: 0.25rem !important;
+        border: 2px solid #4b5563 !important;
+        background-color: #1f2937 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        margin-right: 0.75rem !important;
+        order: 1 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+    }
+
+    .flex.items-center input#terms:checked,
+    .flex.items-center input[type="checkbox"]:checked {
+        background-color: #10b981 !important;
+        border-color: #10b981 !important;
+    }
+
+    .flex.items-center input#terms:checked::after,
+    .flex.items-center input[type="checkbox"]:checked::after {
+        content: '✓' !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        color: white !important;
+        font-size: 0.6rem !important;
+        font-weight: bold !important;
+        line-height: 1 !important;
+    }
+
+    .flex.items-center label[for="terms"] {
+        font-size: 0.875rem !important;
+        line-height: 1.4 !important;
+        color: #d1d5db !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+        user-select: none !important;
+        flex: 1 !important;
+        order: 2 !important;
+    }
+
+    .flex.items-center label[for="terms"] a {
+        color: #10b981 !important;
+        text-decoration: none !important;
+        font-weight: 500 !important;
+        transition: color 0.2s ease !important;
+        display: inline !important;
+        margin: 0.25rem 0 !important;
+    }
+
+    .flex.items-center label[for="terms"] a:hover {
+        color: #34d399 !important;
+    }
+
+    /* LOGIN PAGE REMEMBER ME CHECKBOX STYLING */
+    .flex.items-center input#remember_me {
+        width: 1rem !important;
+        height: 1rem !important;
+        border-radius: 0.25rem !important;
+        border: 2px solid #4b5563 !important;
+        background-color: #1f2937 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        margin-right: 0.75rem !important;
+        order: 1 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+    }
+
+    .flex.items-center input#remember_me:checked {
+        background-color: #10b981 !important;
+        border-color: #10b981 !important;
+    }
+
+    .flex.items-center input#remember_me:checked::after {
+        content: '✓' !important;
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        color: white !important;
+        font-size: 0.6rem !important;
+        font-weight: bold !important;
+        line-height: 1 !important;
+    }
+
+    .flex.items-center label[for="remember_me"] {
+        font-size: 0.875rem !important;
+        line-height: 1.4 !important;
+        color: #d1d5db !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+        user-select: none !important;
+        flex: 1 !important;
+        order: 2 !important;
+    }
+
+    /* SIMPLE TERMS AND CONDITIONS - NORMAL SINGLE LINE */
+    .flex.items-center {
+        display: flex !important;
+        align-items: center !important;
+        margin: 1rem 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    /* MOBILE OPTIMIZATION FOR TERMS */
+    @media (max-width: 480px) {
+        .flex.items-center label[for="terms"] {
+            font-size: 0.8rem !important;
+            line-height: 1.5 !important;
+        }
+        
+        .flex.items-center {
+            margin: 0.75rem 0 !important;
+        }
+        
+        .flex.items-center input[type="checkbox"] {
+            width: 1.125rem !important;
+            height: 1.125rem !important;
+        }
+    }
+
+    /* Additional override for any conflicting styles */
+    header .flex.md\\:hidden.items-center.justify-between.h-10 {
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    header .flex.md\\:hidden.items-center.justify-between.h-10 > div:first-child {
+        margin-right: auto !important;
+        flex: 0 0 auto !important;
+    }
+
+    header .flex.md\\:hidden.items-center.justify-between.h-10 > div:last-child {
+        margin-left: auto !important;
+        flex: 0 0 auto !important;
+    }
+
+    /* FORCE EXACT POSITIONING - LOGO LEFT, BURGER RIGHT */
+    .mobile-header-container {
+        position: relative !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        height: 2.5rem !important;
+        min-height: 2.5rem !important;
+        max-height: 2.5rem !important;
+        padding: 0 1rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .mobile-header-container a {
+        position: absolute !important;
+        left: 1rem !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        height: 2.5rem !important;
+        max-height: 2.5rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    .mobile-header-container .mobile-menu-button {
+        position: absolute !important;
+        right: 1rem !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        height: 1.5rem !important;
+        width: 1.5rem !important;
+        min-height: 1.5rem !important;
+        max-height: 1.5rem !important;
+        margin: 0 !important;
+        padding: 0.25rem !important;
+        background: transparent !important;
+        border: none !important;
+        color: white !important;
+        font-size: 0.875rem !important;
+        cursor: pointer !important;
+        z-index: 1001 !important;
+        border-radius: 0.375rem !important;
+        transition: all 0.2s ease !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .navbar-nav {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Mobile menu */
+    .navbar-collapse {
+        background: rgba(0, 0, 0, 0.95);
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+    }
+
+    /* Custom mobile menu styling - override dark theme */
+    .mobile-menu {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100vh !important;
+        background: rgba(0, 0, 0, 0.95) !important;
+        z-index: 1000 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding-top: 4rem !important;
+        border: none !important;
+    }
+
+    .mobile-menu.show {
+        transform: translateX(0) !important;
+    }
+
+    .mobile-menu .nav-link {
+        color: white !important;
+        padding: 1rem 2rem !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        font-size: 1.1rem !important;
+        transition: background-color 0.2s ease !important;
+    }
+
+    .mobile-menu .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: white !important;
+    }
+
+    /* Burger menu positioning */
+    .navbar-toggler {
+        order: 2;
+        margin-left: auto;
+    }
+
+    /* Mobile menu button styling */
+    .mobile-menu-button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 1.2rem;
+        padding: 0.5rem;
+        cursor: pointer;
+        z-index: 1001;
+        position: relative;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.375rem;
+        transition: all 0.2s ease;
+    }
+
+    .mobile-menu-button:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(1.05);
+    }
+
+    .mobile-menu-button:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+    }
+
+    .mobile-menu-button:active {
+        transform: scale(0.95);
+    }
+
+    /* Hide desktop elements on mobile */
+    .d-md-block {
+        display: none !important;
+    }
+
+    .d-md-none {
+        display: block !important;
+    }
+
+    /* Mobile bottom login button */
+    .mobile-login-btn {
+        position: fixed;
+        bottom: 15px;
+        right: 15px;
+        z-index: 1000;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 40px;
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        display: block;
+    }
+
+    .mobile-login-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 12px rgba(102, 126, 234, 0.6);
+    }
+
+    /* Hide footer on mobile, show on desktop */
+    footer {
+        display: none !important;
+    }
+    
+    /* Show footer on desktop */
+    @media (min-width: 768px) {
+        footer {
+            display: block !important;
+        }
+    }
+
+    /* Container adjustments */
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    /* Form improvements */
+    .form-control {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 12px 15px;
+        border-radius: 8px;
+    }
+
+    .form-select {
+        font-size: 16px;
+        padding: 12px 15px;
+        border-radius: 8px;
+    }
+
+    /* Button improvements */
+    .btn {
+        padding: 12px 20px;
+        font-size: 16px;
+        border-radius: 8px;
+        min-height: 48px; /* Touch-friendly */
+    }
+
+    .btn-lg {
+        padding: 15px 25px;
+        font-size: 18px;
+    }
+
+    /* Card improvements */
+    .card {
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    /* Grid adjustments */
+    .row {
+        margin-left: -10px;
+        margin-right: -10px;
+    }
+
+    .col, .col-md-6, .col-lg-4 {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    /* Checkout page specific */
+    .checkout-container {
+        padding: 1rem;
+    }
+
+    .order-summary {
+        position: static;
+        margin-top: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .order-summary-mobile {
+        display: block;
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .order-summary-desktop {
+        display: none;
+    }
+
+    /* Coupon section */
+    .coupon-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .coupon-input {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .coupon-input .form-control {
+        width: 100%;
+    }
+
+    .coupon-input .btn {
+        width: 100%;
+    }
+
+    /* Product cards */
+    .product-card {
+        margin-bottom: 1rem;
+    }
+
+    .product-card .card-img-top {
+        height: 200px;
+        object-fit: cover;
+    }
+
+    /* Alert improvements */
+    .alert {
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Badge improvements */
+    .badge {
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 6px;
+    }
+
+    /* Table improvements */
+    .table {
+        font-size: 14px;
+    }
+
+    .table td, .table th {
+        padding: 0.75rem 0.5rem;
+    }
+
+    /* Modal improvements */
+    .modal-dialog {
+        margin: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    /* Spacing adjustments */
+    .mt-5 {
+        margin-top: 2rem !important;
+    }
+
+    .mb-5 {
+        margin-bottom: 2rem !important;
+    }
+
+    .py-5 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+
+    /* Text adjustments */
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    h3 {
+        font-size: 1.25rem;
+    }
+
+    /* Navigation improvements */
+    .dropdown-menu {
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+    }
+
+    /* Utility classes */
+    .text-center-mobile {
+        text-align: center !important;
+    }
+
+    .d-block-mobile {
+        display: block !important;
+    }
+
+    .w-100-mobile {
+        width: 100% !important;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 576px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+
+    .form-control {
+        padding: 10px 12px;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+} 

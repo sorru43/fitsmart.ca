@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SMTP Email Utility for HealthyRizz
+SMTP Email Utility for FitSmart
 """
 
 import os
@@ -22,9 +22,9 @@ def init_mail(app):
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
     app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
-    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', 'healthyrizz.in@gmail.com')
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', 'info@fitsmart.ca')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', 'qjrl pfep hzds ddbv')
-    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', 'healthyrizz.in@gmail.com')
+    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', 'info@fitsmart.ca')
     
     mail.init_app(app)
 
@@ -114,7 +114,7 @@ def send_trial_request_notification(trial_request):
     """
     
     # Send to admin
-    admin_email = os.getenv('ADMIN_EMAIL', 'healthyrizz.in@gmail.com')
+    admin_email = os.getenv('ADMIN_EMAIL', 'fitsmart.ca@gmail.com')
     return send_email(admin_email, subject, html_content, text_content)
 
 def send_trial_confirmation(trial_request):
@@ -124,7 +124,7 @@ def send_trial_confirmation(trial_request):
     Args:
         trial_request: TrialRequest object
     """
-    subject = "Trial Request Confirmed - HealthyRizz"
+    subject = "Trial Request Confirmed - FitSmart"
     
     html_content = f"""
     <html>
@@ -144,10 +144,10 @@ def send_trial_confirmation(trial_request):
         
         <p>Our team will contact you within 24 hours to confirm your delivery schedule.</p>
         
-        <p>If you have any questions, please call us at +91-98765-43210 or email us at healthyrizz.in@gmail.com</p>
+        <p>If you have any questions, please call us at +91-98765-43210 or email us at fitsmart.ca@gmail.com</p>
         
         <p>Best regards,<br>
-        Team HealthyRizz</p>
+        Team FitSmart</p>
     </body>
     </html>
     """
@@ -167,10 +167,10 @@ def send_trial_confirmation(trial_request):
     
     Our team will contact you within 24 hours to confirm your delivery schedule.
     
-    If you have any questions, please call us at +91-98765-43210 or email us at healthyrizz.in@gmail.com
+    If you have any questions, please call us at +91-98765-43210 or email us at fitsmart.ca@gmail.com
     
     Best regards,
-    Team HealthyRizz
+    Team FitSmart
     """
     
     return send_email(trial_request.email, subject, html_content, text_content)
@@ -182,49 +182,113 @@ def send_order_confirmation(order):
     Args:
         order: Order object
     """
-    subject = f"Order Confirmed - Order #{order.id}"
+    subject = f"📦 Order Confirmed - Order #{order.id}"
+    
+    # Get delivery address, handling different attribute names
+    delivery_address = None
+    if hasattr(order, 'delivery_address') and order.delivery_address:
+        delivery_address = order.delivery_address
+    elif hasattr(order, 'customer_address') and order.customer_address:
+        delivery_address = order.customer_address
+    else:
+        delivery_address = "Address not specified"
     
     html_content = f"""
     <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: #10b981; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }}
+            .content {{ background: #f9f9f9; padding: 20px; border-radius: 8px; }}
+            .success {{ background: #d1fae5; border: 1px solid #10b981; padding: 15px; border-radius: 6px; margin: 15px 0; }}
+            .order-details {{ background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+            .footer {{ text-align: center; color: #666; font-size: 14px; margin-top: 20px; }}
+        </style>
+    </head>
     <body>
-        <h2>Order Confirmed!</h2>
-        <p>Dear {order.customer_name},</p>
+        <div class="header">
+            <h1>📦 Order Confirmed!</h1>
+            <p>Order #{order.id} - {order.created_at.strftime('%d/%m/%Y %I:%M %p')}</p>
+        </div>
         
-        <p>Thank you for your order. Your order has been confirmed and is being processed.</p>
+        <div class="content">
+            <div class="success">
+                <h2>✅ Order Processing Started</h2>
+                <p>Dear {order.customer_name},</p>
+                <p>Thank you for your order! Your order has been confirmed and is now being processed. We're excited to prepare your healthy meals!</p>
+            </div>
+            
+            <div class="order-details">
+                <h3>📋 Order Details</h3>
+                <p><strong>Order ID:</strong> #{order.id}</p>
+                <p><strong>Order Date:</strong> {order.created_at.strftime('%d/%m/%Y %I:%M %p')}</p>
+                <p><strong>Total Amount:</strong> ₹{order.total_amount}</p>
+                <p><strong>Delivery Address:</strong> {delivery_address}</p>
+                <p><strong>Status:</strong> Processing</p>
+            </div>
+            
+            <div class="order-details">
+                <h3>🚀 What's Next?</h3>
+                <ul>
+                    <li>We'll start preparing your meals within 24 hours</li>
+                    <li>You'll receive a delivery notification with your delivery time</li>
+                    <li>You can track your order status in your account dashboard</li>
+                    <li>Our team will contact you if any clarification is needed</li>
+                </ul>
+            </div>
+            
+            <div class="order-details">
+                <h3>📞 Need Help?</h3>
+                <p><strong>Email:</strong> <a href="mailto:fitsmart.ca@gmail.com">fitsmart.ca@gmail.com</a></p>
+                <p><strong>Phone:</strong> <a href="tel:+919876543210">+91-98765-43210</a></p>
+                <p><strong>Live Chat:</strong> Available on our website</p>
+            </div>
+            
+            <p>We will notify you when your order is ready for delivery.</p>
+            
+            <p>Best regards,<br>Team FitSmart</p>
+        </div>
         
-        <h3>Order Details:</h3>
-        <ul>
-            <li><strong>Order ID:</strong> #{order.id}</li>
-            <li><strong>Order Date:</strong> {order.created_at.strftime('%Y-%m-%d %H:%M')}</li>
-            <li><strong>Total Amount:</strong> ₹{order.total_amount}</li>
-            <li><strong>Delivery Address:</strong> {order.delivery_address}</li>
-        </ul>
-        
-        <p>We will notify you when your order is ready for delivery.</p>
-        
-        <p>Best regards,<br>
-        Team HealthyRizz</p>
+        <div class="footer">
+            <p>This is an automated email from FitSmart.</p>
+            <p>&copy; {datetime.now().year} FitSmart. All rights reserved.</p>
+        </div>
     </body>
     </html>
     """
     
     text_content = f"""
-    Order Confirmed!
-    
-    Dear {order.customer_name},
-    
-    Thank you for your order. Your order has been confirmed and is being processed.
-    
-    Order Details:
-    - Order ID: #{order.id}
-    - Order Date: {order.created_at.strftime('%Y-%m-%d %H:%M')}
-    - Total Amount: ₹{order.total_amount}
-    - Delivery Address: {order.delivery_address}
-    
-    We will notify you when your order is ready for delivery.
-    
-    Best regards,
-    Team HealthyRizz
+Order Confirmed!
+
+Dear {order.customer_name},
+
+Thank you for your order! Your order has been confirmed and is now being processed. We're excited to prepare your healthy meals!
+
+Order Details:
+- Order ID: #{order.id}
+- Order Date: {order.created_at.strftime('%d/%m/%Y %I:%M %p')}
+- Total Amount: ₹{order.total_amount}
+- Delivery Address: {delivery_address}
+- Status: Processing
+
+What's Next?
+- We'll start preparing your meals within 24 hours
+- You'll receive a delivery notification with your delivery time
+- You can track your order status in your account dashboard
+- Our team will contact you if any clarification is needed
+
+Need Help?
+- Email: support@fitsmart.ca
+- Phone: +91-98765-43210
+- Live Chat: Available on our website
+
+We will notify you when your order is ready for delivery.
+
+Best regards,
+Team FitSmart
+
+This is an automated email from FitSmart.
+© {datetime.now().year} FitSmart. All rights reserved.
     """
     
     return send_email(order.customer_email, subject, html_content, text_content)
@@ -236,45 +300,111 @@ def send_delivery_notification(order):
     Args:
         order: Order object
     """
-    subject = f"Your order is out for delivery - Order #{order.id}"
+    subject = f"🚚 Your order is out for delivery - Order #{order.id}"
+    
+    # Get delivery address, handling different attribute names
+    delivery_address = None
+    if hasattr(order, 'delivery_address') and order.delivery_address:
+        delivery_address = order.delivery_address
+    elif hasattr(order, 'customer_address') and order.customer_address:
+        delivery_address = order.customer_address
+    else:
+        delivery_address = "Address not specified"
     
     html_content = f"""
     <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: #10b981; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }}
+            .content {{ background: #f9f9f9; padding: 20px; border-radius: 8px; }}
+            .delivery {{ background: #d1fae5; border: 1px solid #10b981; padding: 15px; border-radius: 6px; margin: 15px 0; }}
+            .delivery-details {{ background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+            .footer {{ text-align: center; color: #666; font-size: 14px; margin-top: 20px; }}
+        </style>
+    </head>
     <body>
-        <h2>Your order is on the way!</h2>
-        <p>Dear {order.customer_name},</p>
+        <div class="header">
+            <h1>🚚 Your Order is on the Way!</h1>
+            <p>Order #{order.id} - Out for Delivery</p>
+        </div>
         
-        <p>Great news! Your order #{order.id} is out for delivery and will reach you soon.</p>
+        <div class="content">
+            <div class="delivery">
+                <h2>🎉 Delivery Started!</h2>
+                <p>Dear {order.customer_name},</p>
+                <p>Great news! Your order #{order.id} is out for delivery and will reach you soon. Your healthy meals are on their way!</p>
+            </div>
+            
+            <div class="delivery-details">
+                <h3>📦 Delivery Information</h3>
+                <p><strong>Expected Delivery:</strong> Today between 6:00 PM - 8:00 PM</p>
+                <p><strong>Delivery Address:</strong> {delivery_address}</p>
+                <p><strong>Order ID:</strong> #{order.id}</p>
+                <p><strong>Status:</strong> Out for Delivery</p>
+            </div>
+            
+            <div class="delivery-details">
+                <h3>📋 Important Reminders</h3>
+                <ul>
+                    <li>Please ensure someone is available to receive the delivery</li>
+                    <li>Keep your phone handy for delivery updates</li>
+                    <li>Check the delivery address is correct</li>
+                    <li>Have your order ID ready: #{order.id}</li>
+                </ul>
+            </div>
+            
+            <div class="delivery-details">
+                <h3>📞 Need Help?</h3>
+                <p><strong>Email:</strong> <a href="mailto:fitsmart.ca@gmail.com">fitsmart.ca@gmail.com</a></p>
+                <p><strong>Phone:</strong> <a href="tel:+919876543210">+91-98765-43210</a></p>
+                <p><strong>Live Chat:</strong> Available on our website</p>
+            </div>
+            
+            <p>Thank you for choosing FitSmart!</p>
+            
+            <p>Best regards,<br>Team FitSmart</p>
+        </div>
         
-        <p><strong>Expected Delivery:</strong> Today between 6:00 PM - 8:00 PM</p>
-        <p><strong>Delivery Address:</strong> {order.delivery_address}</p>
-        
-        <p>Please ensure someone is available to receive the delivery.</p>
-        
-        <p>If you have any questions, please call us at +91-98765-43210</p>
-        
-        <p>Best regards,<br>
-        Team HealthyRizz</p>
+        <div class="footer">
+            <p>This is an automated email from FitSmart.</p>
+            <p>&copy; {datetime.now().year} FitSmart. All rights reserved.</p>
+        </div>
     </body>
     </html>
     """
     
     text_content = f"""
-    Your order is on the way!
-    
-    Dear {order.customer_name},
-    
-    Great news! Your order #{order.id} is out for delivery and will reach you soon.
-    
-    Expected Delivery: Today between 6:00 PM - 8:00 PM
-    Delivery Address: {order.delivery_address}
-    
-    Please ensure someone is available to receive the delivery.
-    
-    If you have any questions, please call us at +91-98765-43210
-    
-    Best regards,
-    Team HealthyRizz
+Your order is on the way!
+
+Dear {order.customer_name},
+
+Great news! Your order #{order.id} is out for delivery and will reach you soon. Your healthy meals are on their way!
+
+Delivery Information:
+- Expected Delivery: Today between 6:00 PM - 8:00 PM
+- Delivery Address: {delivery_address}
+- Order ID: #{order.id}
+- Status: Out for Delivery
+
+Important Reminders:
+- Please ensure someone is available to receive the delivery
+- Keep your phone handy for delivery updates
+- Check the delivery address is correct
+- Have your order ID ready: #{order.id}
+
+Need Help?
+- Email: fitsmart.ca@gmail.com
+- Phone: +91-98765-43210
+- Live Chat: Available on our website
+
+Thank you for choosing FitSmart!
+
+Best regards,
+Team FitSmart
+
+This is an automated email from FitSmart.
+© {datetime.now().year} FitSmart. All rights reserved.
     """
     
     return send_email(order.customer_email, subject, html_content, text_content)
@@ -287,7 +417,7 @@ def send_water_reminder(user_email, user_name):
         user_email (str): User's email address
         user_name (str): User's name
     """
-    subject = "Time to hydrate! 💧 - HealthyRizz"
+    subject = "Time to hydrate! 💧 - FitSmart"
     
     html_content = f"""
     <html>
@@ -308,7 +438,7 @@ def send_water_reminder(user_email, user_name):
         <p>Remember to drink at least 8 glasses of water daily!</p>
         
         <p>Best regards,<br>
-        Team HealthyRizz</p>
+        Team FitSmart</p>
     </body>
     </html>
     """
@@ -329,7 +459,7 @@ def send_water_reminder(user_email, user_name):
     Remember to drink at least 8 glasses of water daily!
     
     Best regards,
-    Team HealthyRizz
+    Team FitSmart
     """
     
     return send_email(user_email, subject, html_content, text_content)
@@ -340,7 +470,7 @@ def test_smtp_connection():
         # Get SMTP settings
         smtp_server = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
         smtp_port = int(os.getenv('MAIL_PORT', 587))
-        username = os.getenv('MAIL_USERNAME', 'healthyrizz.in@gmail.com')
+        username = os.getenv('MAIL_USERNAME', 'fitsmart.ca@gmail.com')
         password = os.getenv('MAIL_PASSWORD', 'qjrl pfep hzds ddbv')
         
         # Test connection

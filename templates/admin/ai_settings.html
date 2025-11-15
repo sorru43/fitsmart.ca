@@ -1,0 +1,289 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}AI Posting Settings - FitSmart Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-white">⚙️ AI Posting Settings</h1>
+        <div class="flex space-x-4">
+            <a href="{{ url_for('admin.admin_ai_posting') }}" class="btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to AI Dashboard
+            </a>
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="btn-secondary">
+                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- General Settings -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-cog mr-2 text-blue-600"></i>General Settings
+            </h2>
+            
+            <form method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="auto_posting_enabled" 
+                               {% if settings.auto_posting_enabled %}checked{% endif %}
+                               class="form-checkbox h-4 w-4 text-blue-600">
+                        <span class="ml-2 text-sm font-medium text-gray-700">Enable Automatic Posting</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1">Allow AI to automatically generate and post content</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Posting Frequency</label>
+                    <select name="posting_frequency" class="form-input w-full">
+                        <option value="daily" {% if settings.posting_frequency == 'daily' %}selected{% endif %}>Daily</option>
+                        <option value="weekly" {% if settings.posting_frequency == 'weekly' %}selected{% endif %}>Weekly</option>
+                        <option value="biweekly" {% if settings.posting_frequency == 'biweekly' %}selected{% endif %}>Bi-weekly</option>
+                        <option value="monthly" {% if settings.posting_frequency == 'monthly' %}selected{% endif %}>Monthly</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">How often should AI generate content</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Content Types</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="content_types" value="blog_post"
+                                   {% if 'blog_post' in settings.content_types %}checked{% endif %}
+                                   class="form-checkbox h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-sm text-gray-700">Blog Posts</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="content_types" value="meal_plan_showcase"
+                                   {% if 'meal_plan_showcase' in settings.content_types %}checked{% endif %}
+                                   class="form-checkbox h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-sm text-gray-700">Meal Plan Showcases</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="content_types" value="nutrition_tips"
+                                   {% if 'nutrition_tips' in settings.content_types %}checked{% endif %}
+                                   class="form-checkbox h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-sm text-gray-700">Nutrition Tips</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="content_types" value="lifestyle_blog"
+                                   {% if 'lifestyle_blog' in settings.content_types %}checked{% endif %}
+                                   class="form-checkbox h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-sm text-gray-700">Lifestyle Blogs</span>
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Types of content AI should generate</p>
+                </div>
+                
+                <button type="submit" class="btn-primary w-full">
+                    <i class="fas fa-save mr-2"></i>Save Settings
+                </button>
+            </form>
+        </div>
+
+        <!-- AI Configuration -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-robot mr-2 text-green-600"></i>AI Configuration
+            </h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="font-semibold text-gray-700 mb-3">API Configuration</h3>
+                    <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">DeepSeek API Key</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Primary</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">Perplexity API Key</span>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">Backup</span>
+                        </div>
+                        <p class="text-xs text-gray-500">DeepSeek is preferred for better performance. Perplexity is used as backup.</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-gray-700 mb-3">Brand Understanding</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Healthy meal delivery focus</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Premium positioning</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Indian market expertise</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Health-conscious audience</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            <span>Convenience and quality focus</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-gray-700 mb-3">Content Guidelines</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start">
+                            <i class="fas fa-info text-blue-500 mr-2 mt-1"></i>
+                            <span>SEO-optimized content with relevant keywords</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-info text-blue-500 mr-2 mt-1"></i>
+                            <span>Engaging and informative writing style</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-info text-blue-500 mr-2 mt-1"></i>
+                            <span>Brand-aligned messaging and tone</span>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-info text-blue-500 mr-2 mt-1"></i>
+                            <span>Call-to-action integration</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Settings -->
+    <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-sliders-h mr-2 text-purple-600"></i>Advanced Settings
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-3">Content Quality</h3>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" checked disabled class="form-checkbox h-4 w-4 text-blue-600">
+                        <span class="ml-2 text-sm text-gray-700">SEO Optimization</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" checked disabled class="form-checkbox h-4 w-4 text-blue-600">
+                        <span class="ml-2 text-sm text-gray-700">Brand Alignment</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" checked disabled class="form-checkbox h-4 w-4 text-blue-600">
+                        <span class="ml-2 text-sm text-gray-700">Engagement Focus</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-3">Posting Schedule</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span>Best Times:</span>
+                        <span class="text-gray-600">9:00 AM, 12:00 PM, 6:00 PM</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Timezone:</span>
+                        <span class="text-gray-600">IST (UTC+5:30)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Auto-publish:</span>
+                        <span class="text-green-600">Enabled</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-3">Monitoring</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span>Performance:</span>
+                        <span class="text-green-600">Good</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Last Post:</span>
+                        <span class="text-gray-600">Today</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Success Rate:</span>
+                        <span class="text-green-600">95%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Status -->
+    <div class="mt-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
+        <h2 class="text-xl font-bold mb-4">
+            <i class="fas fa-wifi mr-2"></i>API Status
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">Perplexity AI</div>
+                <div class="flex items-center justify-center">
+                    <div class="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
+                    <span class="text-sm">Connected</span>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">Response Time</div>
+                <div class="text-sm opacity-75">~2.5 seconds</div>
+            </div>
+            
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">Uptime</div>
+                <div class="text-sm opacity-75">99.9%</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form submission handling
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+        submitBtn.disabled = true;
+        
+        // Re-enable after a short delay (simulating save)
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 2000);
+    });
+    
+    // Auto-posting toggle effect
+    const autoPostingCheckbox = document.querySelector('input[name="auto_posting_enabled"]');
+    const frequencySelect = document.querySelector('select[name="posting_frequency"]');
+    
+    autoPostingCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            frequencySelect.disabled = false;
+            frequencySelect.classList.remove('opacity-50');
+        } else {
+            frequencySelect.disabled = true;
+            frequencySelect.classList.add('opacity-50');
+        }
+    });
+    
+    // Trigger initial state
+    autoPostingCheckbox.dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %} 

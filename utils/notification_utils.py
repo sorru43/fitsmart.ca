@@ -19,7 +19,7 @@ def send_water_reminder(reminder):
             
         # Calculate progress towards daily goal
         current_time = datetime.now(pytz.UTC)
-        local_time = current_time.astimezone(pytz.timezone('America/Toronto'))
+        local_time = current_time.astimezone(pytz.timezone('Asia/Kolkata'))
         
         # Create email content
         subject = "Time to Hydrate! 💧"
@@ -50,6 +50,7 @@ def send_water_reminder(reminder):
         # Send email
         success = send_email(
             to_email=user.email,
+            from_email="healthyrizz.in@gmail.com",
             subject=subject,
             html_content=html_content
         )
@@ -71,7 +72,7 @@ def check_and_send_water_reminders():
     """
     try:
         current_time = datetime.now(pytz.UTC)
-        local_time = current_time.astimezone(pytz.timezone('America/Toronto'))
+        local_time = current_time.astimezone(pytz.timezone('Asia/Kolkata'))
         current_time_of_day = local_time.time()
         
         # Get all active reminders

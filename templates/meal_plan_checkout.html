@@ -64,7 +64,6 @@
                             <h2 class="text-xl font-bold mb-4 text-white">Delivery Information</h2>
                             
                             <form id="payment-form" action="{{ url_for('main.process_meal_plan_checkout', plan_id=plan.id) }}" method="POST" class="space-y-4"
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                   data-weekly-price="{{ plan.price_weekly }}"
                                   data-monthly-price="{{ plan.price_monthly }}"
                                   data-plan-id="{{ plan.id }}">
@@ -192,18 +191,18 @@
                             
                             <div class="flex justify-between">
                                 <span class="text-gray-300">Subtotal:</span>
-                                <span class="text-white" id="summary-subtotal">₹{{ "%.2f"|format(price) }}</span>
+                                <span class="text-white" id="summary-subtotal">${{ "%.2f"|format(price) }}</span>
                             </div>
                             
                             <div class="flex justify-between">
                                 <span class="text-gray-300">Discount:</span>
-                                <span class="text-white" id="summary-discount">₹0.00</span>
+                                <span class="text-white" id="summary-discount">$0.00</span>
                             </div>
                             
                             <div class="border-t border-gray-700 pt-4">
                                 <div class="flex justify-between">
                                     <span class="text-lg font-bold text-white">Total:</span>
-                                    <span class="text-lg font-bold text-white" id="summary-total">₹{{ "%.2f"|format(price) }}</span>
+                                    <span class="text-lg font-bold text-white" id="summary-total">${{ "%.2f"|format(price) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -248,8 +247,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Update price based on frequency
             const price = this.value === 'monthly' ? {{ plan.price_monthly }} : {{ plan.price_weekly }};
-            summarySubtotal.textContent = '₹' + price.toFixed(2);
-            summaryTotal.textContent = '₹' + price.toFixed(2);
+            summarySubtotal.textContent = '$' + price.toFixed(2);
+            summaryTotal.textContent = '$' + price.toFixed(2);
             
             // Update hidden input
             document.getElementById('total-price-input').value = price;

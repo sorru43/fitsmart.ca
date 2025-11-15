@@ -5,7 +5,8 @@ This script creates all necessary tables and updates the schema
 """
 
 from app import create_app
-from models import db
+from extensions import db
+from database.models import User, MealPlan, FAQ, HeroSlide, SiteSetting
 import sqlite3
 import os
 
@@ -90,7 +91,7 @@ def create_sample_data():
     app = create_app()
     
     with app.app_context():
-        from models import User, MealPlan, FAQ, HeroSlide, SiteSetting
+        from database.models import User, MealPlan, FAQ, HeroSlide, SiteSetting
         
         print("🎯 Creating sample data...")
         

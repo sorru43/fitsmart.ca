@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed - FitSmart</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px 20px;
+            background-color: #f9f9f9;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .error-box {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .order-details {
+            background-color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .help-section {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .retry-button {
+            background-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Payment Failed</h1>
+            <p>We couldn't process your payment</p>
+        </div>
+        
+        <div class="content">
+            <div class="error-box">
+                <h2>❌ Payment Unsuccessful</h2>
+                <p>We're sorry, but we couldn't process your payment at this time.</p>
+            </div>
+            
+            <p>Hello {{ order.customer_name }},</p>
+            
+            <p>We attempted to process your payment for order #{{ order.id }}, but it was unsuccessful. Don't worry - this happens sometimes and is usually easy to resolve.</p>
+            
+            <div class="order-details">
+                <h3>📋 Order Details</h3>
+                <p><strong>Order Number:</strong> #{{ order.id }}</p>
+                <p><strong>Order Date:</strong> {{ order.created_at.strftime('%d/%m/%Y %I:%M %p') }}</p>
+                <p><strong>Amount:</strong> ${{ order.total_amount }}</p>
+                
+                {% if order.plan %}
+                <p><strong>Meal Plan:</strong> {{ order.plan.name }}</p>
+                <p><strong>Frequency:</strong> {{ order.frequency|title if order.frequency else 'One-time' }}</p>
+                {% endif %}
+                
+                <p><strong>Delivery Address:</strong><br>
+                {{ order.customer_address }}<br>
+                {{ order.customer_city }}, {{ order.customer_state }} - {{ order.customer_pincode }}</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>🔧 Common Reasons for Payment Failure</h3>
+                <ul>
+                    <li><strong>Insufficient funds</strong> in your account</li>
+                    <li><strong>Card expired</strong> or incorrect card details</li>
+                    <li><strong>Bank declined</strong> the transaction for security reasons</li>
+                    <li><strong>Network issues</strong> during payment processing</li>
+                    <li><strong>3D Secure authentication</strong> was not completed</li>
+                </ul>
+            </div>
+            
+            <h3>🔄 How to Retry Payment</h3>
+            <p>You can easily retry your payment by following these steps:</p>
+            <ol>
+                <li>Log into your FitSmart account</li>
+                <li>Go to your order history</li>
+                <li>Find order #{{ order.id }}</li>
+                <li>Click "Retry Payment"</li>
+                <li>Complete the payment process</li>
+            </ol>
+            
+            <p style="text-align: center;">
+                <a href="{{ url_for('profile', _external=True) }}" class="button">View Order & Retry Payment</a>
+            </p>
+            
+            <h3>💳 Alternative Payment Methods</h3>
+            <p>If you continue to have issues, you can try:</p>
+            <ul>
+                <li>Using a different payment method (UPI, Net Banking, etc.)</li>
+                <li>Contacting your bank to ensure the card is active</li>
+                <li>Checking if your bank has any restrictions on online payments</li>
+            </ul>
+            
+            <h3>📞 Need Help?</h3>
+            <p>Our customer support team is here to help you resolve any payment issues:</p>
+            <ul>
+                <li>📧 Email: info@fitsmart.ca</li>
+                <li>📞 Phone: +1 (647) 573-2429</li>
+                <li>💬 Live Chat: Available on our website</li>
+            </ul>
+            
+            <p><strong>Important:</strong> Your order will be held for 24 hours. If payment is not completed within this time, the order will be automatically cancelled.</p>
+            
+            <p>We apologize for any inconvenience and look forward to serving you once the payment is completed.</p>
+            
+            <p>Best regards,<br>
+            The FitSmart Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>This email was sent to {{ order.customer_email }}</p>
+            <p>Order ID: #{{ order.id }} | Payment ID: {{ order.payment_id if order.payment_id else 'N/A' }}</p>
+            <p>&copy; {{ now.year }} FitSmart. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Order Notification - FitSmart Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #28a745;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px 20px;
+            background-color: #f9f9f9;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .order-details {
+            background-color: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .customer-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .delivery-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .priority-high {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .priority-normal {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🆕 New Order Received!</h1>
+            <p>Order #{{ order.id }} - {{ order.created_at.strftime('%d/%m/%Y %I:%M %p') }}</p>
+        </div>
+        
+        <div class="content">
+            <p>Hello Admin,</p>
+            
+            <p>A new order has been placed on FitSmart. Please review the details below and take necessary action.</p>
+            
+            <div class="order-details">
+                <h2>📋 Order Information</h2>
+                <p><strong>Order ID:</strong> #{{ order.id }}</p>
+                <p><strong>Order Date:</strong> {{ order.created_at.strftime('%d/%m/%Y %I:%M %p') }}</p>
+                <p><strong>Order Status:</strong> <span style="color: #007bff; font-weight: bold;">{{ order.status|title if order.status else 'Pending' }}</span></p>
+                <p><strong>Payment Status:</strong> <span style="color: #28a745; font-weight: bold;">{{ order.payment_status|title if order.payment_status else 'Pending' }}</span></p>
+                <p><strong>Payment Method:</strong> {{ order.payment_method|title if order.payment_method else 'Online Payment' }}</p>
+                
+                {% if order.plan %}
+                <p><strong>Meal Plan:</strong> {{ order.plan.name }}</p>
+                <p><strong>Frequency:</strong> {{ order.frequency|title if order.frequency else 'One-time' }}</p>
+                {% endif %}
+                
+                <p class="amount">Total Amount: ${{ order.total_amount }}</p>
+            </div>
+            
+            <div class="customer-info">
+                <h3>👤 Customer Information</h3>
+                <p><strong>Name:</strong> {{ order.customer_name }}</p>
+                <p><strong>Email:</strong> {{ order.customer_email }}</p>
+                <p><strong>Phone:</strong> {{ order.customer_phone }}</p>
+                <p><strong>Customer ID:</strong> {{ order.user_id if order.user_id else 'Guest User' }}</p>
+            </div>
+            
+            <div class="delivery-info">
+                <h3>🚚 Delivery Information</h3>
+                <p><strong>Delivery Address:</strong><br>
+                {{ order.customer_address }}<br>
+                {{ order.customer_city }}, {{ order.customer_state }} - {{ order.customer_pincode }}</p>
+                
+                {% if order.delivery_instructions %}
+                <p><strong>Delivery Instructions:</strong><br>
+                {{ order.delivery_instructions }}</p>
+                {% endif %}
+                
+                {% if order.preferred_delivery_time %}
+                <p><strong>Preferred Delivery Time:</strong> {{ order.preferred_delivery_time }}</p>
+                {% endif %}
+            </div>
+            
+            {% if order.coupon_code %}
+            <div class="order-details">
+                <h3>🎫 Coupon Applied</h3>
+                <p><strong>Coupon Code:</strong> {{ order.coupon_code }}</p>
+                <p><strong>Discount Amount:</strong> ${{ order.discount_amount if order.discount_amount else 'N/A' }}</p>
+            </div>
+            {% endif %}
+            
+            <h3>📊 Order Summary</h3>
+            <ul>
+                <li><strong>Subtotal:</strong> ${{ order.amount if order.amount else order.total_amount }}</li>
+                {% if order.hst_amount or order.gst_amount %}
+                <li><strong>HST (13%):</strong> ${{ order.hst_amount if order.hst_amount else order.gst_amount }}</li>
+                {% endif %}
+                {% if order.discount_amount %}
+                <li><strong>Discount:</strong> -${{ order.discount_amount }}</li>
+                {% endif %}
+                <li><strong>Total:</strong> ${{ order.total_amount }}</li>
+            </ul>
+            
+            <h3>⚡ Required Actions</h3>
+            <ol>
+                <li><strong>Review Order:</strong> Check if all details are correct</li>
+                <li><strong>Verify Payment:</strong> Confirm payment has been received</li>
+                <li><strong>Schedule Delivery:</strong> Arrange delivery based on customer preferences</li>
+                <li><strong>Update Status:</strong> Mark order as confirmed in admin panel</li>
+            </ol>
+            
+            <p style="text-align: center;">
+                <a href="{{ url_for('admin.admin_view_order', id=order.id, _external=True) }}" class="button">View Order in Admin Panel</a>
+            </p>
+            
+            <h3>📞 Customer Contact</h3>
+            <p>If you need to contact the customer:</p>
+            <ul>
+                <li>📧 Email: {{ order.customer_email }}</li>
+                <li>📞 Phone: {{ order.customer_phone }}</li>
+            </ul>
+            
+            <p><strong>Note:</strong> This is an automated notification. Please log into the admin panel to take action on this order.</p>
+            
+            <p>Best regards,<br>
+            FitSmart System</p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated notification from the FitSmart system.</p>
+            <p>Order ID: #{{ order.id }} | Generated: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+            <p>&copy; {{ now.year }} FitSmart. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html> 

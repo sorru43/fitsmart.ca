@@ -3,7 +3,7 @@
     <!-- Blog Posts Only -->
     {% for post in blog_posts %}
     <url>
-        <loc>https://healthyrizz.in/amp/blog/{{ post.slug }}</loc>
+        <loc>https://fitsmart.ca/amp/blog/{{ post.slug }}</loc>
         <lastmod>{{ post.updated_at.strftime('%Y-%m-%d') if post.updated_at else post.created_at.strftime('%Y-%m-%d') }}</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>

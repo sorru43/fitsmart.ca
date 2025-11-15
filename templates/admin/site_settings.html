@@ -1,6 +1,6 @@
 {% extends 'admin/base_admin.html' %}
 
-{% block title %}Site Settings - HealthyRizz{% endblock %}
+{% block title %}Site Settings - FitSmart{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -23,7 +23,7 @@
                         <div>
                             <label for="company_name" class="block text-sm font-medium text-white mb-2">Company Name</label>
                             <input type="text" id="company_name" name="company_name" 
-                                   value="{{ site_settings.company_name if site_settings else 'HealthyRizz' }}"
+                                   value="{{ site_settings.company_name if site_settings else 'FitSmart' }}"
                                    class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
                         </div>
 
@@ -62,14 +62,14 @@
                         <div>
                             <label for="contact_email" class="block text-sm font-medium text-white mb-2">Contact Email</label>
                             <input type="email" id="contact_email" name="contact_email" 
-                                   value="{{ site_settings.get('contact_email', 'info@healthyrizz.in') }}"
+                                   value="{{ site_settings.get('contact_email', 'FitSmart.in@gmail.com') }}"
                                    class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
                         </div>
 
                         <div>
                             <label for="contact_phone" class="block text-sm font-medium text-white mb-2">Contact Phone</label>
                             <input type="tel" id="contact_phone" name="contact_phone" 
-                                   value="{{ site_settings.contact_phone if site_settings else '+1 (437) 428-3393' }}"
+                                   value="{{ site_settings.contact_phone if site_settings else '+1 (647) 573-2429' }}"
                                    class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
                         </div>
 
@@ -109,14 +109,14 @@
                         <div>
                             <label for="facebook_url" class="block text-sm font-medium text-white mb-2">Facebook URL</label>
                             <input type="text" id="facebook_url" name="facebook_url" 
-                                   value="{{ site_settings.get('facebook_url', 'https://facebook.com/healthyrizz.in') }}"
+                                   value="{{ site_settings.get('facebook_url', 'https://facebook.com/FitSmart.in') }}"
                                    class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white">
                         </div>
 
                         <div>
                             <label for="instagram_url" class="block text-sm font-medium text-white mb-2">Instagram URL</label>
                             <input type="text" id="instagram_url" name="instagram_url" 
-                                   value="{{ site_settings.instagram_url if site_settings else 'https://instagram.com/healthyrizz.in' }}"
+                                   value="{{ site_settings.instagram_url if site_settings else 'https://instagram.com/FitSmart.in' }}"
                                    placeholder="https://instagram.com/yourpage"
                                    class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
                         </div>
@@ -129,12 +129,129 @@
                                     <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gray-800 flex items-center justify-center">
                                         <i class="fas fa-image text-2xl text-gray-500"></i>
                                     </div>
-                                    <h3 class="text-white font-semibold" id="preview-company">{{ site_settings.company_name if site_settings else 'HealthyRizz' }}</h3>
+                                    <h3 class="text-white font-semibold" id="preview-company">{{ site_settings.company_name if site_settings else 'FitSmart' }}</h3>
                                     <p class="text-gray-400 text-sm" id="preview-subtitle">{{ site_settings.hero_subtitle if site_settings else 'In Supervision Of Nutrition Experts' }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Tracking Pixels -->
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-semibold text-white border-b border-gray-600 pb-2">Tracking Pixels</h3>
+                        
+                        <div>
+                            <label for="facebook_pixel_id" class="block text-sm font-medium text-white mb-2">Facebook Pixel ID (Meta Pixel)</label>
+                            <input type="text" id="facebook_pixel_id" name="facebook_pixel_id" 
+                                   value="{{ site_settings.get('facebook_pixel_id', '') }}"
+                                   placeholder="e.g., 123456789012345"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                            <p class="text-gray-400 text-xs mt-1">Enter your Facebook Pixel ID (found in Facebook Events Manager)</p>
+                        </div>
+
+                        <div>
+                            <label for="google_analytics_id" class="block text-sm font-medium text-white mb-2">Google Analytics Measurement ID</label>
+                            <input type="text" id="google_analytics_id" name="google_analytics_id" 
+                                   value="{{ site_settings.get('google_analytics_id', '') }}"
+                                   placeholder="e.g., G-XXXXXXXXXX"
+                                   class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                            <p class="text-gray-400 text-xs mt-1">Enter your Google Analytics 4 Measurement ID (starts with G-)</p>
+                        </div>
+
+                                                 <div class="bg-blue-900 bg-opacity-20 border border-blue-600 rounded-lg p-4">
+                             <h4 class="text-blue-300 font-semibold mb-2">📊 Tracking Events</h4>
+                             <p class="text-blue-200 text-sm mb-2">The following events will be automatically tracked:</p>
+                             <ul class="text-blue-200 text-xs space-y-1">
+                                 <li>• Page views</li>
+                                 <li>• Purchase completions</li>
+                                 <li>• Add to cart actions</li>
+                                 <li>• Checkout initiation</li>
+                                 <li>• Newsletter signups</li>
+                                 <li>• Contact form submissions</li>
+                                 <li>• Lead generation</li>
+                             </ul>
+                         </div>
+                     </div>
+
+                     <!-- WhatsApp Business API -->
+                     <div class="space-y-6">
+                         <h3 class="text-lg font-semibold text-white border-b border-gray-600 pb-2">WhatsApp Business API</h3>
+                         
+                         <div>
+                             <label for="whatsapp_phone_number_id" class="block text-sm font-medium text-white mb-2">WhatsApp Phone Number ID</label>
+                             <input type="text" id="whatsapp_phone_number_id" name="whatsapp_phone_number_id" 
+                                    value="{{ site_settings.get('whatsapp_phone_number_id', '') }}"
+                                    placeholder="e.g., 123456789012345"
+                                    class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                             <p class="text-gray-400 text-xs mt-1">Your WhatsApp Business Phone Number ID (found in Meta Developer Console)</p>
+                         </div>
+
+                         <div>
+                             <label for="whatsapp_access_token" class="block text-sm font-medium text-white mb-2">WhatsApp Access Token</label>
+                             <input type="password" id="whatsapp_access_token" name="whatsapp_access_token" 
+                                    value="{{ site_settings.get('whatsapp_access_token', '') }}"
+                                    placeholder="Enter your WhatsApp Access Token"
+                                    class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                             <p class="text-gray-400 text-xs mt-1">Your WhatsApp Business API Access Token (keep this secure)</p>
+                         </div>
+
+                         <div>
+                             <label for="whatsapp_business_account_id" class="block text-sm font-medium text-white mb-2">WhatsApp Business Account ID</label>
+                             <input type="text" id="whatsapp_business_account_id" name="whatsapp_business_account_id" 
+                                    value="{{ site_settings.get('whatsapp_business_account_id', '') }}"
+                                    placeholder="e.g., 123456789012345"
+                                    class="w-full px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                             <p class="text-gray-400 text-xs mt-1">Your WhatsApp Business Account ID (found in Meta Developer Console)</p>
+                         </div>
+
+                         <div>
+                             <label for="whatsapp_webhook_verify_token" class="block text-sm font-medium text-white mb-2">Webhook Verify Token</label>
+                             <div class="flex space-x-2">
+                                 <input type="text" id="whatsapp_webhook_verify_token" name="whatsapp_webhook_verify_token" 
+                                        value="{{ site_settings.get('whatsapp_webhook_verify_token', '') }}"
+                                        placeholder="Enter a secure verify token"
+                                        class="flex-1 px-3 py-2 bg-dark-lightest border border-gray-600 rounded-lg text-white focus:outline-none focus:border-primary">
+                                 <button type="button" id="generate-token" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">
+                                     Generate
+                                 </button>
+                             </div>
+                             <p class="text-gray-400 text-xs mt-1">Custom token for webhook verification (create a secure random string)</p>
+                         </div>
+
+                         <div class="bg-green-900 bg-opacity-20 border border-green-600 rounded-lg p-4">
+                             <h4 class="text-green-300 font-semibold mb-2">📱 WhatsApp Features</h4>
+                             <p class="text-green-200 text-sm mb-2">With WhatsApp Business API, you can:</p>
+                             <ul class="text-green-200 text-xs space-y-1">
+                                 <li>• Send order confirmations</li>
+                                 <li>• Send delivery updates</li>
+                                 <li>• Send payment reminders</li>
+                                 <li>• Send promotional messages</li>
+                                 <li>• Automated customer support</li>
+                                 <li>• Newsletter broadcasts</li>
+                                 <li>• Birthday wishes</li>
+                             </ul>
+                         </div>
+
+                         <div class="bg-yellow-900 bg-opacity-20 border border-yellow-600 rounded-lg p-4">
+                             <h4 class="text-yellow-300 font-semibold mb-2">⚠️ Setup Instructions</h4>
+                             <p class="text-yellow-200 text-xs mb-2">To complete WhatsApp setup:</p>
+                             <ol class="text-yellow-200 text-xs space-y-1 list-decimal list-inside">
+                                 <li>Create Meta Developer Account</li>
+                                 <li>Set up WhatsApp Business API</li>
+                                 <li>Configure webhook URL: <code class="bg-gray-800 px-1 rounded">https://yourdomain.com/webhook/whatsapp</code></li>
+                                 <li>Add verify token above</li>
+                                 <li>Test with sample phone numbers</li>
+                             </ol>
+                             
+                             <div class="mt-4 pt-4 border-t border-yellow-600">
+                                 <button type="button" id="test-whatsapp" class="w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm">
+                                     <i class="fas fa-test-tube mr-2"></i>Test WhatsApp Connection
+                                 </button>
+                                 <div id="whatsapp-test-result" class="mt-2 text-xs hidden"></div>
+                             </div>
+                         </div>
+                     </div>
+                     </div>
                 </div>
 
                 <!-- Submit Button -->
@@ -154,7 +271,7 @@
 <script>
 // Live preview for text inputs
 document.getElementById('company_name').addEventListener('input', function() {
-    document.getElementById('preview-company').textContent = this.value || 'HealthyRizz';
+    document.getElementById('preview-company').textContent = this.value || 'FitSmart';
 });
 document.getElementById('hero_subtitle').addEventListener('input', function() {
     document.getElementById('preview-subtitle').textContent = this.value || 'In Supervision Of Nutrition Experts';
@@ -197,9 +314,73 @@ document.querySelector('form').addEventListener('submit', function(e) {
         logoFile.value = '';
     }
     
-    // Both fields are optional, so form will submit successfully
-    console.log('Form submitting with logo URL:', logoUrl.value);
-    console.log('Form submitting with logo file:', logoFile.files.length > 0 ? 'File selected' : 'No file');
-});
+         // Both fields are optional, so form will submit successfully
+     console.log('Form submitting with logo URL:', logoUrl.value);
+     console.log('Form submitting with logo file:', logoFile.files.length > 0 ? 'File selected' : 'No file');
+ });
+
+// Generate secure webhook verify token
+document.getElementById('generate-token').addEventListener('click', function() {
+     const tokenInput = document.getElementById('whatsapp_webhook_verify_token');
+     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+     let token = '';
+     for (let i = 0; i < 32; i++) {
+         token += chars.charAt(Math.floor(Math.random() * chars.length));
+     }
+     tokenInput.value = token;
+     tokenInput.focus();
+ });
+
+// Test WhatsApp connection
+document.getElementById('test-whatsapp').addEventListener('click', function() {
+     const button = this;
+     const resultDiv = document.getElementById('whatsapp-test-result');
+     
+     // Get current form values
+     const phoneNumberId = document.getElementById('whatsapp_phone_number_id').value;
+     const accessToken = document.getElementById('whatsapp_access_token').value;
+     const businessAccountId = document.getElementById('whatsapp_business_account_id').value;
+     
+     if (!phoneNumberId || !accessToken || !businessAccountId) {
+         resultDiv.innerHTML = '<div class="text-red-400">❌ Please fill in all WhatsApp API fields first</div>';
+         resultDiv.classList.remove('hidden');
+         return;
+     }
+     
+     // Show loading state
+     button.disabled = true;
+     button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Testing...';
+     resultDiv.innerHTML = '<div class="text-yellow-400">🔄 Testing WhatsApp API connection...</div>';
+     resultDiv.classList.remove('hidden');
+     
+     // Test API connection
+     fetch('/admin/test-whatsapp-connection', {
+         method: 'POST',
+         headers: {
+             'Content-Type': 'application/json',
+             'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+         },
+         body: JSON.stringify({
+             phone_number_id: phoneNumberId,
+             access_token: accessToken,
+             business_account_id: businessAccountId
+         })
+     })
+     .then(response => response.json())
+     .then(data => {
+         if (data.success) {
+             resultDiv.innerHTML = '<div class="text-green-400">✅ WhatsApp API connection successful!</div>';
+         } else {
+             resultDiv.innerHTML = '<div class="text-red-400">❌ ' + (data.error || 'Connection failed') + '</div>';
+         }
+     })
+     .catch(error => {
+         resultDiv.innerHTML = '<div class="text-red-400">❌ Network error: ' + error.message + '</div>';
+     })
+     .finally(() => {
+         button.disabled = false;
+         button.innerHTML = '<i class="fas fa-test-tube mr-2"></i>Test WhatsApp Connection';
+     });
+ });
 </script>
 {% endblock %} 

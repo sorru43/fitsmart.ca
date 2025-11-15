@@ -1,136 +1,354 @@
-<<<<<<< HEAD
 {% extends "base.html" %}
 
-{% block title %}Checkout - {{ meal_plan.name }} - HealthyRizz{% endblock %}
+{% block title %}Checkout - {{ meal_plan.name }} - FitSmart{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-4 sm:py-8">
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold text-white mb-8">Complete Your Order</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8 text-center sm:text-left">Complete Your Order</h1>
         
-        <div class="grid md:grid-cols-2 gap-8">
+        <!-- Mobile Order Summary (shown first on mobile) -->
+                    <!-- Additional Services - Mobile -->
+                    <div class="bg-gray-800 rounded-lg p-3 mb-3 hidden" id="mobile-services-summary">
+                        <h3 class="text-white font-semibold mb-2 text-xs">🛒 Additional Services</h3>
+                        <div class="text-xs text-gray-300 space-y-1" id="mobile-services-list">
+                            <!-- Services will be listed here -->
+                        </div>
+                    </div>
+
+        <div class="block sm:hidden mb-6">
+            <div class="bg-darker p-4 rounded-lg border border-gray-800">
+                <h2 class="text-lg font-semibold mb-4 text-white">Order Summary</h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-300 text-sm">Plan:</span>
+                        <span class="text-white font-semibold text-sm">{{ meal_plan.name }}</span>
+                    </div>
+                    <div class="bg-gray-700 rounded-lg p-2 mb-3">
+                        <div class="text-xs text-gray-300">
+                            <p class="mb-1">{{ meal_plan.description }}</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-300 text-sm">Frequency:</span>
+                        <span class="text-white text-sm">{{ frequency.title() }}</span>
+                    </div>
+                    <!-- Meals Included -->
+                    <div class="bg-gray-800 rounded-lg p-3 mb-3">
+                        <h3 class="text-white font-semibold mb-2 text-xs">🍽️ Meals Included</h3>
+                        <div class="text-xs text-gray-300 space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span>🍳 Breakfast:</span>
+                                <span class="{% if meal_plan.includes_breakfast %}text-green-400{% else %}text-red-400{% endif %}">{% if meal_plan.includes_breakfast %}✓ Included{% else %}✗ Not Included{% endif %}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>🍽️ Lunch:</span>
+                                <span class="{% if meal_plan.includes_lunch %}text-green-400{% else %}text-red-400{% endif %}">{% if meal_plan.includes_lunch %}✓ Included{% else %}✗ Not Included{% endif %}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>🌙 Dinner:</span>
+                                <span class="{% if meal_plan.includes_dinner %}text-green-400{% else %}text-red-400{% endif %}">{% if meal_plan.includes_dinner %}✓ Included{% else %}✗ Not Included{% endif %}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>🥨 Snacks:</span>
+                                <span class="{% if meal_plan.includes_snacks %}text-green-400{% else %}text-red-400{% endif %}">{% if meal_plan.includes_snacks %}✓ Included{% else %}✗ Not Included{% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Meal Count -->
+                    <div class="bg-gray-700 rounded-lg p-2 mb-3">
+                        <div class="text-xs text-gray-300 space-y-1">
+                            {% set meal_count = (meal_plan.includes_breakfast|int + meal_plan.includes_lunch|int + meal_plan.includes_dinner|int + meal_plan.includes_snacks|int) %}
+                            <div>• {{ meal_count }} meals/day • 5 days/week</div>
+                            <div>• {% if frequency == 'weekly' %}{{ meal_count * 5 }} meals/week{% else %}{{ meal_count * 20 }} meals/month{% endif %}</div>
+                        </div>
+                    </div>
+                    <!-- Delivery Schedule -->
+                    <div class="bg-gray-800 rounded-lg p-2 mb-3">
+                        <div class="text-xs text-gray-300">
+                            <div>📅 Delivery: Monday to Friday</div>
+                            {% if meal_plan.includes_breakfast %}<div>🌅 Breakfast: {{ meal_plan.breakfast_time }}</div>{% endif %}
+                            {% if meal_plan.includes_lunch %}<div>☀️ Lunch: {{ meal_plan.lunch_time }}</div>{% endif %}
+                            {% if meal_plan.includes_dinner %}<div>🌆 Dinner: {{ meal_plan.dinner_time }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <!-- Nutrition Info -->
+                    <div class="bg-gray-700 rounded-lg p-2 mb-3">
+                        <div class="text-xs text-gray-300">
+                            <div>⚡ Calories: {{ meal_plan.calories }}</div>
+                            <div>💪 Protein: {{ meal_plan.protein }}</div>
+                            {% if meal_plan.fat %}<div>🥑 Fat: {{ meal_plan.fat }}</div>{% endif %}
+                            {% if meal_plan.carbs %}<div>🍞 Carbs: {{ meal_plan.carbs }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <!-- Dietary Tags -->
+                    <div class="bg-gray-800 rounded-lg p-2 mb-3">
+                        <div class="text-xs text-gray-300">
+                            {% for tag in meal_plan.dietary_tags %}
+                                <span class="inline-block bg-primary bg-opacity-20 text-primary text-xs rounded-full px-2 py-1 mr-1 mb-1">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- Price Breakdown -->
+                    <div class="flex justify-between">
+                        <span class="text-gray-300 text-sm">Base Price:</span>
+                        <span class="text-white text-sm">${{ base_price }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-300 text-sm">HST (13%):</span>
+                        <span class="text-white text-sm">${{ hst_amount }}</span>
+                    </div>
+                    <div class="flex justify-between hidden" id="coupon-discount-line-mobile">
+                        <span class="text-gray-300 text-sm">Coupon Discount:</span>
+                        <span class="text-green-400 text-sm" id="coupon-discount-amount-mobile">-$0.00</span>
+                    </div>
+                    <div class="border-t border-gray-700 pt-3">
+                        <div class="flex justify-between font-semibold text-base">
+                            <span class="text-white">Total:</span>
+                            <span class="text-primary" id="summary-total-mobile">${{ total_amount }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid lg:grid-cols-2 gap-6 sm:gap-8 checkout-container">
             <!-- Order Form -->
-            <div class="bg-darker p-6 rounded-lg border border-gray-800">
-                <h2 class="text-xl font-semibold mb-6 text-white">Customer Information</h2>
+            <div class="bg-darker p-4 sm:p-6 rounded-lg border border-gray-800 order-2 lg:order-1 checkout-form">
+                <h2 class="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-white">Customer Information</h2>
                 
                 <form id="checkout-form" method="POST" action="{{ url_for('main.process_checkout') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="plan_id" value="{{ meal_plan.id }}">
                     <input type="hidden" name="frequency" value="{{ frequency }}">
                     <input type="hidden" name="total_amount" value="{{ total_amount }}">
+                    <input type="hidden" name="applied_coupon_code" id="applied_coupon_code" value="">
+                    <input type="hidden" name="coupon_discount" id="coupon_discount" value="0">
+                    <input type="hidden" name="selected_services" id="selected_services" value="">
                     
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium mb-2 text-white">Full Name *</label>
-                            <input type="text" name="customer_name" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" 
-                                   value="{{ user_data.name if user_data else '' }}">
+                            <input type="text" name="customer_name" required 
+                                   class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base" 
+                                   value="{{ current_user.name if current_user.is_authenticated else '' }}"
+                                   placeholder="Enter your full name">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium mb-2 text-white">Email Address *</label>
-                            <input type="email" name="customer_email" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600"
-                                   value="{{ user_data.email if user_data else '' }}">
+                            <input type="email" name="customer_email" required 
+                                   class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base"
+                                   value="{{ current_user.email if current_user.is_authenticated else '' }}"
+                                   placeholder="Enter your email address">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium mb-2 text-white">Phone Number *</label>
-                            <input type="tel" name="customer_phone" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600"
-                                   value="{{ user_data.phone if user_data else '' }}">
-                        </div>
-                        
-                        <!-- Cascading Location Dropdowns -->
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">State *</label>
-                            <select name="customer_state" id="state-select" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600">
-                                <option value="">Select State</option>
-                                {% for state in states %}
-                                <option value="{{ state.name }}" {% if user_data and user_data.state == state.name %}selected{% endif %}>
-                                    {{ state.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
+                            <input type="tel" name="customer_phone" required 
+                                   class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base"
+                                   value="{{ current_user.phone if current_user.is_authenticated else '' }}"
+                                   placeholder="Enter your phone number">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium mb-2 text-white">City *</label>
-                            <select name="customer_city" id="city-select" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" disabled>
-                                <option value="">Select City</option>
-                            </select>
+                            <label class="block text-sm font-medium mb-2 text-white">Address *</label>
+                            <textarea name="customer_address" required 
+                                      class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base" 
+                                      rows="3" placeholder="Enter your complete address">{{ current_user.address if current_user.is_authenticated else '' }}</textarea>
                         </div>
                         
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">Area *</label>
-                            <select name="customer_area" id="area-select" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" disabled>
-                                <option value="">Select Area</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">Complete Address *</label>
-                            <textarea name="customer_address" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" rows="3" 
-                                      placeholder="Enter your complete delivery address">{{ user_data.address if user_data else '' }}</textarea>
+                        <!-- Location dropdowns - responsive grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 location-grid">
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-white">State *</label>
+                                <select id="state-select" name="customer_state" required 
+                                        class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base">
+                                    <option value="">Select State</option>
+                                    {% for state in locations_data %}
+                                        <option value="{{ state.name }}" 
+                                                data-state-id="{{ state.id }}"
+                                                {% if current_user.is_authenticated and current_user.state == state.name %}selected{% endif %}>
+                                            {{ state.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-white">City *</label>
+                                <select id="city-select" name="customer_city" required 
+                                        class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base" 
+                                        disabled>
+                                    <option value="">Select State First</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-white">Area *</label>
+                                <select id="area-select" name="customer_area" required 
+                                        class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base" 
+                                        disabled>
+                                    <option value="">Select City First</option>
+                                </select>
+                            </div>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium mb-2 text-white">PIN Code *</label>
-                            <input type="text" name="customer_pincode" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600"
-                                   value="{{ user_data.postal_code if user_data else '' }}" maxlength="6" pattern="[0-9]{6}">
+                            <input type="text" name="customer_pincode" required 
+                                   class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base"
+                                   value="{{ current_user.postal_code if current_user.is_authenticated else '' }}"
+                                   placeholder="Enter PIN code">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium mb-2 text-white">Delivery Instructions</label>
-                            <textarea name="delivery_instructions" class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" rows="2" 
-                                      placeholder="Any special delivery instructions (optional)"></textarea>
+                            <textarea name="delivery_instructions" 
+                                      class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base" 
+                                      rows="2" placeholder="Any special delivery instructions (optional)"></textarea>
+                        </div>
+                        
+                        
+                        <!-- Additional Services Section -->
+                        <div class="border-t border-gray-700 pt-4 services-section">
+                            <div class="flex items-center space-x-2 mb-4">
+                                <label class="block text-sm font-medium text-white">Additional Services</label>
+                                <i class="fas fa-plus-circle text-primary text-xs"></i>
+                            </div>
+                            <div class="space-y-3" id="services-container">
+                                <!-- Services will be loaded here via JavaScript -->
+                            </div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                Select any additional services you'd like to add to your order
+                            </div>
+                        </div>
+
+                        <!-- Coupon Code Section - improved mobile layout -->
+                        <div class="border-t border-gray-700 pt-4 coupon-section">
+                            <div class="flex items-center space-x-2 mb-3">
+                                <label class="block text-sm font-medium text-white">Coupon Code</label>
+                                <i class="fas fa-tag text-primary text-xs"></i>
+                            </div>
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                <input type="text" id="coupon_code" name="coupon_code" 
+                                       class="flex-1 px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base" 
+                                       placeholder="Enter coupon code (optional)">
+                                <button type="button" id="apply-coupon" 
+                                        class="px-4 py-3 sm:py-2 bg-primary text-white rounded-md hover:bg-green-600 font-medium text-sm whitespace-nowrap">
+                                    Apply Coupon
+                                </button>
+                            </div>
+                            <div id="coupon-message" class="mt-2 text-sm hidden"></div>
                         </div>
                     </div>
                     
                     <div class="mt-6">
-                        <button type="submit" id="pay-button" class="w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-green-600 font-semibold">
-                            <i class="fas fa-credit-card mr-2"></i>Proceed to Payment (Rs. {{ "%.2f"|format(total_amount) }})
+                        <button type="submit" id="pay-button" 
+                                class="w-full bg-primary text-white py-4 sm:py-3 px-6 rounded-md hover:bg-green-600 font-semibold text-base">
+                            <i class="fas fa-credit-card mr-2"></i>Proceed to Payment ($<span id="display-total">{{ total_amount }}</span>)
                         </button>
                     </div>
                 </form>
             </div>
             
-            <!-- Order Summary -->
-            <div class="bg-darker p-6 rounded-lg border border-gray-800">
-                <h2 class="text-xl font-semibold mb-6 text-white">Order Summary</h2>
-                
+            <!-- Order Summary - Desktop only -->
+                    <!-- Additional Services - Desktop -->
+                    <div class="bg-gray-800 rounded-lg p-3 mb-3 hidden" id="desktop-services-summary">
+                        <h3 class="text-white font-semibold mb-2 text-sm">🛒 Additional Services</h3>
+                        <div class="text-sm text-gray-300 space-y-1" id="desktop-services-list">
+                            <!-- Services will be listed here -->
+                        </div>
+                    </div>
+
+            <div class="bg-darker p-4 sm:p-6 rounded-lg border border-gray-800 order-1 lg:order-2 hidden sm:block">
+                <h2 class="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-white">Order Summary</h2>
                 <div class="space-y-4">
                     <div class="flex justify-between">
                         <span class="text-gray-300">Plan:</span>
                         <span class="text-white font-semibold">{{ meal_plan.name }}</span>
                     </div>
+                    <div class="bg-gray-700 rounded-lg p-3 mb-3">
+                        <div class="text-sm text-gray-300">
+                            <p class="mb-2">{{ meal_plan.description }}</p>
+                        </div>
+                    </div>
                     <div class="flex justify-between">
                         <span class="text-gray-300">Frequency:</span>
                         <span class="text-white">{{ frequency.title() }}</span>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-300">Base Price:</span>
-                        <span class="text-white">Rs. {{ "%.2f"|format(base_price) }}</span>
+                    <!-- Meals Included -->
+                    <div class="bg-gray-800 rounded-lg p-4 mb-4">
+                        <h3 class="text-white font-semibold mb-3 text-sm">🍽️ Meals Included</h3>
+                        <div class="text-sm text-gray-300 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span>🍳 Breakfast:</span>
+                                <span class="{% if meal_plan.includes_breakfast %}text-green-400{% else %}text-red-400{% endif %}">{% if meal_plan.includes_breakfast %}✓ Included{% else %}✗ Not Included{% endif %}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>🍽️ Lunch:</span>
+                                <span class="{% if meal_plan.includes_lunch %}text-green-400{% else %}text-red-400{% endif %}">{% if meal_plan.includes_lunch %}✓ Included{% else %}✗ Not Included{% endif %}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>🌙 Dinner:</span>
+                                <span class="{% if meal_plan.includes_dinner %}text-green-400{% else %}text-red-400{% endif %}">{% if meal_plan.includes_dinner %}✓ Included{% else %}✗ Not Included{% endif %}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>🥨 Snacks:</span>
+                                <span class="{% if meal_plan.includes_snacks %}text-green-400{% else %}text-red-400{% endif %}">{% if meal_plan.includes_snacks %}✓ Included{% else %}✗ Not Included{% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Meal Count -->
+                    <div class="bg-gray-700 rounded-lg p-3 mb-3">
+                        <div class="text-sm text-gray-300 space-y-1">
+                            {% set meal_count = (meal_plan.includes_breakfast|int + meal_plan.includes_lunch|int + meal_plan.includes_dinner|int + meal_plan.includes_snacks|int) %}
+                            <div>• {{ meal_count }} meals per day</div>
+                            <div>• 5 days per week (Monday to Friday)</div>
+                            <div>• {% if frequency == 'weekly' %}{{ meal_count * 5 }} meals per week{% else %}{{ meal_count * 20 }} meals per month{% endif %}</div>
+                        </div>
+                    </div>
+                    <!-- Delivery Schedule -->
+                    <div class="bg-gray-800 rounded-lg p-3 mb-3">
+                        <div class="text-xs text-gray-300">
+                            <div>📅 Delivery: Monday to Friday</div>
+                            {% if meal_plan.includes_breakfast %}<div>🌅 Breakfast: {{ meal_plan.breakfast_time }}</div>{% endif %}
+                            {% if meal_plan.includes_lunch %}<div>☀️ Lunch: {{ meal_plan.lunch_time }}</div>{% endif %}
+                            {% if meal_plan.includes_dinner %}<div>🌆 Dinner: {{ meal_plan.dinner_time }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <!-- Nutrition Info -->
+                    <div class="bg-gray-700 rounded-lg p-3 mb-3">
+                        <div class="text-xs text-gray-300">
+                            <div>⚡ Calories: {{ meal_plan.calories }}</div>
+                            <div>💪 Protein: {{ meal_plan.protein }}</div>
+                            {% if meal_plan.fat %}<div>🥑 Fat: {{ meal_plan.fat }}</div>{% endif %}
+                            {% if meal_plan.carbs %}<div>🍞 Carbs: {{ meal_plan.carbs }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <!-- Dietary Tags -->
+                    <div class="bg-gray-800 rounded-lg p-3 mb-3">
+                        <div class="text-xs text-gray-300">
+                            {% for tag in meal_plan.dietary_tags %}
+                                <span class="inline-block bg-primary bg-opacity-20 text-primary text-xs rounded-full px-2 py-1 mr-1 mb-1">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-300">GST (5%):</span>
-                        <span class="text-white">Rs. {{ "%.2f"|format(gst_amount) }}</span>
+                        <span class="text-gray-300">Base Price:</span>
+                        <span class="text-white">${{ base_price }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">HST (13%):</span>
+                        <span class="text-white">${{ hst_amount }}</span>
+                    </div>
+                    <div class="flex justify-between hidden" id="coupon-discount-line">
+                        <span class="text-gray-300">Coupon Discount:</span>
+                        <span class="text-green-400" id="coupon-discount-amount">-$0.00</span>
                     </div>
                     <div class="border-t border-gray-700 pt-4">
                         <div class="flex justify-between font-semibold text-lg">
                             <span class="text-white">Total:</span>
-                            <span class="text-primary">Rs. {{ "%.2f"|format(total_amount) }}</span>
+                            <span class="text-primary" id="summary-total">${{ total_amount }}</span>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- Plan Details -->
-                <div class="mt-6 pt-6 border-t border-gray-700">
-                    <h3 class="text-lg font-semibold text-white mb-3">Plan Details</h3>
-                    <div class="space-y-2 text-sm text-gray-300">
-                        <p>• {{ meal_plan.description }}</p>
-                        <p>• {{ meal_plan.meals_per_day }} meals per day</p>
-                        <p>• {{ meal_plan.days_per_week }} days per week</p>
-                        {% if meal_plan.vegetarian_options %}
-                        <p>• Vegetarian options available</p>
-                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -138,9 +356,263 @@
     </div>
 </div>
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<!-- Stripe is handled via server-side redirect -->
 <script>
+// Location data from backend
+const locationsData = {{ locations_data|tojson|safe }};
+
+// Coupon functionality
+let originalTotal = {{ total_amount }};
+let currentDiscount = 0;
+
+document.getElementById('apply-coupon').addEventListener('click', function() {
+    const couponCode = document.getElementById('coupon_code').value.trim();
+    const messageDiv = document.getElementById('coupon-message');
+    const applyButton = this;
+    
+    if (!couponCode) {
+        showCouponMessage('Please enter a coupon code', 'error');
+        return;
+    }
+    
+    // Disable button and show loading
+    applyButton.disabled = true;
+    applyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // Send AJAX request to validate coupon
+    fetch('{{ url_for("main.validate_coupon") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+        },
+        body: 'coupon_code=' + encodeURIComponent(couponCode) + '&amount=' + originalTotal
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            // Calculate discount
+            let discountAmount = 0;
+            if (data.discount_type === 'percent') {
+                discountAmount = originalTotal * (data.discount_value / 100);
+            } else if (data.discount_type === 'fixed') {
+                discountAmount = Math.min(data.discount_value, originalTotal);
+            }
+            
+            // Update UI
+            currentDiscount = discountAmount;
+            updateTotalDisplay(originalTotal - discountAmount);
+            showCouponMessage(data.message, 'success');
+            
+            // Update hidden fields
+            document.getElementById('applied_coupon_code').value = couponCode;
+            document.getElementById('coupon_discount').value = discountAmount.toFixed(2);
+            
+            // Show coupon discount line (both desktop and mobile)
+            document.getElementById('coupon-discount-line').classList.remove('hidden');
+            document.getElementById('coupon-discount-amount').textContent = `-$${discountAmount.toFixed(2)}`;
+            document.getElementById('coupon-discount-line-mobile').classList.remove('hidden');
+            document.getElementById('coupon-discount-amount-mobile').textContent = `-$${discountAmount.toFixed(2)}`;
+            
+            // Disable coupon input
+            document.getElementById('coupon_code').disabled = true;
+            applyButton.innerHTML = 'Applied';
+            applyButton.classList.remove('bg-primary', 'hover:bg-green-600');
+            applyButton.classList.add('bg-gray-600', 'cursor-not-allowed');
+            
+        } else {
+            showCouponMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showCouponMessage('An error occurred while validating the coupon', 'error');
+    })
+    .finally(() => {
+        applyButton.disabled = false;
+        applyButton.innerHTML = 'Apply Coupon';
+    });
+});
+
+function showCouponMessage(message, type) {
+    const messageDiv = document.getElementById('coupon-message');
+    messageDiv.textContent = message;
+    messageDiv.className = `mt-2 text-sm ${type === 'success' ? 'text-green-400' : 'text-red-400'}`;
+    messageDiv.classList.remove('hidden');
+    
+    // Hide message after 5 seconds
+    setTimeout(() => {
+        messageDiv.classList.add('hidden');
+    }, 5000);
+}
+
+function updateTotalDisplay(newTotal) {
+    document.getElementById('display-total').textContent = newTotal.toFixed(2);
+    document.getElementById('summary-total').textContent = `$${newTotal.toFixed(2)}`;
+    document.getElementById('summary-total-mobile').textContent = `$${newTotal.toFixed(2)}`;
+    document.querySelector('input[name="total_amount"]').value = newTotal.toFixed(2);
+}
+
 // Cascading dropdown functionality
+
+// Load additional services
+function loadAdditionalServices() {
+    fetch('{{ url_for("main.get_additional_services") }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayServices(data.services);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading services:', error);
+        });
+}
+
+// Display services in the container
+function displayServices(services) {
+    const container = document.getElementById('services-container');
+    container.innerHTML = '';
+    
+    services.forEach(service => {
+        const serviceElement = createServiceElement(service);
+        container.appendChild(serviceElement);
+    });
+}
+
+// Create service element
+function createServiceElement(service) {
+    const div = document.createElement('div');
+    div.className = 'bg-gray-800 rounded-lg p-3 border border-gray-700 service-item';
+    div.innerHTML = `
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <div class="flex items-center space-x-2 mb-1">
+                    <input type="checkbox" 
+                           id="service-${service.id}" 
+                           class="service-checkbox rounded border-gray-600 bg-dark text-primary focus:ring-primary"
+                           data-service-id="${service.id}"
+                           data-service-name="${service.name}"
+                           data-service-price="${service.price}"
+                           data-service-type="${service.price_type}">
+                    <label for="service-${service.id}" class="text-white font-medium text-sm cursor-pointer">
+                        ${service.name}
+                    </label>
+                </div>
+                <p class="text-gray-400 text-xs mb-2">${service.description}</p>
+                <div class="flex items-center justify-between">
+                    <span class="text-primary font-semibold text-sm">$${service.price}${service.price_type === 'percentage' ? '%' : ''}</span>
+                    <div class="flex items-center space-x-2">
+                        <button type="button" 
+                                class="quantity-btn bg-gray-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs hover:bg-gray-600"
+                                onclick="changeQuantity(${service.id}, -1)">-</button>
+                        <span class="quantity-display text-white text-sm w-8 text-center" id="qty-${service.id}">1</span>
+                        <button type="button" 
+                                class="quantity-btn bg-gray-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs hover:bg-gray-600"
+                                onclick="changeQuantity(${service.id}, 1)">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add event listener for checkbox
+    const checkbox = div.querySelector('.service-checkbox');
+    checkbox.addEventListener('change', updateServicesTotal);
+    
+    return div;
+}
+
+// Change quantity for a service
+function changeQuantity(serviceId, change) {
+    const display = document.getElementById(`qty-${serviceId}`);
+    const currentQty = parseInt(display.textContent);
+    const newQty = Math.max(1, currentQty + change);
+    display.textContent = newQty;
+    
+    // Update checkbox data
+    const checkbox = document.getElementById(`service-${serviceId}`);
+    checkbox.setAttribute('data-service-quantity', newQty);
+    
+    updateServicesTotal();
+}
+
+// Update services total and display
+function updateServicesTotal() {
+    const checkboxes = document.querySelectorAll('.service-checkbox:checked');
+    let servicesTotal = 0;
+    const selectedServices = [];
+    
+    checkboxes.forEach(checkbox => {
+        const serviceId = checkbox.getAttribute('data-service-id');
+        const serviceName = checkbox.getAttribute('data-service-name');
+        const servicePrice = parseFloat(checkbox.getAttribute('data-service-price'));
+        const serviceType = checkbox.getAttribute('data-service-type');
+        const quantity = parseInt(checkbox.getAttribute('data-service-quantity') || 1);
+        
+        let serviceAmount = 0;
+        if (serviceType === 'percentage') {
+            serviceAmount = (originalTotal * servicePrice / 100) * quantity;
+        } else {
+            serviceAmount = servicePrice * quantity;
+        }
+        
+        servicesTotal += serviceAmount;
+        selectedServices.push({
+            id: serviceId,
+            name: serviceName,
+            price: servicePrice,
+            type: serviceType,
+            quantity: quantity,
+            amount: serviceAmount
+        });
+    });
+    
+    // Update total display
+    const newTotal = originalTotal + servicesTotal - currentDiscount;
+    updateTotalDisplay(newTotal);
+    
+    // Update services summary
+    updateServicesSummary(selectedServices);
+    
+    // Update hidden input
+    document.getElementById('selected_services').value = JSON.stringify(selectedServices);
+}
+
+// Update services summary display
+function updateServicesSummary(selectedServices) {
+    const mobileContainer = document.getElementById('mobile-services-list');
+    const desktopContainer = document.getElementById('desktop-services-list');
+    const mobileSummary = document.getElementById('mobile-services-summary');
+    const desktopSummary = document.getElementById('desktop-services-summary');
+    
+    if (selectedServices.length === 0) {
+        mobileSummary.classList.add('hidden');
+        desktopSummary.classList.add('hidden');
+        return;
+    }
+    
+    mobileSummary.classList.remove('hidden');
+    desktopSummary.classList.remove('hidden');
+    
+    const servicesHtml = selectedServices.map(service => 
+        `<div class="flex justify-between">
+            <span>${service.name} x${service.quantity}:</span>
+            <span class="text-primary">$${service.amount.toFixed(2)}</span>
+        </div>`
+    ).join('');
+    
+    mobileContainer.innerHTML = servicesHtml;
+    desktopContainer.innerHTML = servicesHtml;
+}
+
+// Load services when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadAdditionalServices();
+});
+
+
+// Load services when page loads
 document.addEventListener('DOMContentLoaded', function() {
     const stateSelect = document.getElementById('state-select');
     const citySelect = document.getElementById('city-select');
@@ -148,84 +620,83 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // State change handler
     stateSelect.addEventListener('change', function() {
-        const selectedState = this.value;
+        const selectedStateId = this.options[this.selectedIndex].dataset.stateId;
         
         // Reset city and area dropdowns
         citySelect.innerHTML = '<option value="">Select City</option>';
-        areaSelect.innerHTML = '<option value="">Select Area</option>';
-        citySelect.disabled = !selectedState;
+        areaSelect.innerHTML = '<option value="">Select City First</option>';
+        citySelect.disabled = true;
         areaSelect.disabled = true;
         
-        if (selectedState) {
-            // Fetch cities for selected state
-            fetch(`/get-delivery-cities?state=${encodeURIComponent(selectedState)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.cities.length > 0) {
-                        data.cities.forEach(city => {
-                            const option = document.createElement('option');
-                            option.value = city.name;
-                            option.textContent = city.name;
-                            citySelect.appendChild(option);
-                        });
-                        citySelect.disabled = false;
-                    } else {
-                        citySelect.innerHTML = '<option value="">No cities available</option>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching cities:', error);
-                    citySelect.innerHTML = '<option value="">Error loading cities</option>';
+        if (selectedStateId) {
+            // Find the selected state data
+            const stateData = locationsData.find(state => state.id == selectedStateId);
+            if (stateData && stateData.cities.length > 0) {
+                // Populate cities
+                stateData.cities.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.name;
+                    option.dataset.cityId = city.id;
+                    option.textContent = city.name;
+                    citySelect.appendChild(option);
                 });
+                citySelect.disabled = false;
+            }
         }
     });
     
     // City change handler
     citySelect.addEventListener('change', function() {
-        const selectedCity = this.value;
-        const selectedState = stateSelect.value;
+        const selectedCityId = this.options[this.selectedIndex].dataset.cityId;
         
         // Reset area dropdown
         areaSelect.innerHTML = '<option value="">Select Area</option>';
-        areaSelect.disabled = !selectedCity;
+        areaSelect.disabled = true;
         
-        if (selectedCity) {
-            // Fetch areas for selected city
-            fetch(`/get-delivery-areas?state=${encodeURIComponent(selectedState)}&city=${encodeURIComponent(selectedCity)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.areas.length > 0) {
-                        data.areas.forEach(area => {
-                            const option = document.createElement('option');
-                            option.value = area.name;
-                            option.textContent = area.name;
-                            areaSelect.appendChild(option);
-                        });
-                        areaSelect.disabled = false;
-                    } else {
-                        areaSelect.innerHTML = '<option value="">No areas available</option>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching areas:', error);
-                    areaSelect.innerHTML = '<option value="">Error loading areas</option>';
-                });
+        if (selectedCityId) {
+            // Find the selected city data
+            const selectedStateId = stateSelect.options[stateSelect.selectedIndex].dataset.stateId;
+            const stateData = locationsData.find(state => state.id == selectedStateId);
+            if (stateData) {
+                const cityData = stateData.cities.find(city => city.id == selectedCityId);
+                if (cityData && cityData.areas.length > 0) {
+                    // Populate areas
+                    cityData.areas.forEach(area => {
+                        const option = document.createElement('option');
+                        option.value = area.name;
+                        option.textContent = area.name;
+                        areaSelect.appendChild(option);
+                    });
+                    areaSelect.disabled = false;
+                }
+            }
         }
     });
+    
+    // Initialize state dropdown if user has a state selected
+    if (stateSelect.value) {
+        stateSelect.dispatchEvent(new Event('change'));
+        
+        // Set city if user has one
+        if (citySelect.value) {
+            citySelect.dispatchEvent(new Event('change'));
+        }
+    }
 });
 
-// Form submission handler
+// Checkout form submission
 document.getElementById('checkout-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Validate location selection
-    const stateSelect = document.getElementById('state-select');
-    const citySelect = document.getElementById('city-select');
-    const areaSelect = document.getElementById('area-select');
-    
-    if (!stateSelect.value || !citySelect.value || !areaSelect.value) {
-        alert('Please select State, City, and Area');
-        return;
+    // Validate required fields
+    const requiredFields = ['customer_name', 'customer_email', 'customer_phone', 'customer_address', 'customer_state', 'customer_city', 'customer_area', 'customer_pincode'];
+    for (let field of requiredFields) {
+        const input = document.querySelector(`[name="${field}"]`);
+        if (!input.value.trim()) {
+            alert(`Please fill in ${field.replace('customer_', '').replace('_', ' ')}`);
+            input.focus();
+            return;
+        }
     }
     
     const button = document.getElementById('pay-button');
@@ -244,63 +715,18 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const options = {
-                key: data.key_id,
-                amount: data.amount,
-                currency: data.currency,
-                name: 'HealthyRizz',
-                description: data.description,
-                order_id: data.order_id,
-                handler: function(response) {
-                    // Payment successful - submit verification
-                    const verifyForm = document.createElement('form');
-                    verifyForm.method = 'POST';
-                    verifyForm.action = '{{ url_for("main.verify_payment") }}';
-                    verifyForm.style.display = 'none';
-                    
-                    // Add CSRF token
-                    const csrfInput = document.createElement('input');
-                    csrfInput.type = 'hidden';
-                    csrfInput.name = 'csrf_token';
-                    csrfInput.value = formData.get('csrf_token');
-                    verifyForm.appendChild(csrfInput);
-                    
-                    // Add payment details
-                    const paymentIdInput = document.createElement('input');
-                    paymentIdInput.type = 'hidden';
-                    paymentIdInput.name = 'razorpay_payment_id';
-                    paymentIdInput.value = response.razorpay_payment_id;
-                    verifyForm.appendChild(paymentIdInput);
-                    
-                    const orderIdInput = document.createElement('input');
-                    orderIdInput.type = 'hidden';
-                    orderIdInput.name = 'razorpay_order_id';
-                    orderIdInput.value = response.razorpay_order_id;
-                    verifyForm.appendChild(orderIdInput);
-                    
-                    const signatureInput = document.createElement('input');
-                    signatureInput.type = 'hidden';
-                    signatureInput.name = 'razorpay_signature';
-                    signatureInput.value = response.razorpay_signature;
-                    verifyForm.appendChild(signatureInput);
-                    
-                    document.body.appendChild(verifyForm);
-                    verifyForm.submit();
-                },
-                prefill: {
-                    name: formData.get('customer_name'),
-                    email: formData.get('customer_email'),
-                    contact: formData.get('customer_phone')
-                },
-                theme: {
-                    color: '#4CAF50'
-                }
-            };
-            
-            const rzp = new Razorpay(options);
-            rzp.open();
+            // Redirect to Stripe Checkout
+            if (data.checkout_url) {
+                window.location.href = data.checkout_url;
+            } else {
+                alert('Error: No checkout URL received');
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Proceed to Payment ($<span id="display-total">{{ total_amount }}</span>)';
+            }
         } else {
-            alert('Error: ' + data.message);
+            alert('Error: ' + (data.error || data.message || 'Unknown error'));
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Proceed to Payment ($<span id="display-total">{{ total_amount }}</span>)';
         }
     })
     .catch(error => {
@@ -309,325 +735,8 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
     })
     .finally(() => {
         button.disabled = false;
-        button.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Proceed to Payment (Rs. {{ "%.2f"|format(total_amount) }})';
+        button.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Proceed to Payment ($<span id="display-total">{{ total_amount }}</span>)';
     });
 });
 </script>
 {% endblock %}
-=======
-{% extends "base.html" %}
-
-{% block title %}Checkout - {{ meal_plan.name }} - HealthyRizz{% endblock %}
-
-{% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold text-white mb-8">Complete Your Order</h1>
-        
-        <div class="grid md:grid-cols-2 gap-8">
-            <!-- Order Form -->
-            <div class="bg-darker p-6 rounded-lg border border-gray-800">
-                <h2 class="text-xl font-semibold mb-6 text-white">Customer Information</h2>
-                
-                <form id="checkout-form" method="POST" action="{{ url_for('main.process_checkout') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="plan_id" value="{{ meal_plan.id }}">
-                    <input type="hidden" name="frequency" value="{{ frequency }}">
-                    <input type="hidden" name="total_amount" value="{{ total_amount }}">
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">Full Name *</label>
-                            <input type="text" name="customer_name" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" 
-                                   value="{{ user_data.name if user_data else '' }}">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">Email Address *</label>
-                            <input type="email" name="customer_email" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600"
-                                   value="{{ user_data.email if user_data else '' }}">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">Phone Number *</label>
-                            <input type="tel" name="customer_phone" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600"
-                                   value="{{ user_data.phone if user_data else '' }}">
-                        </div>
-                        
-                        <!-- Cascading Location Dropdowns -->
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">State *</label>
-                            <select name="customer_state" id="state-select" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600">
-                                <option value="">Select State</option>
-                                {% for state in states %}
-                                <option value="{{ state.name }}" {% if user_data and user_data.state == state.name %}selected{% endif %}>
-                                    {{ state.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">City *</label>
-                            <select name="customer_city" id="city-select" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" disabled>
-                                <option value="">Select City</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">Area *</label>
-                            <select name="customer_area" id="area-select" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" disabled>
-                                <option value="">Select Area</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">Complete Address *</label>
-                            <textarea name="customer_address" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" rows="3" 
-                                      placeholder="Enter your complete delivery address">{{ user_data.address if user_data else '' }}</textarea>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">PIN Code *</label>
-                            <input type="text" name="customer_pincode" required class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600"
-                                   value="{{ user_data.postal_code if user_data else '' }}" maxlength="6" pattern="[0-9]{6}">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2 text-white">Delivery Instructions</label>
-                            <textarea name="delivery_instructions" class="w-full px-3 py-2 rounded-md bg-dark text-white border border-gray-600" rows="2" 
-                                      placeholder="Any special delivery instructions (optional)"></textarea>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <button type="submit" id="pay-button" class="w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-green-600 font-semibold">
-                            <i class="fas fa-credit-card mr-2"></i>Proceed to Payment (Rs. {{ "%.2f"|format(total_amount) }})
-                        </button>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- Order Summary -->
-            <div class="bg-darker p-6 rounded-lg border border-gray-800">
-                <h2 class="text-xl font-semibold mb-6 text-white">Order Summary</h2>
-                
-                <div class="space-y-4">
-                    <div class="flex justify-between">
-                        <span class="text-gray-300">Plan:</span>
-                        <span class="text-white font-semibold">{{ meal_plan.name }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-300">Frequency:</span>
-                        <span class="text-white">{{ frequency.title() }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-300">Base Price:</span>
-                        <span class="text-white">Rs. {{ "%.2f"|format(base_price) }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-300">GST (5%):</span>
-                        <span class="text-white">Rs. {{ "%.2f"|format(gst_amount) }}</span>
-                    </div>
-                    <div class="border-t border-gray-700 pt-4">
-                        <div class="flex justify-between font-semibold text-lg">
-                            <span class="text-white">Total:</span>
-                            <span class="text-primary">Rs. {{ "%.2f"|format(total_amount) }}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Plan Details -->
-                <div class="mt-6 pt-6 border-t border-gray-700">
-                    <h3 class="text-lg font-semibold text-white mb-3">Plan Details</h3>
-                    <div class="space-y-2 text-sm text-gray-300">
-                        <p>• {{ meal_plan.description }}</p>
-                        <p>• {{ meal_plan.meals_per_day }} meals per day</p>
-                        <p>• {{ meal_plan.days_per_week }} days per week</p>
-                        {% if meal_plan.vegetarian_options %}
-                        <p>• Vegetarian options available</p>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script>
-// Cascading dropdown functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const stateSelect = document.getElementById('state-select');
-    const citySelect = document.getElementById('city-select');
-    const areaSelect = document.getElementById('area-select');
-    
-    // State change handler
-    stateSelect.addEventListener('change', function() {
-        const selectedState = this.value;
-        
-        // Reset city and area dropdowns
-        citySelect.innerHTML = '<option value="">Select City</option>';
-        areaSelect.innerHTML = '<option value="">Select Area</option>';
-        citySelect.disabled = !selectedState;
-        areaSelect.disabled = true;
-        
-        if (selectedState) {
-            // Fetch cities for selected state
-            fetch(`/get-delivery-cities?state=${encodeURIComponent(selectedState)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.cities.length > 0) {
-                        data.cities.forEach(city => {
-                            const option = document.createElement('option');
-                            option.value = city.name;
-                            option.textContent = city.name;
-                            citySelect.appendChild(option);
-                        });
-                        citySelect.disabled = false;
-                    } else {
-                        citySelect.innerHTML = '<option value="">No cities available</option>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching cities:', error);
-                    citySelect.innerHTML = '<option value="">Error loading cities</option>';
-                });
-        }
-    });
-    
-    // City change handler
-    citySelect.addEventListener('change', function() {
-        const selectedCity = this.value;
-        const selectedState = stateSelect.value;
-        
-        // Reset area dropdown
-        areaSelect.innerHTML = '<option value="">Select Area</option>';
-        areaSelect.disabled = !selectedCity;
-        
-        if (selectedCity) {
-            // Fetch areas for selected city
-            fetch(`/get-delivery-areas?state=${encodeURIComponent(selectedState)}&city=${encodeURIComponent(selectedCity)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.areas.length > 0) {
-                        data.areas.forEach(area => {
-                            const option = document.createElement('option');
-                            option.value = area.name;
-                            option.textContent = area.name;
-                            areaSelect.appendChild(option);
-                        });
-                        areaSelect.disabled = false;
-                    } else {
-                        areaSelect.innerHTML = '<option value="">No areas available</option>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching areas:', error);
-                    areaSelect.innerHTML = '<option value="">Error loading areas</option>';
-                });
-        }
-    });
-});
-
-// Form submission handler
-document.getElementById('checkout-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    // Validate location selection
-    const stateSelect = document.getElementById('state-select');
-    const citySelect = document.getElementById('city-select');
-    const areaSelect = document.getElementById('area-select');
-    
-    if (!stateSelect.value || !citySelect.value || !areaSelect.value) {
-        alert('Please select State, City, and Area');
-        return;
-    }
-    
-    const button = document.getElementById('pay-button');
-    button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
-    
-    const formData = new FormData(this);
-    
-    fetch(this.action, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': formData.get('csrf_token')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const options = {
-                key: data.key_id,
-                amount: data.amount,
-                currency: data.currency,
-                name: 'HealthyRizz',
-                description: data.description,
-                order_id: data.order_id,
-                handler: function(response) {
-                    // Payment successful - submit verification
-                    const verifyForm = document.createElement('form');
-                    verifyForm.method = 'POST';
-                    verifyForm.action = '{{ url_for("main.verify_payment") }}';
-                    verifyForm.style.display = 'none';
-                    
-                    // Add CSRF token
-                    const csrfInput = document.createElement('input');
-                    csrfInput.type = 'hidden';
-                    csrfInput.name = 'csrf_token';
-                    csrfInput.value = formData.get('csrf_token');
-                    verifyForm.appendChild(csrfInput);
-                    
-                    // Add payment details
-                    const paymentIdInput = document.createElement('input');
-                    paymentIdInput.type = 'hidden';
-                    paymentIdInput.name = 'razorpay_payment_id';
-                    paymentIdInput.value = response.razorpay_payment_id;
-                    verifyForm.appendChild(paymentIdInput);
-                    
-                    const orderIdInput = document.createElement('input');
-                    orderIdInput.type = 'hidden';
-                    orderIdInput.name = 'razorpay_order_id';
-                    orderIdInput.value = response.razorpay_order_id;
-                    verifyForm.appendChild(orderIdInput);
-                    
-                    const signatureInput = document.createElement('input');
-                    signatureInput.type = 'hidden';
-                    signatureInput.name = 'razorpay_signature';
-                    signatureInput.value = response.razorpay_signature;
-                    verifyForm.appendChild(signatureInput);
-                    
-                    document.body.appendChild(verifyForm);
-                    verifyForm.submit();
-                },
-                prefill: {
-                    name: formData.get('customer_name'),
-                    email: formData.get('customer_email'),
-                    contact: formData.get('customer_phone')
-                },
-                theme: {
-                    color: '#4CAF50'
-                }
-            };
-            
-            const rzp = new Razorpay(options);
-            rzp.open();
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while processing your checkout.');
-    })
-    .finally(() => {
-        button.disabled = false;
-        button.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Proceed to Payment (Rs. {{ "%.2f"|format(total_amount) }})';
-    });
-});
-</script>
-{% endblock %}
->>>>>>> 81a4199426f7354dc222b670139539c5516ca07d

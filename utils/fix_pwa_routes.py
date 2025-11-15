@@ -69,9 +69,9 @@ def create_service_worker(app_dir):
         return
     
     with open(service_worker_file, 'w') as f:
-        f.write('''// HealthyRizz Service Worker
+        f.write('''// FitSmart Service Worker
 
-const CACHE_NAME = 'healthyrizz-cache-v1';
+const CACHE_NAME = 'fitsmart-cache-v1';
 const URLS_TO_CACHE = [
   '/',
   '/static/css/style.css',
@@ -211,8 +211,8 @@ def create_manifest(app_dir):
     
     with open(manifest_file, 'w') as f:
         f.write('''{
-  "name": "HealthyRizz Meal Delivery",
-  "short_name": "HealthyRizz",
+  "name": "FitSmart Meal Delivery",
+  "short_name": "FitSmart",
   "description": "Healthy meal delivery service for fitness-focused individuals",
   "start_url": "/",
   "display": "standalone",
@@ -253,7 +253,7 @@ def create_offline_page(app_dir):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthyRizz - Offline</title>
+    <title>FitSmart - Offline</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -284,9 +284,9 @@ def create_offline_page(app_dir):
     <div class="container">
         <div class="icon">📶</div>
         <h1>You're Offline</h1>
-        <p>Sorry, you need an internet connection to access HealthyRizz.</p>
+        <p>Sorry, you need an internet connection to access FitSmart.</p>
         <p>Please check your connection and try again.</p>
-        <p>Some features of HealthyRizz are available offline, but you'll need to connect to browse meals and place orders.</p>
+        <p>Some features of FitSmart are available offline, but you'll need to connect to browse meals and place orders.</p>
     </div>
 </body>
 </html>
@@ -316,7 +316,7 @@ def create_placeholder_icons(app_dir):
             # Create a simple colored square icon
             img = Image.new('RGB', (size, size), color=(76, 175, 80))
             draw = ImageDraw.Draw(img)
-            draw.text((size//4, size//3), "HealthyRizz", fill=(255, 255, 255))
+            draw.text((size//4, size//3), "FitSmart", fill=(255, 255, 255))
             
             img.save(icon_file)
             print(f"Created icon at {icon_file}")
@@ -386,7 +386,7 @@ def update_base_template(app_dir):
     <meta name="theme-color" content="#4CAF50">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="HealthyRizz">
+    <meta name="apple-mobile-web-app-title" content="FitSmart">
     
     <!-- iOS icons -->
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
@@ -408,7 +408,7 @@ def update_base_template(app_dir):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Add PWA functionality to HealthyRizz Flask app')
+    parser = argparse.ArgumentParser(description='Add PWA functionality to FitSmart Flask app')
     parser.add_argument('--app-dir', type=str, default='.', help='Application directory path')
     args = parser.parse_args()
     

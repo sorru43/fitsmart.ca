@@ -61,10 +61,16 @@ class ProductionConfig:
     MAIL_ASCII_ATTACHMENTS = False
     MAIL_SUPPRESS_SEND = False
     
-    # Razorpay configuration
-    RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
-    RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
-    RAZORPAY_WEBHOOK_SECRET = os.getenv('RAZORPAY_WEBHOOK_SECRET')
+    # Stripe configuration (Primary payment gateway for Canadian market)
+    STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+    STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+    STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+    
+    # Razorpay configuration (Deprecated - kept for backward compatibility)
+    # Note: Razorpay is primarily for Indian market. Use Stripe for Canadian market.
+    RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '')
+    RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '')
+    RAZORPAY_WEBHOOK_SECRET = os.getenv('RAZORPAY_WEBHOOK_SECRET', '')
     
     # Rate limiting - More restrictive for production
     RATELIMIT_DEFAULT = "1000 per day, 200 per hour, 30 per minute"
@@ -78,7 +84,7 @@ class ProductionConfig:
     }
     
     # File upload configuration
-    UPLOAD_FOLDER = '/var/www/healthyrizz/static/uploads'
+    UPLOAD_FOLDER = '/var/www/fitsmart/static/uploads'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     
@@ -97,12 +103,12 @@ class ProductionConfig:
         'X-Frame-Options': 'SAMEORIGIN',
         'X-XSS-Protection': '1; mode=block',
         'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.razorpay.com https://api.stripe.com;"
+        'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://api.stripe.com; frame-src https://js.stripe.com;"
     }
     
     # Logging configuration
     LOG_LEVEL = 'INFO'
-    LOG_FILE = '/var/log/healthyrizz/app.log'
+    LOG_FILE = '/var/log/fitsmart/app.log'
     LOG_MAX_BYTES = 10 * 1024 * 1024  # 10MB
     LOG_BACKUP_COUNT = 5
     
@@ -110,27 +116,27 @@ class ProductionConfig:
     CACHE_TYPE = 'redis'
     CACHE_REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/1')
     CACHE_DEFAULT_TIMEOUT = 300
-    CACHE_KEY_PREFIX = 'healthyrizz_'
+    CACHE_KEY_PREFIX = 'fitsmart_'
     
     # Performance settings
     COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']
     COMPRESS_LEVEL = 6
     COMPRESS_MIN_SIZE = 500
     
-    # Indian specific settings
-    CURRENCY = 'INR'
-    CURRENCY_SYMBOL = '₹'
-    DATE_FORMAT = '%d/%m/%Y'
+    # Canadian specific settings
+    CURRENCY = 'CAD'
+    CURRENCY_SYMBOL = '$'
+    DATE_FORMAT = '%Y-%m-%d'
     TIME_FORMAT = '%I:%M %p'
-    PHONE_REGEX = r'^[6-9]\d{9}$'
-    PINCODE_REGEX = r'^\d{6}$'
+    PHONE_REGEX = r'^\+?1?\d{10}$'
+    PINCODE_REGEX = r'^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$'
     
     # Production specific settings
     PREFERRED_URL_SCHEME = 'https'
     SERVER_NAME = os.getenv('SERVER_NAME')
     
     # Backup configuration
-    BACKUP_DIR = '/var/backups/healthyrizz'
+    BACKUP_DIR = '/var/backups/fitsmart'
     BACKUP_RETENTION_DAYS = 30
     
     # Monitoring

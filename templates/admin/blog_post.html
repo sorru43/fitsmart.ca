@@ -1,9 +1,9 @@
-{% extends "base.html" %}
+{% extends "admin/base_admin.html" %}
 
 {% block title %}{{ post.title if post else 'New Blog Post' }} - Admin{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/skins/ui/oxide/skin.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/skins/ui/oxide/skin.min.css">
 <style>
     .tox-tinymce {
         border-radius: 0.5rem !important;
@@ -67,7 +67,7 @@
                     </div>
                     
                     <div class="flex items-center">
-                        <input type="checkbox" name="is_published" id="is_published" {% if post and post.is_published %}checked{% endif %}
+                        <input type="checkbox" name="is_published" id="is_published" value="true" {% if post and post.is_published %}checked{% endif %}
                             class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
                         <label for="is_published" class="ml-2 block text-sm text-gray-700">Publish immediately</label>
                     </div>
@@ -88,7 +88,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js"></script>
 <script>
     tinymce.init({
         selector: '#content',

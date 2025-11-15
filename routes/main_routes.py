@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, request, jsonify, current_app, session, redirect, url_for, flash
+from flask import Blueprint, render_template, request, jsonify, current_app, session, redirect, url_for, flash, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from database.models import db, User, MealPlan, Order, Subscription, BlogPost, DeliveryLocation, State, City, Area, CouponCode, CouponUsage
+from database.models import db, User, MealPlan, Order, Subscription, BlogPost, DeliveryLocation, State, City, Area, CouponCode, CouponUsage, SubscriptionStatus, SubscriptionFrequency, SkippedDelivery, Holiday, Newsletter
 from forms.auth_forms import LoginForm, RegisterForm, ProfileForm, ContactForm, NewsletterForm
 from forms.checkout_forms import CheckoutForm
 from forms.trial_forms import TrialRequestForm
@@ -16,7 +16,7 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 from forms.auth_forms import LoginForm, RegisterForm
 from utils.token_utils import generate_password_reset_token
-from utils.email_utils import send_password_reset_email, send_contact_notification
+from utils.email_utils import send_password_reset_email, send_contact_notification, send_email
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
@@ -30,7 +30,8 @@ from forms.checkout_forms import CheckoutForm
 from forms import GeneralContactForm, CorporateInquiryForm
 from utils.auth_utils import send_verification_email
 from utils.encryption_helper import encrypt_sensitive_data, decrypt_sensitive_data
-from utils.razorpay_utils import get_razorpay_key, create_razorpay_order
+from utils.stripe_utils import create_stripe_customer, create_stripe_checkout_session
+from extensions import csrf
 # from utils.report_utils import get_order_completion_notifications  # Temporarily disabled due to fpdf2 import issues
 from utils.notifications import send_push_notification_to_all_users, send_push_notification_to_user
 from datetime import datetime, timedelta, date, time as dt_time
@@ -43,6 +44,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_
 import hmac
 import hashlib
+from itsdangerous import URLSafeTimedSerializer
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -137,7 +139,7 @@ def index():
         
         if not videos:
             videos = [
-                {'title': 'How HealthyRizz Works', 'description': 'Choose your plan, connect with a nutrition expert, get chef-prepared meals delivered, and transform your lifestyle!', 'youtube_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'thumbnail_url': '/static/images/healthy-meal-bowl.jpg'},
+                {'title': 'How FitSmart Works', 'description': 'Choose your plan, connect with a nutrition expert, get chef-prepared meals delivered, and transform your lifestyle!', 'youtube_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'thumbnail_url': '/static/images/healthy-meal-bowl.jpg'},
                 {'title': 'Our Kitchen Process', 'description': 'See how we prepare fresh, nutritious meals in our state-of-the-art kitchen facilities with expert chefs.', 'youtube_url': 'https://www.youtube.com/watch?v=9bZkp7q19f0', 'thumbnail_url': '/static/images/meal-plate.jpg'}
             ]
         
@@ -151,7 +153,7 @@ def index():
         default_settings = {
             'site_logo': '/static/images/logo white.png',
             'hero_subtitle': 'In Supervision Of Nutrition Experts',
-            'company_name': 'HealthyRizz',
+            'company_name': 'FitSmart',
             'company_tagline': 'Healthy Meal Delivery'
         }
         
@@ -164,24 +166,26 @@ def index():
         if not meal_plans:
             # Create some default meal plans to show
             class MockMealPlan:
-                def __init__(self, name, description, price_weekly, trial_price, calories, protein, fat, carbs, is_popular=False):
+                def __init__(self, name, description, price_weekly, trial_price, calories, protein, fat, carbs, tag, is_popular=False):
                     self.name = name
                     self.description = description
                     self.price_weekly = price_weekly
                     self.trial_price = trial_price
+                    self.price_trial = trial_price  # For template compatibility
                     self.calories = calories
                     self.protein = protein
                     self.fat = fat
                     self.carbs = carbs
+                    self.tag = tag  # Add tag attribute
                     self.is_popular = is_popular
                     self.id = 1
                     self.is_active = True
                     self.available_for_trial = True
             
             meal_plans = [
-                MockMealPlan("Balanced Diets office", "Fresh vegetarian meals packed with nutrition", 750, 200, 1600, 80, 50, 180, True),
-                MockMealPlan("Balanced Diet Plan", "A well-balanced diet with all essential nutrients", 999, 200, 1800, 120, 60, 200, True),
-                MockMealPlan("High Protein Diet", "High Protein diets, special for whom who want natural protein from daily foods", 1200, 250, 100, 100, 100, 100, True)
+                MockMealPlan("Balanced Diets office", "Fresh vegetarian meals packed with nutrition", 750, 200, 1600, 80, 50, 180, "Balanced", True),
+                MockMealPlan("Balanced Diet Plan", "A well-balanced diet with all essential nutrients", 999, 200, 1800, 120, 60, 200, "Balanced", True),
+                MockMealPlan("High Protein Diet", "High Protein diets, special for whom who want natural protein from daily foods", 1200, 250, 100, 100, 100, 100, "High Protein", True)
             ]
         
         if not team_members:
@@ -223,13 +227,13 @@ def index():
         essential_defaults = {
             'site_logo': '/static/images/logo_20250629_170145_black_bg.gif',
             'hero_subtitle': 'In Supervision Of Nutrition Experts',
-            'company_name': 'HealthyRizz',
+            'company_name': 'FitSmart',
             'company_tagline': 'Healthy Meal Delivery',
             'contact_phone': '8054090043',
-            'contact_email': 'healthyrizz.in@gmail.com',
+            'contact_email': 'info@fitsmart.ca',
             'company_address': 'Ludhiana, Punjab, India',
-            'facebook_url': 'https://facebook.com/healthyrizz',
-            'instagram_url': 'https://instagram.com/healthyrizz.india',
+            'facebook_url': 'https://facebook.com/fitsmart',
+            'instagram_url': 'https://instagram.com/fitsmart.ca',
             'show_social_links': 'True',
             'show_fssai_badge': 'True',
             'show_hygiene_badge': 'True',
@@ -282,7 +286,7 @@ def index():
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>HealthyRizz - Welcome</title>
+            <title>FitSmart - Welcome</title>
             <style>
                 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
                 .container { background: white; padding: 3rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center; max-width: 500px; margin: 20px; }
@@ -298,7 +302,7 @@ def index():
         <body>
             <div class="container">
                 <div class="emoji">🎉</div>
-                <h1>Welcome to HealthyRizz!</h1>
+                <h1>Welcome to FitSmart!</h1>
                 <p>You have successfully logged in to your account.</p>
                 
                 <div class="nav">
@@ -309,7 +313,7 @@ def index():
                 </div>
                 
                 <div class="status">
-                    ✨ Your HealthyRizz journey starts here!<br>
+                    ✨ Your FitSmart journey starts here!<br>
                     <small>Homepage in safe mode - all features available</small>
                 </div>
             </div>
@@ -334,7 +338,7 @@ def about():
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>About Us - HealthyRizz</title>
+            <title>About Us - FitSmart</title>
             <style>
                 body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f8f9fa; }
                 .about-container { background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -350,7 +354,7 @@ def about():
         <body>
             <div class="about-container">
                 <div class="icon">🌱</div>
-                <h1>About HealthyRizz</h1>
+                <h1>About FitSmart</h1>
                 <p>We're passionate about bringing you nutritious, delicious meals that fit your lifestyle.</p>
                 <p>Our mission is to make healthy eating convenient and enjoyable for everyone, whether you're a busy professional, a fitness enthusiast, or someone just starting their wellness journey.</p>
                 
@@ -417,6 +421,12 @@ def contact():
             db.session.add(inquiry)
             db.session.commit()
             
+            # Track contact form submission
+            try:
+                session['track_contact'] = True
+            except Exception as e:
+                current_app.logger.error(f'Error setting contact tracking: {str(e)}')
+            
             # Send email notification to admin
             try:
                 send_contact_notification(inquiry)
@@ -460,6 +470,7 @@ def amp_blog_post(slug):
         return render_template('404.html'), 404
 
 @main_bp.route('/calculate-meal', methods=['POST'])
+@csrf.exempt  # Exempt from CSRF protection for AJAX requests
 def calculate_meal():
     """Calculate meal plan macros and return JSON response for AJAX requests"""
     current_app.logger.info("Meal calculator endpoint called")
@@ -560,88 +571,124 @@ def calculate_meal():
 
 @main_bp.route('/meal-plans')
 def meal_plans():
-    """Meal plans page with bulletproof error handling"""
+    """Meal plans page with advanced filtering"""
     try:
-        plan_type = request.args.get('type')
-        breakfast = request.args.get('breakfast')
-        trial_only = request.args.get('trial_only')
-        search = request.args.get('search')
+        # Get filter parameters
+        meal_type = request.args.get('type', '')
+        gender = request.args.get('gender', '')
+        breakfast = request.args.get('breakfast', '')
+        trial_only = request.args.get('trial_only', '')
         
-        # Start with all active plans - with error handling
-        try:
-            query = MealPlan.query.filter_by(is_active=True)
-
-            # Filter by plan type (tag or category)
-            if plan_type:
-                if plan_type == 'vegetarian':
-                    query = query.filter(MealPlan.is_vegetarian == True)
-                else:
-                    query = query.filter(MealPlan.tag.ilike(f"%{plan_type.replace('-', ' ')}%"))
-
-            # Filter by breakfast option
+        # Build query - start with all active plans
+        query = MealPlan.query.filter_by(is_active=True)
+        
+        # Apply filters only if they are provided
+        if meal_type:
+            if meal_type == 'balanced':
+                query = query.filter(MealPlan.tag.ilike('%Balanced%'))
+            elif meal_type == 'weight-loss':
+                query = query.filter(MealPlan.tag.ilike('%Weight Loss%'))
+            elif meal_type == 'athletic':
+                query = query.filter(MealPlan.tag.ilike('%Athletic%'))
+            elif meal_type == 'vegetarian':
+                query = query.filter(MealPlan.tag.ilike('%Vegetarian%'))
+            elif meal_type == 'keto':
+                query = query.filter(MealPlan.tag.ilike('%Keto%'))
+        
+        if gender:
+            if gender == 'male':
+                query = query.filter(MealPlan.tag.ilike('%Male%'))
+            elif gender == 'female':
+                query = query.filter(MealPlan.tag.ilike('%Female%'))
+        
+        if breakfast:
             if breakfast == '1':
                 query = query.filter(MealPlan.includes_breakfast == True)
             elif breakfast == '0':
                 query = query.filter(MealPlan.includes_breakfast == False)
-
-            # Filter by trial availability
+        
+        if trial_only:
             if trial_only == '1':
-                query = query.filter(MealPlan.available_for_trial == True)
-
-            # Search by name or description
-            if search:
-                query = query.filter(or_(MealPlan.name.ilike(f'%{search}%'), MealPlan.description.ilike(f'%{search}%')))
-
-            plans = query.order_by(MealPlan.price_weekly).all()
-        except Exception as db_error:
-            current_app.logger.warning(f"Database query failed: {db_error}")
-            plans = []
+                query = query.filter(MealPlan.is_trial_available == True)
         
-        current_app.logger.info(f"Meal plans loaded successfully: {len(plans)} plans")
+        # Get the plans
+        plans = query.order_by(MealPlan.is_popular.desc(), MealPlan.price_weekly.asc()).all()
         
-        return render_template('meal_plans.html', 
-                             plan_type=plan_type, 
-                             plans=plans,
-                             now=datetime.now())
-                             
+        # Debug: Print plan names and details
+        current_app.logger.info(f"Found {len(plans)} meal plans")
+        for plan in plans:
+            current_app.logger.info(f"Plan: {plan.name} (ID: {plan.id})")
+            current_app.logger.info(f"  - Description: {plan.description}")
+            current_app.logger.info(f"  - Price: {plan.price_weekly}")
+            current_app.logger.info(f"  - Is Popular: {plan.is_popular}")
+            current_app.logger.info(f"  - Is Active: {plan.is_active}")
+        
+        # Track meal plans page view
+        try:
+            session['track_meal_plans_view'] = {
+                'plan_count': len(plans),
+                'filters': {
+                    'meal_type': meal_type,
+                    'gender': gender,
+                    'breakfast': breakfast,
+                    'trial_only': trial_only
+                }
+            }
+        except Exception as e:
+            current_app.logger.error(f'Error setting meal plans tracking: {str(e)}')
+        
+        return render_template('meal-plans.html', meal_plans=plans)
+        
     except Exception as e:
-        current_app.logger.error(f"Error in meal_plans route: {str(e)}")
+        current_app.logger.error(f"Error loading meal plans: {e}")
+        # Return empty plans list but don't crash
+        return render_template('meal-plans.html', meal_plans=[])
+
+@main_bp.route('/meal-plans-json')
+def meal_plans_json():
+    """API route to return meal plans as JSON"""
+    try:
+        plans = MealPlan.query.filter_by(is_active=True).all()
+        plan_data = []
+        for plan in plans:
+            plan_data.append({
+                'id': plan.id,
+                'name': plan.name,
+                'description': plan.description,
+                'price_weekly': float(plan.price_weekly),
+                'is_popular': plan.is_popular,
+                'is_active': plan.is_active,
+                'calories': plan.calories,
+                'protein': plan.protein,
+                'fat': plan.fat,
+                'carbs': plan.carbs
+            })
+        return jsonify({'plans': plan_data, 'count': len(plan_data)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main_bp.route('/sample-menu/<int:plan_id>')
+def sample_menu(plan_id):
+    """Sample menu page for a specific meal plan"""
+    try:
+        # Get the meal plan
+        meal_plan = MealPlan.query.get_or_404(plan_id)
         
-        # Fallback: Return a beautiful error page with working navigation
-        fallback_html = """
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Meal Plans - HealthyRizz</title>
-            <style>
-                body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f8f9fa; }
-                .error-container { background: white; border-radius: 8px; padding: 30px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                .nav-links { display: flex; gap: 20px; justify-content: center; margin: 30px 0; flex-wrap: wrap; }
-                .nav-links a { color: #007bff; text-decoration: none; padding: 12px 20px; background: #e9ecef; border-radius: 5px; transition: all 0.3s; }
-                .nav-links a:hover { background: #007bff; color: white; transform: translateY(-2px); }
-                h1 { color: #28a745; margin-bottom: 20px; }
-                .icon { font-size: 3rem; margin-bottom: 20px; }
-            </style>
-        </head>
-        <body>
-            <div class="error-container">
-                <div class="icon">🥗</div>
-                <h1>Our Meal Plans</h1>
-                <p>We're currently updating our meal plan database to serve you better.</p>
-                <p>Please check back soon for our delicious and nutritious meal options!</p>
-                <div class="nav-links">
-                    <a href="/">🏠 Home</a>
-                    <a href="/about">📖 About</a>
-                    <a href="/contact">📞 Contact</a>
-                    <a href="/profile">👤 Profile</a>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        return fallback_html, 200
+        # Get sample menu items organized by meal type
+        sample_menu_by_type = meal_plan.get_sample_menu_by_meal_type()
+        
+        # Get sample menu items organized by day
+        sample_menu_by_day = meal_plan.get_sample_menu_by_day()
+        
+        return render_template('sample_menu.html', 
+                             meal_plan=meal_plan, 
+                             sample_menu_by_type=sample_menu_by_type,
+                             sample_menu_by_day=sample_menu_by_day)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading sample menu: {e}")
+        flash('Error loading sample menu. Please try again.', 'error')
+        return redirect(url_for('main.meal_plans'))
 
 @main_bp.route('/blog')
 def blog():
@@ -690,122 +737,82 @@ def blog_post(slug):
 @main_bp.route('/profile')
 @login_required
 def profile():
-    """User profile page with enhanced order and payment history"""
-    current_app.logger.info(f"📄 PROFILE PAGE ACCESSED by {current_user.email}")
+    """Enhanced user profile page with better UI/UX for subscription management"""
+    # Initialize variables with default values
+    active_subscriptions = []
+    paused_subscriptions = []
+    canceled_subscriptions = []
+    subscription_deliveries = {}
+    payments = []
+    orders = []
+    total_spent = 0
     
     try:
-        # Get user's active subscriptions
-        active_subscriptions = Subscription.query.filter(
-            Subscription.user_id == current_user.id,
-            Subscription.status == 'active'
-        ).all()
-        
-        # Get user's paused subscriptions
-        paused_subscriptions = Subscription.query.filter(
-            Subscription.user_id == current_user.id,
-            Subscription.status == 'paused'
-        ).all()
-        
-        # Get user's canceled subscriptions
-        canceled_subscriptions = Subscription.query.filter(
-            Subscription.user_id == current_user.id,
-            Subscription.status == 'cancelled'
-        ).all()
-        
-        # Get user's order history (all orders) - SIMPLIFIED QUERY
-        try:
-            orders = Order.query.filter(
-                Order.user_id == current_user.id
-            ).order_by(Order.created_at.desc()).all()
-            current_app.logger.info(f"Found {len(orders)} orders for user {current_user.id}")
-        except Exception as order_error:
-            current_app.logger.error(f"Error querying orders: {str(order_error)}")
-            orders = []
-        
-        # Get recent orders (last 10) with meal plan info
-        recent_orders = []
-        for order in orders[:10]:
-            try:
-                # Try to get meal plan name safely
-                meal_plan_name = 'N/A'
-                if hasattr(order, 'meal_plan') and order.meal_plan:
-                    meal_plan_name = order.meal_plan.name
-                elif hasattr(order, 'meal_plan_id') and order.meal_plan_id:
-                    # Try to get meal plan by ID
-                    meal_plan = MealPlan.query.get(order.meal_plan_id)
-                    if meal_plan:
-                        meal_plan_name = meal_plan.name
-            except Exception as e:
-                current_app.logger.warning(f"Error getting meal plan name for order {order.id}: {str(e)}")
-                meal_plan_name = 'N/A'
-                
-            order_data = {
-                'id': order.id,
-                'amount': order.amount,
-                'status': order.status,
-                'payment_status': order.payment_status,
-                'created_at': order.created_at,
-                'meal_plan_name': meal_plan_name
-            }
-            recent_orders.append(order_data)
-        
-        # Get payment history from orders
-        payment_history = []
-        for order in orders:
-            if order.payment_status and order.payment_id:
-                try:
-                    payment_history.append({
-                        'order_id': order.id,
-                        'payment_id': order.payment_id,
-                        'amount': order.amount,
-                        'status': order.payment_status,
-                        'date': order.created_at,
-                        'subscription_id': None,
-                        'meal_plan_name': 'N/A'
-                    })
-                except Exception as e:
-                    current_app.logger.warning(f"Error processing payment history for order {order.id}: {str(e)}")
+        # Get user's orders for payment history
+        orders = Order.query.filter_by(
+            user_id=current_user.id
+        ).order_by(Order.created_at.desc()).all()
         
         # Calculate total spent
-        total_spent = sum(order.amount for order in orders if order.payment_status == 'completed')
+        total_spent = sum(float(order.amount) for order in orders if order.amount)
         
-        # Get subscription statistics
-        total_subscriptions = len(active_subscriptions) + len(paused_subscriptions) + len(canceled_subscriptions)
+        # Get user's subscriptions
+        subscriptions = Subscription.query.filter_by(
+            user_id=current_user.id
+        ).order_by(Subscription.start_date.desc()).all()
         
-        # Remove delivery processing completely to avoid JSON error
-        subscription_deliveries = {}
+        # Group subscriptions by status
+        for s in subscriptions:
+            if s.status == SubscriptionStatus.ACTIVE:
+                active_subscriptions.append(s)
+            elif s.status == SubscriptionStatus.PAUSED:
+                paused_subscriptions.append(s)
+            elif s.status == SubscriptionStatus.CANCELED:
+                canceled_subscriptions.append(s)
         
-        current_app.logger.info(f"Profile data loaded successfully for {current_user.email}")
-        current_app.logger.info(f"Found {len(orders)} orders, {len(payment_history)} payments, {total_subscriptions} subscriptions")
+        # Get upcoming deliveries for active and paused subscriptions
+        for subscription in active_subscriptions + paused_subscriptions:
+            try:
+                subscription_deliveries[subscription.id] = subscription.get_upcoming_deliveries(days=14)
+            except Exception as del_error:
+                current_app.logger.error(f"Error processing deliveries for subscription {subscription.id}: {str(del_error)}")
+                subscription_deliveries[subscription.id] = []
         
-        return render_template('profile.html', 
-                             user=current_user,
-                             active_subscriptions=active_subscriptions,
-                             paused_subscriptions=paused_subscriptions,
-                             canceled_subscriptions=canceled_subscriptions,
-                             subscription_deliveries=subscription_deliveries,
-                             orders=recent_orders,
-                             payment_history=payment_history,
-                             total_spent=total_spent,
-                             total_subscriptions=total_subscriptions,
-                             now=datetime.now())
-                             
+        # Generate payment history from orders
+        payments = []
+        for order in orders:
+            if order.meal_plan:
+                payment = {
+                    'date': order.created_at,
+                    'description': f"{order.meal_plan.name} - Order #{order.id}",
+                    'amount': float(order.amount),
+                    'status': order.payment_status,
+                    'order_id': order.id,
+                    'payment_id': order.payment_id,
+                    'invoice_url': '#'
+                }
+                payments.append(payment)
+        
+        # Sort payments by date
+        if payments:
+            payments.sort(key=lambda x: x.get('date', datetime.now()), reverse=True)
+                
     except Exception as e:
-        current_app.logger.error(f"Error in profile route: {str(e)}")
-        current_app.logger.error(f"Error type: {type(e).__name__}")
-        import traceback
-        current_app.logger.error(f"Full traceback: {traceback.format_exc()}")
-        
-        # Return a working profile page with tabs even if there's an error
-        return render_template('profile_working.html', 
-                             user=current_user,
-                             orders=[],
-                             payment_history=[],
-                             total_spent=0,
-                             total_subscriptions=0,
-                             now=datetime.now())
+        current_app.logger.error(f"Error in profile page: {str(e)}")
+        db.session.rollback()
+        flash('An error occurred while loading your profile. Please try again.', 'error')
+    
+    return render_template('profile_enhanced.html', 
+                          user=current_user,
+                          active_subscriptions=active_subscriptions,
+                          paused_subscriptions=paused_subscriptions,
+                          canceled_subscriptions=canceled_subscriptions,
+                          subscription_deliveries=subscription_deliveries,
+                          payments=payments,
+                          orders=orders,
+                          total_spent=total_spent)
 
-@main_bp.route('/profile/update', methods=['POST'])
+@main_bp.route('/update-profile', methods=['POST'])
 @login_required
 def update_profile():
     """Handle profile updates"""
@@ -1042,6 +1049,10 @@ def update_profile():
             return redirect(url_for('main.profile'))
 
 
+def _is_google_oauth_enabled():
+    """Helper function to check if Google OAuth is enabled"""
+    return current_app.config.get('GOOGLE_CLIENT_ID') is not None and current_app.config.get('GOOGLE_CLIENT_SECRET') is not None
+
 @main_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """Handle user login with debug logging for CSRF/session issues"""
@@ -1080,7 +1091,130 @@ def login():
             flash('Invalid email or password', 'error')
             return redirect(url_for('main.login'))
     
-    return render_template('login.html', form=form)
+    # Check if Google OAuth is enabled
+    google_enabled = _is_google_oauth_enabled()
+    return render_template('login.html', form=form, google_enabled=google_enabled)
+
+@main_bp.route('/login/google')
+def google_login():
+    """Initiate Google OAuth login"""
+    if not hasattr(current_app, 'google_oauth') or not current_app.google_oauth:
+        flash('Google authentication is not configured.', 'error')
+        return redirect(url_for('main.login'))
+    
+    try:
+        # Generate state for CSRF protection
+        state = secrets.token_urlsafe(32)
+        session['oauth_state'] = state
+        
+        # Get redirect URI
+        redirect_uri = url_for('main.google_callback', _external=True)
+        
+        # Redirect to Google OAuth
+        return current_app.google_oauth.authorize_redirect(redirect_uri, state=state)
+    except Exception as e:
+        current_app.logger.error(f"Error initiating Google login: {str(e)}", exc_info=True)
+        flash('Error initiating Google login. Please try again.', 'error')
+        return redirect(url_for('main.login'))
+
+@main_bp.route('/login/google/callback')
+def google_callback():
+    """Handle Google OAuth callback"""
+    if not hasattr(current_app, 'google_oauth') or not current_app.google_oauth:
+        flash('Google authentication is not configured.', 'error')
+        return redirect(url_for('main.login'))
+    
+    try:
+        # Verify state
+        state = request.args.get('state')
+        if not state or state != session.get('oauth_state'):
+            flash('Invalid authentication state. Please try again.', 'error')
+            return redirect(url_for('main.login'))
+        
+        # Remove state from session
+        session.pop('oauth_state', None)
+        
+        # Get authorization token
+        token = current_app.google_oauth.authorize_access_token()
+        
+        # Get user info from Google
+        user_info = token.get('userinfo')
+        if not user_info:
+            # Fetch user info if not in token
+            resp = current_app.google_oauth.get('https://www.googleapis.com/oauth2/v2/userinfo')
+            user_info = resp.json()
+        
+        # Extract user information
+        google_id = user_info.get('sub')
+        email = user_info.get('email', '').lower()
+        name = user_info.get('name', '')
+        picture = user_info.get('picture', '')
+        
+        if not email:
+            flash('Could not retrieve email from Google account.', 'error')
+            return redirect(url_for('main.login'))
+        
+        # Check if user exists by Google ID
+        user = User.query.filter_by(google_id=google_id).first()
+        
+        if not user:
+            # Check if user exists by email (link accounts)
+            user = User.query.filter_by(email=email).first()
+            
+            if user:
+                # Link Google account to existing user
+                user.google_id = google_id
+                if not user.name and name:
+                    user.name = name
+                user.email_verified = True
+                db.session.commit()
+                current_app.logger.info(f'Linked Google account to existing user: {user.email}')
+            else:
+                # Create new user
+                username = email.split('@')[0] if email else f"user_{secrets.token_hex(4)}"
+                # Ensure username is unique
+                base_username = username
+                counter = 1
+                while User.query.filter_by(username=username).first():
+                    username = f"{base_username}_{counter}"
+                    counter += 1
+                
+                user = User(
+                    username=username,
+                    email=email,
+                    google_id=google_id,
+                    name=name or username,
+                    email_verified=True,
+                    is_active=True
+                )
+                db.session.add(user)
+                db.session.commit()
+                current_app.logger.info(f'Created new user via Google OAuth: {user.email}')
+                
+                # Send welcome email
+                try:
+                    from utils.email_functions import send_welcome_email
+                    send_welcome_email(user)
+                except Exception as e:
+                    current_app.logger.error(f'Failed to send welcome email: {str(e)}')
+        else:
+            # Update user info if needed
+            if not user.name and name:
+                user.name = name
+            user.email_verified = True
+            db.session.commit()
+        
+        # Log user in
+        login_user(user, remember=True)
+        current_app.logger.info(f'User logged in via Google: {user.email}')
+        
+        flash('Successfully logged in with Google!', 'success')
+        return redirect(url_for('main.index'))
+        
+    except Exception as e:
+        current_app.logger.error(f"Error in Google OAuth callback: {str(e)}", exc_info=True)
+        flash('Error authenticating with Google. Please try again.', 'error')
+        return redirect(url_for('main.login'))
 
 @main_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -1095,29 +1229,62 @@ def register():
         phone = form.phone.data
         password = form.password.data
         
-        # Check if user already exists
+        # Check if user already exists by email
         if User.query.filter_by(email=email).first():
             flash('Email already registered', 'error')
-            return render_template('register.html', form=form, now=datetime.now())
+            google_enabled = _is_google_oauth_enabled()
+            return render_template('register.html', form=form, now=datetime.now(), google_enabled=google_enabled)
+        
+        # Check if username already exists
+        if User.query.filter_by(username=name).first():
+            flash('Username already taken. Please choose a different one.', 'error')
+            google_enabled = _is_google_oauth_enabled()
+            return render_template('register.html', form=form, now=datetime.now(), google_enabled=google_enabled)
         
         try:
-            # Create new user using the create_user method
-            user = User.create_user(email=email, username=name, password=password, phone=phone)
+            # Create new user manually
+            user = User(
+                username=name,
+                email=email,
+                phone=phone,
+                name=name
+            )
+            user.set_password(password)
+            
             db.session.add(user)
             db.session.commit()
             
             # Log successful registration
-            logging.info(f'New user registered: {user.email}')
+            current_app.logger.info(f'New user registered: {user.email}')
             
-            flash('Registration successful! Please log in.', 'success')
+            # Send welcome email
+            try:
+                from utils.email_functions import send_welcome_email
+                send_welcome_email(user)
+                current_app.logger.info(f'Welcome email sent to: {user.email}')
+            except Exception as e:
+                current_app.logger.error(f'Failed to send welcome email to {user.email}: {str(e)}')
+                # Don't fail registration if email fails
+            
+            flash('Registration successful! Please check your email for a welcome message.', 'success')
             return redirect(url_for('main.login'))
+        except IntegrityError as e:
+            db.session.rollback()
+            current_app.logger.error(f'Registration integrity error for {email}: {str(e)}')
+            flash('Email or username already exists. Please try a different one.', 'error')
+            google_enabled = _is_google_oauth_enabled()
+            return render_template('register.html', form=form, now=datetime.now(), google_enabled=google_enabled)
         except Exception as e:
             db.session.rollback()
-            logging.error(f'Registration error for {email}: {str(e)}')
+            current_app.logger.error(f'Registration error for {email}: {str(e)}')
+            current_app.logger.error(f'Error type: {type(e).__name__}')
             flash('An error occurred during registration. Please try again.', 'error')
-            return render_template('register.html', form=form, now=datetime.now())
+            google_enabled = _is_google_oauth_enabled()
+            return render_template('register.html', form=form, now=datetime.now(), google_enabled=google_enabled)
     
-    return render_template('register.html', form=form, now=datetime.now())
+    # Check if Google OAuth is enabled
+    google_enabled = current_app.config.get('GOOGLE_CLIENT_ID') is not None and current_app.config.get('GOOGLE_CLIENT_SECRET') is not None
+    return render_template('register.html', form=form, now=datetime.now(), google_enabled=google_enabled)
 
 @main_bp.route('/logout')
 def logout():
@@ -1152,32 +1319,159 @@ def logout():
 def subscribe_newsletter():
     """Newsletter subscription"""
     try:
+        current_app.logger.info('Newsletter subscription attempt started')
+        
+        # Get email from form
         email = request.form.get('email', '').strip().lower()
+        current_app.logger.info(f'Email received: {email}')
         
         if not email:
+            current_app.logger.warning('No email provided')
             flash('Please provide a valid email address.', 'error')
-            return redirect(url_for('main.index'))
+            return redirect(request.referrer or url_for('main.index'))
+        
+        # Validate email format
+        if '@' not in email or '.' not in email:
+            current_app.logger.warning(f'Invalid email format: {email}')
+            flash('Please provide a valid email address.', 'error')
+            return redirect(request.referrer or url_for('main.index'))
         
         # Check if already subscribed
         existing_subscription = Newsletter.query.filter_by(email=email).first()
         if existing_subscription:
+            current_app.logger.info(f'Email already subscribed: {email}')
             flash('You are already subscribed to our newsletter!', 'info')
-            return redirect(url_for('main.index'))
+            return redirect(request.referrer or url_for('main.index'))
         
         # Create new subscription
         newsletter = Newsletter(email=email)
         db.session.add(newsletter)
         db.session.commit()
         
-        current_app.logger.info(f'New newsletter subscription: {email}')
-        flash('Thank you for subscribing to our newsletter!', 'success')
+        current_app.logger.info(f'New newsletter subscription successful: {email}')
         
+        # Send welcome email to new subscriber
+        try:
+            from utils.email_utils import send_email
+            
+            subject = "Welcome to FitSmart Newsletter! 🎉"
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: #10b981; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }}
+                    .content {{ background: #f9f9f9; padding: 20px; border-radius: 8px; }}
+                    .welcome {{ background: #d1fae5; border: 1px solid #10b981; padding: 15px; border-radius: 6px; margin: 15px 0; }}
+                    .footer {{ text-align: center; color: #666; font-size: 14px; margin-top: 20px; }}
+                    .button {{ display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 15px 0; }}
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>🎉 Welcome to FitSmart!</h1>
+                    <p>You're now part of our healthy community!</p>
+                </div>
+                
+                <div class="content">
+                    <div class="welcome">
+                        <h2>✅ Successfully Subscribed!</h2>
+                        <p>Thank you for subscribing to the FitSmart newsletter! You'll now receive:</p>
+                    </div>
+                    
+                    <h3>📧 What You'll Get:</h3>
+                    <ul>
+                        <li>🍽️ Weekly healthy meal inspiration</li>
+                        <li>💪 Nutrition tips and fitness advice</li>
+                        <li>🎯 Exclusive recipes and cooking tips</li>
+                        <li>💰 Special offers and discounts</li>
+                        <li>🏆 Success stories from our community</li>
+                    </ul>
+                    
+                    <h3>🚀 Get Started:</h3>
+                    <p>Explore our meal plans and start your healthy journey today!</p>
+                    
+                    <a href="https://fitsmart.ca/meal-plans" class="button">View Meal Plans</a>
+                    
+                    <p>We're excited to have you on board! Your first newsletter will arrive soon.</p>
+                </div>
+                
+                <div class="footer">
+                    <p>Best regards,<br>Team FitSmart</p>
+                    <p>© 2024 FitSmart - Fresh, Healthy Meals Delivered</p>
+                    <p><small>You can unsubscribe anytime by clicking the link in our emails.</small></p>
+                </div>
+            </body>
+            </html>
+            """
+            
+            text_content = f"""
+Welcome to HealthyRizz Newsletter!
+
+✅ Successfully Subscribed!
+
+Thank you for subscribing to the HealthyRizz newsletter! You'll now receive:
+
+📧 What You'll Get:
+🍽️ Weekly healthy meal inspiration
+💪 Nutrition tips and fitness advice
+🎯 Exclusive recipes and cooking tips
+💰 Special offers and discounts
+🏆 Success stories from our community
+
+🚀 Get Started:
+Explore our meal plans and start your healthy journey today!
+Visit: https://healthyrizz.in/meal-plans
+
+We're excited to have you on board! Your first newsletter will arrive soon.
+
+Best regards,
+Team HealthyRizz
+© 2024 HealthyRizz - Fresh, Healthy Meals Delivered
+
+You can unsubscribe anytime by clicking the link in our emails.
+            """
+            
+            # Send welcome email
+            email_sent = send_email(
+                to_email=email,
+                from_email="healthyrizz.in@gmail.com",
+                subject=subject,
+                html_content=html_content,
+                text_content=text_content
+            )
+            
+            if email_sent:
+                current_app.logger.info(f'Welcome email sent successfully to {email}')
+            else:
+                current_app.logger.error(f'Failed to send welcome email to {email}')
+                
+        except Exception as e:
+            current_app.logger.error(f'Error sending welcome email to {email}: {str(e)}')
+        
+        flash('Thank you for subscribing to our newsletter! Check your email for a welcome message.', 'success')
+        
+        # Track newsletter signup event
+        try:
+            from flask import session
+            session['track_newsletter_signup'] = True
+            current_app.logger.info('Tracking session set successfully')
+        except Exception as e:
+            current_app.logger.error(f'Error setting tracking session: {str(e)}')
+        
+    except IntegrityError as e:
+        db.session.rollback()
+        current_app.logger.error(f'Database integrity error in newsletter subscription: {str(e)}')
+        flash('This email is already subscribed to our newsletter!', 'info')
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f'Newsletter subscription error: {str(e)}')
+        current_app.logger.error(f'Error type: {type(e).__name__}')
         flash('An error occurred while subscribing. Please try again.', 'error')
     
-    return redirect(url_for('main.index'))
+    return redirect(request.referrer or url_for('main.index'))
 
 @main_bp.route('/meals')
 def meals():
@@ -1388,6 +1682,7 @@ def init_db():
         return jsonify({'error': str(e)}), 500
 
 @main_bp.route('/forgot-password', methods=['GET', 'POST'])
+@csrf.exempt  # Exempt from CSRF protection for public password reset
 def forgot_password():
     """Forgot password page"""
     if request.method == 'POST':
@@ -1416,39 +1711,103 @@ def forgot_password():
 @main_bp.route('/subscribe/<int:plan_id>')
 def subscribe(plan_id):
     """Subscribe to a meal plan with proper total calculation and cascading location dropdowns"""
-    meal_plan = MealPlan.query.get_or_404(plan_id)
-    frequency = request.args.get('frequency', 'weekly')
-    if frequency == 'weekly':
-        base_price = float(meal_plan.price_weekly)
-    else:
-        base_price = float(meal_plan.price_monthly)
-    gst_amount = base_price * 0.05
-    total_amount = base_price + gst_amount
-    
-    # Get all states for the cascading dropdown
-    states = State.query.order_by(State.name).all()
-    
-    user_data = None
-    if current_user.is_authenticated:
-        user_data = {
-            'name': current_user.name or getattr(current_user, 'username', ''),
-            'email': current_user.email,
-            'phone': current_user.phone,
-            'address': current_user.address,
-            'city': current_user.city,
-            'state': current_user.state,
-            'postal_code': current_user.postal_code
-        }
-    return render_template(
-        'checkout.html',
-        meal_plan=meal_plan,
-        frequency=frequency,
-        base_price=base_price,
-        gst_amount=gst_amount,
-        total_amount=total_amount,
-        states=states,
-        user_data=user_data
-    )
+    try:
+        # Get meal plan with error handling
+        try:
+            meal_plan = MealPlan.query.get_or_404(plan_id)
+        except Exception as e:
+            current_app.logger.error(f"Error getting meal plan {plan_id}: {e}")
+            flash('Meal plan not found.', 'error')
+            return redirect(url_for('main.meal_plans'))
+        
+        frequency = request.args.get('frequency', 'weekly')
+        
+        # Calculate prices properly
+        try:
+            if frequency == 'weekly':
+                base_price = float(meal_plan.price_weekly)
+            else:
+                base_price = float(meal_plan.price_monthly)
+        except (ValueError, AttributeError) as e:
+            current_app.logger.error(f"Error calculating price: {e}")
+            base_price = 1000.0  # Fallback price
+        
+        # Calculate HST (13% for Ontario, Canada)
+        hst_amount = base_price * 0.13
+        total_amount = base_price + hst_amount
+        
+        # Get all states with their cities and areas for the cascading dropdown
+        locations_data = []
+        try:
+            states = State.query.order_by(State.name).all()
+            for state in states:
+                state_data = {
+                    'id': state.id,
+                    'name': state.name,
+                    'cities': []
+                }
+                for city in state.cities:
+                    city_data = {
+                        'id': city.id,
+                        'name': city.name,
+                        'areas': []
+                    }
+                    for area in city.areas:
+                        city_data['areas'].append({
+                            'id': area.id,
+                            'name': area.name
+                        })
+                    state_data['cities'].append(city_data)
+                locations_data.append(state_data)
+        except Exception as e:
+            current_app.logger.warning(f"Could not load locations from database: {e}")
+            locations_data = []
+        
+        # If no locations from database, show empty dropdowns
+        if not locations_data:
+            current_app.logger.warning("No delivery locations found in database. Admin must add locations first.")
+        
+        # Get user data if logged in
+        user_data = None
+        try:
+            if current_user.is_authenticated:
+                user_data = {
+                    'name': getattr(current_user, 'name', '') or getattr(current_user, 'username', ''),
+                    'email': getattr(current_user, 'email', ''),
+                    'phone': getattr(current_user, 'phone', ''),
+                    'address': getattr(current_user, 'address', ''),
+                    'city': getattr(current_user, 'city', ''),
+                    'state': getattr(current_user, 'state', ''),
+                    'postal_code': getattr(current_user, 'postal_code', '')
+                }
+        except Exception as e:
+            current_app.logger.warning(f"Error getting user data: {e}")
+            user_data = None
+        
+        # Track checkout initiation
+        try:
+            session['track_initiate_checkout'] = {
+                'value': total_amount,
+                'currency': 'CAD',
+                'meal_plan_id': plan_id
+            }
+        except Exception as e:
+            current_app.logger.error(f'Error setting checkout tracking: {str(e)}')
+        
+        return render_template(
+            'checkout.html',
+            meal_plan=meal_plan,
+            frequency=frequency,
+            base_price=base_price,
+            hst_amount=hst_amount,
+            total_amount=total_amount,
+            locations_data=locations_data,
+            user_data=user_data
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error in subscribe route: {str(e)}")
+        flash('An error occurred while loading the checkout page.', 'error')
+        return redirect(url_for('main.meal_plans'))
 
 @main_bp.route('/admin/daily-meal-prep')
 @login_required
@@ -1598,42 +1957,172 @@ def get_cities_by_province():
     city_list = [c[0] for c in cities]
     return jsonify({'success': True, 'cities': city_list})
 
+@main_bp.route('/test-trial-form')
+def test_trial_form():
+    """Test page for trial request form"""
+    return render_template('test_trial_form.html')
+
+@main_bp.route('/simple-test')
+def simple_test():
+    """Very simple test page"""
+    return render_template('simple_test.html')
+
+@main_bp.route('/simple-trial/<int:plan_id>')
+def simple_trial(plan_id):
+    """Simple trial request page"""
+    meal_plan = MealPlan.query.get_or_404(plan_id)
+    return render_template('simple_trial_form.html', meal_plan=meal_plan)
+
+@main_bp.route('/simple-trial-submit', methods=['POST'])
+@csrf.exempt
+def simple_trial_submit():
+    """Simple trial request submission"""
+    try:
+        print("DEBUG: Simple trial submit called")
+        print(f"DEBUG: Form data: {request.form}")
+        
+        # Get form data
+        name = request.form.get('name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        address = request.form.get('address')
+        province = request.form.get('province')
+        city = request.form.get('city')
+        area = request.form.get('area')
+        postal_code = request.form.get('postal_code')
+        preferred_date = request.form.get('preferred_date')
+        notes = request.form.get('notes', '')
+        meal_plan_id = request.form.get('meal_plan_id')
+        
+        # Validate required fields
+        if not all([name, email, phone, address, province, city, area, postal_code, preferred_date, meal_plan_id]):
+            return jsonify({'success': False, 'error': 'Please fill in all required fields'})
+        
+        # Convert date string to date object
+        from datetime import datetime
+        try:
+            preferred_date_obj = datetime.strptime(preferred_date, '%Y-%m-%d').date()
+        except:
+            return jsonify({'success': False, 'error': 'Invalid date format'})
+        
+        # Create trial request
+        trial_request = TrialRequest(
+            name=name,
+            email=email,
+            phone=phone,
+            address=address,
+            province=province,
+            city=city,
+            area=area,
+            postal_code=postal_code,
+            preferred_date=preferred_date_obj,
+            notes=notes,
+            meal_plan_id=int(meal_plan_id)
+        )
+        
+        db.session.add(trial_request)
+        db.session.commit()
+        
+        print(f"DEBUG: Trial request created successfully with ID: {trial_request.id}")
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Trial request submitted successfully!',
+            'trial_id': trial_request.id
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"DEBUG: Error in simple trial submit: {type(e).__name__}: {str(e)}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'})
+
 @main_bp.route('/trial-request/<int:plan_id>', methods=['GET', 'POST'])
+@csrf.exempt  # Temporarily exempt for testing
 def trial_request(plan_id):
+    """Handle trial meal plan requests with admin location data"""
     meal_plan = MealPlan.query.get_or_404(plan_id)
     form = TrialRequestForm()
     form.meal_plan_id.data = plan_id
     
-    if form.validate_on_submit():
-        try:
-            trial_request = TrialRequest(
-                name=form.name.data,
-                email=form.email.data,
-                phone=form.phone.data,
-                preferred_date=form.preferred_date.data,
-                address=form.address.data,
-                city=form.city.data,
-                province=form.province.data,
-                postal_code=form.postal_code.data,
-                notes=form.notes.data,
-                meal_plan_id=plan_id,
-                user_id=current_user.id if current_user.is_authenticated else None
-            )
-            db.session.add(trial_request)
-            db.session.commit()
-            
-            flash('Your trial request has been submitted successfully! We will contact you shortly to confirm your delivery.', 'success')
-            return redirect(url_for('main.meal_plans'))
-        except Exception as e:
-            db.session.rollback()
-            flash('An error occurred while submitting your trial request. Please try again.', 'error')
-            current_app.logger.error(f'Error creating trial request: {str(e)}')
+    # Get location data from database (same as checkout page)
+    locations_data = []
+    try:
+        states = State.query.order_by(State.name).all()
+        for state in states:
+            state_data = {
+                'id': state.id,
+                'name': state.name,
+                'cities': []
+            }
+            for city in state.cities:
+                city_data = {
+                    'id': city.id,
+                    'name': city.name,
+                    'areas': []
+                }
+                for area in city.areas:
+                    city_data['areas'].append({
+                        'id': area.id,
+                        'name': area.name
+                    })
+                state_data['cities'].append(city_data)
+            locations_data.append(state_data)
+    except Exception as e:
+        current_app.logger.warning(f"Could not load locations from database: {e}")
+        locations_data = []
     
-    return render_template('trial_request.html', meal_plan=meal_plan, form=form)
+    # If no locations from database, show empty dropdowns
+    if not locations_data:
+        current_app.logger.warning("No delivery locations found in database. Admin must add locations first.")
+    
+    if request.method == 'POST':
+        print(f"DEBUG: POST request received")
+        print(f"DEBUG: Form data: {request.form}")
+        
+        if form.validate_on_submit():
+            try:
+                print(f"DEBUG: Form validation passed")
+                print(f"DEBUG: Creating trial request...")
+                
+                trial_request = TrialRequest(
+                    name=form.name.data,
+                    email=form.email.data,
+                    phone=form.phone.data,
+                    preferred_date=form.preferred_date.data,
+                    address=form.address.data,
+                    city=form.city.data,
+                    province=form.province.data,
+                    area=form.area.data,
+                    postal_code=form.postal_code.data,
+                    notes=form.notes.data,
+                    meal_plan_id=plan_id
+                )
+                db.session.add(trial_request)
+                db.session.commit()
+                
+                print(f"DEBUG: Trial request created successfully with ID: {trial_request.id}")
+                flash('Your trial request has been submitted successfully! We will contact you shortly to confirm your delivery.', 'success')
+                return redirect(url_for('main.meal_plans'))
+                
+            except Exception as e:
+                db.session.rollback()
+                print(f"DEBUG: Error creating trial request: {type(e).__name__}: {str(e)}")
+                flash('An error occurred while submitting your trial request. Please try again.', 'error')
+                current_app.logger.error(f'Error creating trial request: {str(e)}')
+        else:
+            print(f"DEBUG: Form validation failed")
+            print(f"DEBUG: Form errors: {form.errors}")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    print(f"DEBUG: Field '{field}' error: {error}")
+                    flash(f'{field}: {error}', 'error')
+    
+    return render_template('trial_request.html', meal_plan=meal_plan, form=form, locations_data=locations_data)
 
 @main_bp.route('/process_checkout', methods=['POST'])
+@csrf.exempt  # Exempt from CSRF protection for payment processing
 def process_checkout():
-    """Process the checkout form and create Razorpay order"""
+    """Process the checkout form and create Stripe checkout session"""
     try:
         # Get form data
         plan_id = request.form.get('plan_id')
@@ -1644,6 +2133,7 @@ def process_checkout():
         customer_address = request.form.get('customer_address')
         customer_city = request.form.get('customer_city')
         customer_state = request.form.get('customer_state')
+        customer_area = request.form.get('customer_area')  # New field
         customer_pincode = request.form.get('customer_pincode')
         vegetarian_days = request.form.get('vegetarian_days', '')
         applied_coupon_code = request.form.get('applied_coupon_code')
@@ -1651,291 +2141,305 @@ def process_checkout():
         
         # Validate required fields
         if not all([plan_id, frequency, customer_name, customer_email, customer_phone, 
-                   customer_address, customer_city, customer_state, customer_pincode]):
+                   customer_address, customer_city, customer_state, customer_area, customer_pincode]):
             return jsonify({
                 'success': False,
-                'error': 'Please fill in all required fields.'
+                'error': 'Please fill in all required fields including State, City, and Area.'
             }), 400
         
         # Get meal plan
         meal_plan = MealPlan.query.get_or_404(plan_id)
         
-        # Calculate price with GST
+        # Calculate price with tax (HST/GST for Canada)
         base_price = float(meal_plan.price_weekly if frequency == 'weekly' else meal_plan.price_monthly)
-        gst_amount = base_price * 0.05  # 5% GST
-        subtotal = base_price + gst_amount
+        tax_amount = base_price * 0.13  # 13% HST (Ontario, Canada)
+        subtotal = base_price + tax_amount
         
         # Apply coupon discount if provided
         discount_amount = float(coupon_discount) if coupon_discount else 0
         total_price = max(0, subtotal - discount_amount)
         
-        # Check if we're in development mode with test keys
-        razorpay_key = get_razorpay_key()
-        if razorpay_key == 'rzp_test_default_key_id':
-            # Development mode - return mock response
-            logger.info("Development mode detected - returning mock Razorpay response")
-            return jsonify({
-                'success': True,
-                'key': razorpay_key,
-                'order_id': f'order_test_{datetime.now().strftime("%Y%m%d%H%M%S")}',
-                'amount': int(total_price * 100),
-                'currency': 'INR',
-                'name': 'HealthyRizz',
-                'description': f'{meal_plan.name} - {frequency.title()} Plan',
-                'prefill': {
-                    'name': customer_name,
-                    'email': customer_email,
-                    'contact': customer_phone
-                },
-                'theme': {
-                    'color': '#3399cc'
-                }
-            })
-        
-        # Create Razorpay order
-        order_data = create_razorpay_order(
-            amount=int(total_price * 100),  # Convert to paise
-            receipt=f"receipt_{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            notes={
-                'plan_id': plan_id,
-                'frequency': frequency,
-                'vegetarian_days': vegetarian_days,
-                'customer_name': customer_name,
-                'customer_email': customer_email,
-                'customer_phone': customer_phone,
-                'customer_address': customer_address,
-                'customer_city': customer_city,
-                'customer_state': customer_state,
-                'customer_pincode': customer_pincode,
-                'applied_coupon': applied_coupon_code,
-                'coupon_discount': str(discount_amount)
-            }
-        )
-        
-        if not order_data:
-            logger.error("Failed to create Razorpay order")
-            return jsonify({
-                'success': False,
-                'error': 'Error creating payment order. Please try again.'
-            }), 500
-        
-        # Store order data in session
-        session['razorpay_order'] = {
-            'order_id': order_data['id'],
-            'amount': order_data['amount'],
-            'currency': order_data['currency'],
-            'receipt': order_data['receipt'],
-            'notes': order_data['notes']
+        # Store checkout data in session
+        session['checkout_data'] = {
+            'plan_id': plan_id,
+            'frequency': frequency,
+            'vegetarian_days': vegetarian_days,
+            'customer_name': customer_name,
+            'customer_email': customer_email,
+            'customer_phone': customer_phone,
+            'customer_address': customer_address,
+            'customer_city': customer_city,
+            'customer_state': customer_state,
+            'customer_area': customer_area,
+            'customer_pincode': customer_pincode,
+            'applied_coupon': applied_coupon_code,
+            'coupon_discount': discount_amount,
+            'total_price': total_price,
+            'base_price': base_price,
+            'tax_amount': tax_amount
         }
         
-        # Return Razorpay order details for client-side integration
+        # Create or get Stripe customer
+        stripe_customer_id = None
+        user = User.query.filter_by(email=customer_email).first()
+        
+        if user and hasattr(user, 'stripe_customer_id') and user.stripe_customer_id:
+            stripe_customer_id = user.stripe_customer_id
+        else:
+            # Create new Stripe customer
+            address_dict = {
+                'line1': customer_address,
+                'city': customer_city,
+                'state': customer_state,
+                'postal_code': customer_pincode,
+                'country': 'CA'
+            }
+            stripe_customer_id = create_stripe_customer(
+                name=customer_name,
+                email=customer_email,
+                phone=customer_phone,
+                address=address_dict
+            )
+            
+            if not stripe_customer_id:
+                current_app.logger.error("Failed to create Stripe customer")
+                return jsonify({
+                    'success': False,
+                    'error': 'Error creating customer. Please try again.'
+                }), 500
+            
+            # Save customer ID to user if exists
+            if user:
+                user.stripe_customer_id = stripe_customer_id
+                db.session.commit()
+        
+        # Create Stripe checkout session
+        success_url = url_for('main.checkout_success', _external=True)
+        cancel_url = url_for('main.meal_plans', _external=True)
+        
+        checkout_session = create_stripe_checkout_session(
+            customer_id=stripe_customer_id,
+            meal_plan_name=meal_plan.name,
+            price_amount=total_price,
+            frequency=frequency,
+            success_url=success_url,
+            cancel_url=cancel_url
+        )
+        
+        if not checkout_session:
+            current_app.logger.error("Failed to create Stripe checkout session")
+            return jsonify({
+                'success': False,
+                'error': 'Error creating checkout session. Please try again.'
+            }), 500
+        
+        # Store checkout session ID
+        session['checkout_session_id'] = checkout_session['id']
+        
         return jsonify({
             'success': True,
-            'key': get_razorpay_key(),
-            'order_id': order_data['id'],
-            'amount': order_data['amount'],
-            'currency': order_data['currency'],
-            'name': 'HealthyRizz',
-            'description': f'{meal_plan.name} - {frequency.title()} Plan',
-            'prefill': {
-                'name': customer_name,
-                'email': customer_email,
-                'contact': customer_phone
-            },
-            'theme': {
-                'color': '#3399cc'
-            }
+            'checkout_url': checkout_session['url'],
+            'session_id': checkout_session['id']
         })
         
     except Exception as e:
-        logger.error(f"Error processing checkout: {str(e)}")
+        current_app.logger.error(f"Error processing checkout: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'An error occurred while processing your order. Please try again.'
         }), 500
 
-@main_bp.route('/verify_payment', methods=['POST'])
-def verify_payment():
-    """Verify Razorpay payment and create subscription"""
+@main_bp.route('/stripe-webhook', methods=['POST'])
+@csrf.exempt  # Stripe webhooks don't use CSRF
+def stripe_webhook():
+    """Handle Stripe webhook events for subscription lifecycle"""
     try:
-        # Get payment verification data
-        razorpay_payment_id = request.form.get('razorpay_payment_id')
-        razorpay_order_id = request.form.get('razorpay_order_id')
-        razorpay_signature = request.form.get('razorpay_signature')
+        import stripe
+        from utils.stripe_utils import handle_webhook_event
         
-        # Get order data from session
-        order_data = session.get('razorpay_order')
-        if not order_data:
-            flash('Invalid order session. Please try again.', 'error')
-            return redirect(url_for('main.meal_plans'))
+        payload = request.data
+        signature = request.headers.get('Stripe-Signature')
+        webhook_secret = current_app.config.get('STRIPE_WEBHOOK_SECRET')
         
-        # Check if we're in development mode
-        if razorpay_order_id.startswith('order_test_'):
-            logger.info("Development mode detected - skipping payment verification")
-            # Create mock subscription for development
-            try:
-                # Get user or create new user
-                user = User.query.filter_by(email=order_data['notes']['customer_email']).first()
-                if not user:
-                    user = User(
-                        name=order_data['notes']['customer_name'],
-                        email=order_data['notes']['customer_email'],
-                        phone=order_data['notes']['customer_phone'],
-                        address=order_data['notes']['customer_address'],
-                        city=order_data['notes']['customer_city'],
-                        state=order_data['notes']['customer_state'],
-                        postal_code=order_data['notes']['customer_pincode']
-                    )
-                    db.session.add(user)
-                    db.session.flush()
-                
-                # Create subscription
-                subscription = Subscription(
-                    user_id=user.id,
-                    meal_plan_id=order_data['notes']['plan_id'],
-                    frequency=SubscriptionFrequency.WEEKLY if order_data['notes']['frequency'] == 'weekly' else SubscriptionFrequency.MONTHLY,
-                    status=SubscriptionStatus.ACTIVE,
-                    price=float(order_data['amount']) / 100,  # Convert from paise to rupees
-                    vegetarian_days=order_data['notes']['vegetarian_days'],
-                    start_date=datetime.now(),
-                    current_period_start=datetime.now(),
-                    current_period_end=(
-                        datetime.now() + timedelta(days=7) if order_data['notes']['frequency'] == 'weekly'
-                        else datetime.now() + timedelta(days=30)
-                    )
-                )
-                
-                db.session.add(subscription)
-                db.session.flush()  # Get subscription ID
-                
-                # Create order record for ALL successful payments (development mode)
-                order = Order(
-                    user_id=user.id,
-                    meal_plan_id=order_data['notes']['plan_id'],
-                    amount=float(order_data['amount']) / 100,
-                    status='confirmed',
-                    payment_status='captured',
-                    payment_id=f'test_payment_{datetime.now().strftime("%Y%m%d%H%M%S")}',
-                    order_id=razorpay_order_id
-                )
-                db.session.add(order)
-                db.session.flush()  # Get order ID
-                
-                # Link subscription to order
-                subscription.order_id = order.id
-                
-                # Track coupon usage if coupon was applied
-                if order_data['notes'].get('applied_coupon'):
-                    coupon = CouponCode.query.filter_by(code=order_data['notes']['applied_coupon']).first()
-                    if coupon:
-                        # Create coupon usage record
-                        coupon_usage = CouponUsage(
-                            coupon_id=coupon.id,
-                            user_id=user.id,
-                            order_id=order.id
-                        )
-                        db.session.add(coupon_usage)
-                        
-                        # Update coupon usage count
-                        coupon.current_uses += 1
-                
-                db.session.commit()
-                
-                # Clear session data
-                session.pop('razorpay_order', None)
-                
-                flash('Your subscription has been created successfully! (Development Mode)', 'success')
-                return redirect(url_for('main.checkout_success', order_id=order.id))
-                
-            except Exception as e:
-                logger.error(f"Error creating development subscription: {str(e)}")
-                db.session.rollback()
-                flash('An error occurred while creating your subscription. Please contact support.', 'error')
-                return redirect(url_for('main.meal_plans'))
+        if not webhook_secret:
+            current_app.logger.error("Stripe webhook secret not configured")
+            return jsonify({'error': 'Webhook secret not configured'}), 500
         
-        # Verify payment signature
-        if not verify_payment_signature(razorpay_order_id, razorpay_payment_id, razorpay_signature):
-            flash('Payment verification failed. Please contact support.', 'error')
-            return redirect(url_for('main.meal_plans'))
+        # Verify webhook signature
+        event = handle_webhook_event(payload, signature, webhook_secret)
         
+        if not event:
+            return jsonify({'error': 'Invalid webhook signature'}), 400
+        
+        # Handle different event types
+        if event['type'] == 'checkout.session.completed':
+            stripe_session = event['data']['object']
+            checkout_session_id = stripe_session['id']
+            
+            # Get checkout data from Flask session
+            checkout_data = session.get('checkout_data')
+            if not checkout_data:
+                # Try to get from Stripe session metadata or database
+                current_app.logger.warning("Checkout data not found in Flask session, checking Stripe metadata")
+                # You may need to store checkout data in database for webhook reliability
+                return jsonify({'received': True})
+            
+            # Create subscription
+            _create_stripe_subscription(checkout_data, stripe_session)
+            
+        elif event['type'] == 'customer.subscription.updated':
+            # Handle subscription updates
+            subscription_data = event['data']['object']
+            _update_stripe_subscription(subscription_data)
+            
+        elif event['type'] == 'customer.subscription.deleted':
+            # Handle subscription cancellation
+            subscription_data = event['data']['object']
+            _cancel_stripe_subscription(subscription_data)
+        
+        return jsonify({'received': True})
+        
+    except Exception as e:
+        current_app.logger.error(f"Error processing Stripe webhook: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+def _create_stripe_subscription(checkout_data, stripe_session):
+    """Create subscription from Stripe checkout session"""
+    try:
         # Get user or create new user
-        user = User.query.filter_by(email=order_data['notes']['customer_email']).first()
+        user = User.query.filter_by(email=checkout_data['customer_email']).first()
         if not user:
-            user = User(
-                name=order_data['notes']['customer_name'],
-                email=order_data['notes']['customer_email'],
-                phone=order_data['notes']['customer_phone'],
-                address=order_data['notes']['customer_address'],
-                city=order_data['notes']['customer_city'],
-                state=order_data['notes']['customer_state'],
-                postal_code=order_data['notes']['customer_pincode']
-            )
+            user = _create_user_from_checkout_data(checkout_data)
             db.session.add(user)
             db.session.flush()
+        
+        # Get Stripe subscription ID from session
+        stripe_subscription_id = stripe_session.get('subscription')
+        stripe_payment_intent_id = stripe_session.get('payment_intent')
+        
+        # Check if subscription already exists
+        existing_subscription = Subscription.query.filter_by(
+            user_id=user.id,
+            meal_plan_id=checkout_data['plan_id'],
+            stripe_subscription_id=stripe_subscription_id
+        ).first()
+        
+        if existing_subscription:
+            current_app.logger.info(f"Subscription already exists: {existing_subscription.id}")
+            return existing_subscription
+        
+        # Create order
+        order = Order(
+            user_id=user.id,
+            meal_plan_id=checkout_data['plan_id'],
+            amount=checkout_data['total_price'],
+            total_amount=checkout_data['total_price'],
+            status='confirmed',
+            payment_status='captured',
+            payment_id=stripe_payment_intent_id,
+            order_id=stripe_session['id']
+        )
+        db.session.add(order)
+        db.session.flush()
         
         # Create subscription
         subscription = Subscription(
             user_id=user.id,
-            meal_plan_id=order_data['notes']['plan_id'],
-            frequency=SubscriptionFrequency.WEEKLY if order_data['notes']['frequency'] == 'weekly' else SubscriptionFrequency.MONTHLY,
+            meal_plan_id=checkout_data['plan_id'],
+            frequency=SubscriptionFrequency.WEEKLY if checkout_data['frequency'] == 'weekly' else SubscriptionFrequency.MONTHLY,
             status=SubscriptionStatus.ACTIVE,
-            price=float(order_data['amount']) / 100,  # Convert from paise to rupees
-            vegetarian_days=order_data['notes']['vegetarian_days'],
+            price=checkout_data['total_price'],
+            stripe_subscription_id=stripe_subscription_id,
+            stripe_customer_id=stripe_session.get('customer'),
+            vegetarian_days=checkout_data.get('vegetarian_days', ''),
             start_date=datetime.now(),
             current_period_start=datetime.now(),
             current_period_end=(
-                datetime.now() + timedelta(days=7) if order_data['notes']['frequency'] == 'weekly'
+                datetime.now() + timedelta(days=7) if checkout_data['frequency'] == 'weekly'
                 else datetime.now() + timedelta(days=30)
-            )
+            ),
+            order_id=order.id,
+            delivery_address=checkout_data.get('customer_address'),
+            delivery_city=checkout_data.get('customer_city'),
+            delivery_province=checkout_data.get('customer_state'),
+            delivery_postal_code=checkout_data.get('customer_pincode')
         )
-        
         db.session.add(subscription)
-        db.session.flush()  # Get subscription ID
         
-        # Create order record for ALL successful payments (not just coupon usage)
-        order = Order(
-            user_id=user.id,
-            meal_plan_id=order_data['notes']['plan_id'],
-            amount=float(order_data['amount']) / 100,
-            status='confirmed',
-            payment_status='captured',
-            payment_id=razorpay_payment_id,
-            order_id=razorpay_order_id
-        )
-        db.session.add(order)
-        db.session.flush()  # Get order ID
-        
-        # Link subscription to order
-        subscription.order_id = order.id
-        db.session.flush()
-        
-        # Track coupon usage if coupon was applied
-        if order_data['notes'].get('applied_coupon'):
-            coupon = CouponCode.query.filter_by(code=order_data['notes']['applied_coupon']).first()
+        # Track coupon usage if applied
+        if checkout_data.get('applied_coupon'):
+            coupon = CouponCode.query.filter_by(code=checkout_data['applied_coupon']).first()
             if coupon:
-                # Create coupon usage record
                 coupon_usage = CouponUsage(
                     coupon_id=coupon.id,
                     user_id=user.id,
                     order_id=order.id
                 )
                 db.session.add(coupon_usage)
-                
-                # Update coupon usage count
                 coupon.current_uses += 1
         
         db.session.commit()
-        
-        # Clear session data
-        session.pop('razorpay_order', None)
-        
-        flash('Your subscription has been created successfully!', 'success')
-        return redirect(url_for('main.checkout_success', order_id=order.id))
+        current_app.logger.info(f"Created subscription {subscription.id} for user {user.id}")
+        return subscription
         
     except Exception as e:
-        logger.error(f"Error verifying payment: {str(e)}")
-        flash('An error occurred while processing your payment. Please contact support.', 'error')
-        return redirect(url_for('main.meal_plans'))
+        current_app.logger.error(f"Error creating Stripe subscription: {str(e)}")
+        db.session.rollback()
+        raise
+
+def _create_user_from_checkout_data(checkout_data):
+    """Create a new user from checkout data"""
+    email = checkout_data['customer_email']
+    username = email.split('@')[0]
+    
+    # Ensure username is unique
+    counter = 1
+    original_username = username
+    while User.query.filter_by(username=username).first():
+        username = f"{original_username}{counter}"
+        counter += 1
+    
+    return User(
+        username=username,
+        name=checkout_data['customer_name'],
+        email=checkout_data['customer_email'],
+        phone=checkout_data['customer_phone'],
+        address=checkout_data['customer_address'],
+        city=checkout_data['customer_city'],
+        province=checkout_data['customer_state'],
+        postal_code=checkout_data['customer_pincode']
+    )
+
+def _update_stripe_subscription(subscription_data):
+    """Update subscription from Stripe webhook"""
+    try:
+        stripe_subscription_id = subscription_data['id']
+        subscription = Subscription.query.filter_by(stripe_subscription_id=stripe_subscription_id).first()
+        
+        if subscription:
+            # Update subscription status based on Stripe status
+            if subscription_data['status'] == 'active':
+                subscription.status = SubscriptionStatus.ACTIVE
+            elif subscription_data['status'] == 'canceled':
+                subscription.status = SubscriptionStatus.CANCELED
+            elif subscription_data['status'] == 'past_due':
+                subscription.status = SubscriptionStatus.EXPIRED
+            
+            db.session.commit()
+    except Exception as e:
+        current_app.logger.error(f"Error updating Stripe subscription: {str(e)}")
+
+def _cancel_stripe_subscription(subscription_data):
+    """Cancel subscription from Stripe webhook"""
+    try:
+        stripe_subscription_id = subscription_data['id']
+        subscription = Subscription.query.filter_by(stripe_subscription_id=stripe_subscription_id).first()
+        
+        if subscription:
+            subscription.status = SubscriptionStatus.CANCELED
+            db.session.commit()
+    except Exception as e:
+        current_app.logger.error(f"Error canceling Stripe subscription: {str(e)}")
 
 @main_bp.route('/checkout-success')
 def checkout_success():
@@ -1951,10 +2455,7 @@ def checkout_success():
             checkout_data = session.get('checkout_data')
             checkout_session_id = session.get('checkout_session_id')
             
-            # Also check for razorpay_order session data
-            razorpay_order = session.get('razorpay_order')
-            
-            if not checkout_data and not razorpay_order:
+            if not checkout_data:
                 # Try to find the most recent order for the current user
                 if current_user.is_authenticated:
                     recent_order = Order.query.filter_by(
@@ -2305,19 +2806,32 @@ def get_delivery_areas():
         })
 
 @main_bp.route('/validate_coupon', methods=['POST'])
+@csrf.exempt  # Exempt from CSRF protection for AJAX requests
 def validate_coupon():
     """Validate coupon code and return discount information"""
     try:
         # Log the request for debugging
-        current_app.logger.info(f"Coupon validation request: {request.get_json()}")
+        current_app.logger.info(f"Coupon validation request - Content-Type: {request.content_type}")
+        current_app.logger.info(f"Form data: {request.form}")
         
-        data = request.get_json()
-        if not data:
-            current_app.logger.error("No JSON data received")
-            return jsonify({'valid': False, 'message': 'Invalid request data'})
-        
-        coupon_code = data.get('coupon_code', '').strip().upper()
-        order_amount = data.get('amount', 0)
+        # Handle both form data and JSON data
+        if request.content_type and 'application/json' in request.content_type:
+            try:
+                data = request.get_json()
+                current_app.logger.info(f"JSON data: {data}")
+                if not data:
+                    current_app.logger.error("No JSON data received")
+                    return jsonify({'valid': False, 'message': 'Invalid request data'})
+                coupon_code = data.get('coupon_code', '').strip().upper()
+                order_amount = data.get('amount', 0)
+            except Exception as e:
+                current_app.logger.error(f"Error parsing JSON: {e}")
+                return jsonify({'valid': False, 'message': 'Invalid JSON data'})
+        else:
+            # Handle form-encoded data
+            current_app.logger.info("Processing form-encoded data")
+            coupon_code = request.form.get('coupon_code', '').strip().upper()
+            order_amount = float(request.form.get('amount', 0) or 0)
         
         current_app.logger.info(f"Validating coupon: {coupon_code} for amount: {order_amount}")
         
@@ -2344,7 +2858,7 @@ def validate_coupon():
         # Check minimum order value
         if order_amount < float(coupon.min_order_value or 0):
             min_order = float(coupon.min_order_value or 0)
-            return jsonify({'valid': False, 'message': f'Minimum order amount required: ₹{min_order}'})
+            return jsonify({'valid': False, 'message': f'Minimum order amount required: ${min_order}'})
         
         # Check if user has already used this coupon (if single use)
         if coupon.is_single_use and current_user.is_authenticated:
@@ -2356,6 +2870,9 @@ def validate_coupon():
             if existing_usage:
                 current_app.logger.warning(f"User already used coupon: {current_user.id} - {coupon_code}")
                 return jsonify({'valid': False, 'message': 'You have already used this coupon'})
+        elif coupon.is_single_use and not current_user.is_authenticated:
+            # For single-use coupons, user must be logged in
+            return jsonify({'valid': False, 'message': 'Please log in to use this coupon'})
         
         # Calculate discount based on coupon type
         discount_amount = coupon.calculate_discount(order_amount)
@@ -2364,7 +2881,8 @@ def validate_coupon():
         response_data = {
             'valid': True,
             'message': f'Coupon applied! {coupon.discount_value}% discount',
-            'discount_percentage': float(coupon.discount_value) if coupon.discount_type == 'percent' else None,
+            'discount_type': coupon.discount_type,
+            'discount_value': float(coupon.discount_value),
             'discount_amount': discount_amount,
             'min_order_amount': float(coupon.min_order_value or 0),
             'max_discount': float(coupon.discount_value) if coupon.discount_type == 'fixed' else None
@@ -2377,7 +2895,7 @@ def validate_coupon():
         current_app.logger.error(f"Error validating coupon: {str(e)}")
         import traceback
         current_app.logger.error(f"Full traceback: {traceback.format_exc()}")
-        return jsonify({'valid': False, 'message': 'Error validating coupon'})
+        return jsonify({'valid': False, 'message': f'Error validating coupon: {str(e)}'})
 
 @main_bp.route('/robots.txt')
 def robots_txt():
@@ -2422,102 +2940,68 @@ def pwa_diagnostic():
     """PWA diagnostic page"""
     return send_file('pwa_diagnostic.html', mimetype='text/html') 
 
+@main_bp.route('/holiday/status')
+def holiday_status():
+    """Get current holiday status for frontend - only for logged-in users with active subscriptions"""
+    
+    # Check if user is logged in
+    if not current_user.is_authenticated:
+        return jsonify({'active': False, 'message': 'Login required'})
+    
+    # Check if user has active subscription
+    active_subscription = Subscription.query.filter_by(
+        user_id=current_user.id,
+        status=SubscriptionStatus.ACTIVE
+    ).first()
+    
+    if not active_subscription:
+        return jsonify({'active': False, 'message': 'Active subscription required'})
+    
+    # Get current holiday
+    current_holiday = Holiday.get_current_holiday()
+    
+    if current_holiday and current_holiday.show_popup:
+        return jsonify({
+            'active': True,
+            'holiday': {
+                'id': current_holiday.id,
+                'name': current_holiday.name,
+                'description': current_holiday.description,
+                'message': current_holiday.popup_message,
+                'options': current_holiday.get_popup_options(),
+                'days_remaining': current_holiday.days_remaining,
+                'protect_meals': current_holiday.protect_meals,
+                'start_date': current_holiday.start_date.isoformat(),
+                'end_date': current_holiday.end_date.isoformat()
+            }
+        })
+    else:
+        return jsonify({'active': False})
+
+@main_bp.route('/holiday/response', methods=['POST'])
+def holiday_response():
+    """Handle user response to holiday popup"""
+    try:
+        data = request.get_json()
+        holiday_id = data.get('holiday_id')
+        response = data.get('response')
+        
+        # Log the response (you can extend this to store in database)
+        current_app.logger.info(f"User {current_user.id if current_user.is_authenticated else 'anonymous'} responded to holiday {holiday_id}: {response}")
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        current_app.logger.error(f"Error handling holiday response: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
+
+# Razorpay webhook deprecated - Stripe webhook is now used at /stripe-webhook
+# This route is kept for backward compatibility but should not be used
 @main_bp.route('/webhook/razorpay', methods=['POST'])
-def razorpay_webhook():
-    import hmac
-    import hashlib
-    import json
-    from flask import current_app
-
-    # Set your webhook secret here (store securely in production!)
-    webhook_secret = 'javnWRC_mZFz6ub'
-    payload = request.data
-    signature = request.headers.get('X-Razorpay-Signature')
-
-    # Verify signature
-    expected_signature = hmac.new(
-        webhook_secret.encode(),
-        payload,
-        hashlib.sha256
-    ).hexdigest()
-
-    if not hmac.compare_digest(expected_signature, signature):
-        current_app.logger.warning("Razorpay webhook signature mismatch!")
-        return "Invalid signature", 400
-
-    event = request.get_json()
-    event_type = event.get('event')
-    payload_data = event.get('payload', {})
-
-    # Handle payment captured event
-    if event_type == 'payment.captured':
-        payment_entity = payload_data.get('payment', {}).get('entity', {})
-        razorpay_order_id = payment_entity.get('order_id')
-        payment_id = payment_entity.get('id')
-        amount = payment_entity.get('amount') / 100  # Convert to rupees
-
-        # Find your order in DB
-        order = Order.query.filter_by(order_id=razorpay_order_id).first()
-        if order:
-            # Idempotency: Only update if not already captured
-            if order.payment_status != 'captured':
-                order.payment_status = 'captured'
-                order.payment_id = payment_id
-                order.status = 'confirmed'
-                
-                # Create subscription for this order
-                from database.models import Subscription, SubscriptionStatus, SubscriptionFrequency
-                
-                # Check if subscription already exists for this order
-                existing_subscription = Subscription.query.filter_by(
-                    user_id=order.user_id,
-                    meal_plan_id=order.meal_plan_id,
-                    order_id=order.id
-                ).first()
-                
-                if not existing_subscription:
-                    # Get meal plan to determine frequency and price
-                    meal_plan = MealPlan.query.get(order.meal_plan_id)
-                    if meal_plan:
-                        # Determine frequency based on amount (you may need to adjust this logic)
-                        # For now, assume weekly if amount matches weekly price, otherwise monthly
-                        frequency = SubscriptionFrequency.WEEKLY
-                        if meal_plan.price_monthly and abs(order.amount - float(meal_plan.price_monthly)) < 1:
-                            frequency = SubscriptionFrequency.MONTHLY
-                        
-                        # Create subscription
-                        subscription = Subscription(
-                            user_id=order.user_id,
-                            meal_plan_id=order.meal_plan_id,
-                            frequency=frequency,
-                            status=SubscriptionStatus.ACTIVE,
-                            price=order.amount,
-                            order_id=order.id,
-                            start_date=datetime.now(),
-                            current_period_start=datetime.now(),
-                            current_period_end=(
-                                datetime.now() + timedelta(days=7) if frequency == SubscriptionFrequency.WEEKLY 
-                                else datetime.now() + timedelta(days=30)
-                            )
-                        )
-                        
-                        db.session.add(subscription)
-                        current_app.logger.info(f"Created subscription {subscription.id} for order {order.id}")
-                    else:
-                        current_app.logger.error(f"Meal plan not found for order {order.id}")
-                else:
-                    current_app.logger.info(f"Subscription already exists for order {order.id}")
-                
-                db.session.commit()
-                current_app.logger.info(f"Order {order.id} marked as paid and subscription created via webhook.")
-            else:
-                current_app.logger.info(f"Order {order.id} already marked as paid.")
-        else:
-            current_app.logger.warning(f"No order found for Razorpay order_id {razorpay_order_id}")
-
-    # You can handle other event types similarly
-    current_app.logger.info(f"Webhook event received: {event_type}")
-    return "OK", 200
+@csrf.exempt
+def razorpay_webhook_deprecated():
+    """Deprecated: Razorpay webhook - Use Stripe webhook instead"""
+    current_app.logger.warning("Deprecated Razorpay webhook called - migration to Stripe required")
+    return jsonify({'message': 'Razorpay webhook deprecated - please use Stripe'}), 410  # 410 Gone
 
 @main_bp.route('/signup-complete/<int:order_id>', methods=['GET', 'POST'])
 def signup_complete(order_id):
@@ -2611,5 +3095,177 @@ def signup_complete(order_id):
         flash('An error occurred. Please contact support.', 'error')
         return redirect(url_for('main.meal_plans'))
 
+@main_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+@csrf.exempt  # Exempt from CSRF protection for public password reset
+def reset_password(token):
+    """Handle password reset with token"""
+    try:
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        email = s.loads(token, salt='password-reset-salt', max_age=3600)
+    except:
+        flash('The password reset link is invalid or has expired.', 'error')
+        return redirect(url_for('main.forgot_password'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return render_template('reset_password.html', token=token)
+        
+        user = User.query.filter_by(email=email).first()
+        if user:
+            user.set_password(password)
+            db.session.commit()
+            flash('Your password has been reset successfully.', 'success')
+            return redirect(url_for('main.login'))
+        else:
+            flash('User not found.', 'error')
+            return redirect(url_for('main.login'))
+    
+    return render_template('reset_password.html', token=token)
+
+@main_bp.route('/process-meal-plan-checkout/<int:plan_id>', methods=['POST'])
+@csrf.exempt
+def process_meal_plan_checkout(plan_id):
+    """Process meal plan checkout - redirect to main checkout"""
+    return redirect(url_for('main.subscribe', plan_id=plan_id))
+
+@main_bp.route('/save-prep-notes', methods=['POST'])
+@login_required
+@admin_required
+def save_prep_notes():
+    """Save daily meal prep notes"""
+    try:
+        date = request.form.get('date')
+        notes = request.form.get('notes')
+        
+        # Here you would save the notes to your database
+        # For now, just return success
+        flash('Prep notes saved successfully!', 'success')
+        return redirect(url_for('main.daily_meal_prep', date=date))
+    except Exception as e:
+        current_app.logger.error(f"Error saving prep notes: {str(e)}")
+        flash('Error saving prep notes.', 'error')
+        return redirect(url_for('main.daily_meal_prep'))
+
+
+
+
+
+
+
+@main_bp.route('/get-additional-services')
+def get_additional_services():
+    """Get available additional services"""
+    try:
+        from database.models import AdditionalService
+        
+        services = AdditionalService.query.filter_by(is_active=True).all()
+        services_data = []
+        
+        for service in services:
+            services_data.append({
+                'id': service.id,
+                'name': service.name,
+                'description': service.description,
+                'price': float(service.price),
+                'price_type': service.price_type,
+                'category': service.category,
+                'max_quantity': service.max_quantity
+            })
+        
+        return jsonify({
+            'success': True,
+            'services': services_data
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting additional services: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'Error loading services'
+        }), 500
+
+
+# TODO: Update process_checkout function to handle selected_services
+# Add this to the form data processing section:
+# selected_services = request.form.get('selected_services', '[]')
+# services_data = json.loads(selected_services) if selected_services else []
+
+@main_bp.route('/change-password', methods=['POST'])
+@login_required
+def change_password():
+    """Allow users to change password without updating name/email"""
+    try:
+        if not current_user.is_authenticated:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'status': 'error', 'message': 'Please log in to change your password'}), 401
+            flash('Please log in to change your password', 'error')
+            return redirect(url_for('main.login'))
+
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        current_password = request.form.get('current_password', '').strip()
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+
+        # All password fields must be provided
+        if not all([current_password, new_password, confirm_password]):
+            message = 'All password fields are required to change password'
+            if is_ajax:
+                return jsonify({'status': 'error', 'message': message})
+            flash(message, 'error')
+            return redirect(url_for('main.profile'))
+
+        # Verify current password
+        if not current_user.check_password(current_password):
+            message = 'Current password is incorrect'
+            if is_ajax:
+                return jsonify({'status': 'error', 'message': message})
+            flash(message, 'error')
+            return redirect(url_for('main.profile'))
+
+        # Check if new passwords match
+        if new_password != confirm_password:
+            message = 'New passwords do not match'
+            if is_ajax:
+                return jsonify({'status': 'error', 'message': message})
+            flash(message, 'error')
+            return redirect(url_for('main.profile'))
+
+        # Validate new password strength
+        if len(new_password) < 8:
+            message = 'New password must be at least 8 characters long'
+            if is_ajax:
+                return jsonify({'status': 'error', 'message': message})
+            flash(message, 'error')
+            return redirect(url_for('main.profile'))
+
+        try:
+            user_id = current_user.id
+            fresh_user = User.query.get(user_id)
+            fresh_user.set_password(new_password)
+            db.session.commit()
+            current_user.password_hash = fresh_user.password_hash
+            message = 'Password updated successfully'
+            if is_ajax:
+                return jsonify({'status': 'success', 'message': message})
+            flash(message, 'success')
+            return redirect(url_for('main.profile') + '#settings')
+        except Exception as e:
+            db.session.rollback()
+            message = 'Failed to update password. Please try again.'
+            if is_ajax:
+                return jsonify({'status': 'error', 'message': message})
+            flash(message, 'error')
+            return redirect(url_for('main.profile'))
+    except Exception as e:
+        db.session.rollback()
+        message = 'An error occurred while changing your password. Please try again.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'status': 'error', 'message': message})
+        flash(message, 'error')
+        return redirect(url_for('main.profile'))
 
 

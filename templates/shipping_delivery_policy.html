@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Shipping & Delivery Policy - HealthyRizz{% endblock %}
+{% block title %}Shipping & Delivery Policy - FitSmart{% endblock %}
 
 {% block content %}
 <main class="bg-gray-900 py-16 md:py-20">
@@ -11,7 +11,9 @@
             </h1>
             
             <div class="prose prose-lg text-gray-300 mx-auto">
-                <p class="text-lg mb-6">At HealthyRizz, we ensure fresh, healthy meals are delivered to your doorstep with care and precision. This policy outlines our delivery standards, areas, and procedures.</p>
+                <p class="text-lg mb-6">At FitSmart, we ensure fresh, healthy meals are delivered to your doorstep across Canada with care and precision. This policy outlines our delivery standards, areas, and procedures.</p>
+                
+                <p class="text-sm text-gray-400 mb-8">Last updated: {{ now.strftime('%B %d, %Y') }}</p>
                 
                 <h3 class="text-xl font-semibold text-white mt-8 mb-4">
                     <i class="fas fa-map-marker-alt text-primary mr-2"></i>Delivery Areas
@@ -19,12 +21,18 @@
                 <div class="bg-gray-800 rounded-lg p-6 mb-6">
                     <h4 class="text-lg font-medium text-white mb-3">Primary Delivery Zones:</h4>
                     <ul class="list-disc pl-6 mb-4 space-y-2">
-                        <li><strong>Ludhiana City:</strong> All major areas including Civil Lines, Model Town, Sarabha Nagar, BRS Nagar, Dugri, Pakhowal Road</li>
-                        <li><strong>Industrial Areas:</strong> Focal Point, Industrial Area A, Industrial Area B</li>
-                        <li><strong>Residential Colonies:</strong> All major residential societies and apartments</li>
-                        <li><strong>Educational Institutions:</strong> Universities, colleges, and schools</li>
+                        <li><strong>Greater Toronto Area (GTA):</strong> Toronto, Mississauga, Brampton, Markham, Vaughan, Richmond Hill, Oakville, Burlington</li>
+                        <li><strong>Ottawa Region:</strong> Ottawa, Kanata, Orleans, Nepean, Barrhaven</li>
+                        <li><strong>Montreal Area:</strong> Montreal, Laval, Longueuil, West Island</li>
+                        <li><strong>Vancouver Area:</strong> Vancouver, Burnaby, Richmond, Surrey, North Vancouver, West Vancouver</li>
+                        <li><strong>Calgary:</strong> All major areas within city limits</li>
+                        <li><strong>Edmonton:</strong> All major areas within city limits</li>
+                        <li><strong>Other Major Cities:</strong> We're expanding! Contact us to check availability in your area</li>
                     </ul>
-                    <p class="text-sm text-gray-400">Don't see your area? <a href="{{ url_for('main.contact') }}" class="text-primary hover:underline">Contact us</a> to check availability.</p>
+                    <p class="text-sm text-gray-400 bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-3 mt-4">
+                        <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                        Don't see your area? <a href="{{ url_for('main.contact') }}" class="text-primary hover:underline">Contact us</a> to check availability. We're continuously expanding our delivery network across Canada.
+                    </p>
                 </div>
 
                 <h3 class="text-xl font-semibold text-white mt-8 mb-4">
@@ -34,17 +42,19 @@
                     <div class="bg-gray-800 rounded-lg p-6">
                         <h4 class="text-lg font-medium text-white mb-3">Morning Delivery</h4>
                         <ul class="space-y-2 text-gray-300">
-                            <li><i class="fas fa-sun text-primary mr-2"></i>6:00 AM - 9:00 AM</li>
-                            <li><i class="fas fa-utensils text-primary mr-2"></i>Breakfast</li>
+                            <li><i class="fas fa-sun text-primary mr-2"></i>7:00 AM - 10:00 AM (Local Time)</li>
+                            <li><i class="fas fa-utensils text-primary mr-2"></i>Breakfast & Lunch Meals</li>
                             <li><i class="fas fa-check text-primary mr-2"></i>Fresh from kitchen</li>
+                            <li><i class="fas fa-snowflake text-primary mr-2"></i>Temperature-controlled delivery</li>
                         </ul>
                     </div>
                     <div class="bg-gray-800 rounded-lg p-6">
                         <h4 class="text-lg font-medium text-white mb-3">Evening Delivery</h4>
                         <ul class="space-y-2 text-gray-300">
-                            <li><i class="fas fa-moon text-primary mr-2"></i>5:00 PM - 8:00 PM</li>
-                            <li><i class="fas fa-utensils text-primary mr-2"></i>Dinner</li>
+                            <li><i class="fas fa-moon text-primary mr-2"></i>5:00 PM - 8:00 PM (Local Time)</li>
+                            <li><i class="fas fa-utensils text-primary mr-2"></i>Dinner Meals</li>
                             <li><i class="fas fa-check text-primary mr-2"></i>Prepared fresh daily</li>
+                            <li><i class="fas fa-snowflake text-primary mr-2"></i>Insulated packaging</li>
                         </ul>
                     </div>
                 </div>
@@ -59,21 +69,21 @@
                                 <i class="fas fa-calendar text-white"></i>
                             </div>
                             <h5 class="font-medium text-white mb-2">1. Flexible Scheduling</h5>
-                            <p class="text-sm text-gray-300">Choose your preferred delivery days and times</p>
+                            <p class="text-sm text-gray-300">Choose your preferred delivery days and times through your account</p>
                         </div>
                         <div class="text-center">
                             <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i class="fas fa-utensils text-white"></i>
                             </div>
                             <h5 class="font-medium text-white mb-2">2. Fresh Preparation</h5>
-                            <p class="text-sm text-gray-300">Meals prepared fresh using quality ingredients</p>
+                            <p class="text-sm text-gray-300">Meals prepared fresh daily using quality Canadian ingredients</p>
                         </div>
                         <div class="text-center">
                             <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i class="fas fa-truck text-white"></i>
                             </div>
                             <h5 class="font-medium text-white mb-2">3. Safe Delivery</h5>
-                            <p class="text-sm text-gray-300">Delivered in insulated containers to maintain freshness</p>
+                            <p class="text-sm text-gray-300">Delivered in insulated containers to maintain freshness and temperature</p>
                         </div>
                     </div>
                     
@@ -83,7 +93,7 @@
                         </h5>
                         <p class="text-gray-300 text-sm">
                             If you don't want delivery for a particular day, you can easily skip it through your account dashboard. 
-                            No need to call us - just log in and manage your delivery schedule anytime.
+                            No need to call us - just log in and manage your delivery schedule anytime. Changes require 24 hours' notice.
                         </p>
                     </div>
                 </div>
@@ -100,15 +110,17 @@
                                 <li><i class="fas fa-check text-primary mr-2"></i>No additional delivery charges</li>
                                 <li><i class="fas fa-check text-primary mr-2"></i>Regular scheduled deliveries</li>
                                 <li><i class="fas fa-check text-primary mr-2"></i>Flexible delivery schedules</li>
+                                <li><i class="fas fa-check text-primary mr-2"></i>Available in all service areas</li>
                             </ul>
                         </div>
                         <div>
                             <h4 class="text-lg font-medium text-white mb-3">Trial Orders</h4>
                             <ul class="space-y-2 text-gray-300">
                                 <li><i class="fas fa-star text-primary mr-2"></i>Free delivery for trial orders</li>
-                                <li><i class="fas fa-clock text-primary mr-2"></i>Same-day delivery available</li>
+                                <li><i class="fas fa-clock text-primary mr-2"></i>Next-day delivery available</li>
                                 <li><i class="fas fa-gift text-primary mr-2"></i>Special trial pricing</li>
                                 <li><i class="fas fa-arrow-right text-primary mr-2"></i>Easy upgrade to subscription</li>
+                                <li><i class="fas fa-map-marked-alt text-primary mr-2"></i>Subject to area availability</li>
                             </ul>
                         </div>
                     </div>
@@ -119,7 +131,8 @@
                         </h5>
                         <p class="text-gray-300 text-sm">
                             All our meal plans are subscription-based, which means delivery is always included at no extra cost. 
-                            You can choose weekly or monthly subscriptions with flexible delivery schedules tailored to your needs.
+                            You can choose weekly or monthly subscriptions with flexible delivery schedules tailored to your needs. 
+                            Delivery is free for all subscription plans across our service areas.
                         </p>
                     </div>
                 </div>
@@ -128,10 +141,12 @@
                     <i class="fas fa-box text-primary mr-2"></i>Packaging & Quality
                 </h3>
                 <ul class="list-disc pl-6 mb-6 space-y-2">
-                    <li><strong>Insulated Containers:</strong> Maintain optimal temperature during transit</li>
-                    <li><strong>Eco-friendly Packaging:</strong> Biodegradable materials used</li>
-                    <li><strong>Hygienic Seals:</strong> Tamper-evident packaging for food safety</li>
-                    <li><strong>Clear Labeling:</strong> Ingredients, nutritional info, and expiry dates</li>
+                    <li><strong>Insulated Containers:</strong> Maintain optimal temperature during transit, even in extreme Canadian weather</li>
+                    <li><strong>Eco-friendly Packaging:</strong> Biodegradable and recyclable materials used whenever possible</li>
+                    <li><strong>Hygienic Seals:</strong> Tamper-evident packaging for food safety and security</li>
+                    <li><strong>Clear Labeling:</strong> Ingredients, nutritional info, expiry dates, and allergen information clearly marked</li>
+                    <li><strong>Temperature Control:</strong> Cold chain maintained for perishable items</li>
+                    <li><strong>Weather Protection:</strong> Packaging designed to protect meals in all weather conditions</li>
                 </ul>
 
                 <h3 class="text-xl font-semibold text-white mt-8 mb-4">
@@ -140,18 +155,21 @@
                 <div class="bg-gray-800 rounded-lg p-6 mb-6">
                     <h4 class="text-lg font-medium text-white mb-3">For Customers:</h4>
                     <ul class="list-disc pl-6 mb-4 space-y-2">
-                        <li>Please provide accurate delivery address and contact number</li>
-                        <li>Keep someone available at the delivery address during the scheduled time</li>
+                        <li>Please provide accurate delivery address including unit/apartment number, postal code, and any access codes</li>
+                        <li>Keep someone available at the delivery address during the scheduled time window</li>
                         <li>Check the package for any damage before accepting</li>
-                        <li>Store meals in refrigerator immediately upon delivery</li>
-                        <li>Consume within the recommended time frame</li>
+                        <li>Store meals in refrigerator immediately upon delivery (within 30 minutes)</li>
+                        <li>Consume within the recommended time frame indicated on packaging</li>
+                        <li>Ensure your delivery address is accessible and safe for our delivery personnel</li>
                     </ul>
                     
                     <h4 class="text-lg font-medium text-white mb-3">Special Instructions:</h4>
                     <ul class="list-disc pl-6 space-y-2">
-                        <li>For office deliveries, please specify building and floor details</li>
-                        <li>For gated communities, provide security guard instructions</li>
-                        <li>For dietary restrictions, mention during order placement</li>
+                        <li>For office deliveries, please specify building name, floor, and suite/office number</li>
+                        <li>For condominiums or apartments, provide buzzer code and any security instructions</li>
+                        <li>For gated communities, provide gate codes or security contact information</li>
+                        <li>For dietary restrictions or special requests, mention during order placement or account setup</li>
+                        <li>For winter deliveries, ensure pathways are cleared of snow and ice</li>
                     </ul>
                 </div>
 
@@ -165,28 +183,35 @@
                             <i class="fas fa-clock text-red-400 mr-3 mt-1"></i>
                             <div>
                                 <strong class="text-white">Delivery is delayed:</strong>
-                                <span class="text-gray-300">Contact us immediately. We'll provide updates and compensation if needed.</span>
+                                <span class="text-gray-300 block">Contact us immediately. We'll provide updates and compensation if the delay is our responsibility. Weather-related delays will be communicated proactively.</span>
                             </div>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-box-open text-red-400 mr-3 mt-1"></i>
                             <div>
                                 <strong class="text-white">Package is damaged:</strong>
-                                <span class="text-gray-300">Do not accept damaged packages. We'll arrange a replacement.</span>
+                                <span class="text-gray-300 block">Do not accept damaged packages. Take photos if possible and contact us immediately. We'll arrange a replacement delivery.</span>
                             </div>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-thermometer-half text-red-400 mr-3 mt-1"></i>
                             <div>
                                 <strong class="text-white">Food temperature issues:</strong>
-                                <span class="text-gray-300">If food isn't at proper temperature, contact us for replacement.</span>
+                                <span class="text-gray-300 block">If food isn't at proper temperature upon delivery, do not consume. Contact us immediately for replacement. Safety is our priority.</span>
                             </div>
                         </li>
                         <li class="flex items-start">
                             <i class="fas fa-user-times text-red-400 mr-3 mt-1"></i>
                             <div>
                                 <strong class="text-white">No one available:</strong>
-                                <span class="text-gray-300">We'll attempt delivery twice. After that, a re-delivery fee applies.</span>
+                                <span class="text-gray-300 block">We'll attempt delivery twice. After that, you can schedule a re-delivery through your account. A re-delivery fee may apply for multiple missed attempts.</span>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-snowflake text-red-400 mr-3 mt-1"></i>
+                            <div>
+                                <strong class="text-white">Weather-related issues:</strong>
+                                <span class="text-gray-300 block">In extreme weather conditions, we may delay or reschedule deliveries for safety. You'll be notified and can reschedule at no charge.</span>
                             </div>
                         </li>
                     </ul>
@@ -197,12 +222,14 @@
                 </h3>
                 <div class="bg-gray-800 rounded-lg p-6 mb-6">
                     <ul class="list-disc pl-6 space-y-2">
-                        <li><strong>Quality Issues:</strong> Full refund or replacement for quality problems</li>
-                        <li><strong>Wrong Items:</strong> Immediate replacement with correct items</li>
-                        <li><strong>Allergies/Intolerances:</strong> Full refund if dietary requirements not met</li>
-                        <li><strong>Delivery Problems:</strong> Refund of delivery charges for service failures</li>
-                        <li><strong>Time Frame:</strong> Report issues within 2 hours of delivery</li>
+                        <li><strong>Quality Issues:</strong> Full refund or replacement for quality problems reported within 2 hours of delivery</li>
+                        <li><strong>Wrong Items:</strong> Immediate replacement with correct items or full refund</li>
+                        <li><strong>Allergies/Intolerances:</strong> Full refund if dietary requirements not met as specified</li>
+                        <li><strong>Delivery Problems:</strong> Refund or credit for service failures on our part</li>
+                        <li><strong>Time Frame:</strong> Report issues within 2 hours of delivery for best resolution</li>
+                        <li><strong>Documentation:</strong> Photos of issues help us resolve problems faster</li>
                     </ul>
+                    <p class="text-sm text-gray-400 mt-4">For detailed refund information, see our <a href="{{ url_for('main.cancellation_refund_policy') }}" class="text-primary hover:underline">Cancellation & Refund Policy</a>.</p>
                 </div>
 
                 <h3 class="text-xl font-semibold text-white mt-8 mb-4">
@@ -213,17 +240,20 @@
                         <div>
                             <h4 class="text-lg font-medium text-white mb-3">Customer Support</h4>
                             <ul class="space-y-2 text-gray-300">
-                                <li><i class="fas fa-phone text-primary mr-2"></i>+91 98765 43210</li>
-                                <li><i class="fas fa-envelope text-primary mr-2"></i>delivery@healthyrizz.in</li>
-                                <li><i class="fas fa-clock text-primary mr-2"></i>7:00 AM - 10:00 PM</li>
+                                <li><i class="fas fa-phone text-primary mr-2"></i>{{ site_settings.get('contact_phone', '+1 (647) 573-2429') }}</li>
+                                <li><i class="fas fa-envelope text-primary mr-2"></i><a href="mailto:delivery@fitsmart.ca" class="text-primary hover:underline">delivery@fitsmart.ca</a></li>
+                                <li><i class="fas fa-envelope text-primary mr-2"></i><a href="mailto:support@fitsmart.ca" class="text-primary hover:underline">support@fitsmart.ca</a></li>
+                                <li><i class="fas fa-clock text-primary mr-2"></i>Monday - Friday: 9:00 AM - 6:00 PM EST</li>
+                                <li><i class="fas fa-clock text-primary mr-2"></i>Saturday: 10:00 AM - 4:00 PM EST</li>
                             </ul>
                         </div>
                         <div>
                             <h4 class="text-lg font-medium text-white mb-3">Emergency Contact</h4>
                             <ul class="space-y-2 text-gray-300">
-                                <li><i class="fas fa-phone text-primary mr-2"></i>+91 98765 43211</li>
-                                <li><i class="fas fa-exclamation text-primary mr-2"></i>24/7 Support</li>
-                                <li><i class="fas fa-whatsapp text-primary mr-2"></i>WhatsApp Support</li>
+                                <li><i class="fas fa-phone text-primary mr-2"></i>{{ site_settings.get('contact_phone', '+1 (647) 573-2429') }}</li>
+                                <li><i class="fas fa-exclamation text-primary mr-2"></i>Urgent delivery issues</li>
+                                <li><i class="fas fa-envelope text-primary mr-2"></i><a href="mailto:info@fitsmart.ca" class="text-primary hover:underline">info@fitsmart.ca</a></li>
+                                <li><i class="fas fa-map-marker-alt text-primary mr-2"></i>{{ site_settings.get('company_address', 'Canada') }}</li>
                             </ul>
                         </div>
                     </div>
@@ -234,17 +264,34 @@
                         <i class="fas fa-info-circle text-primary mr-2"></i>Important Notes
                     </h3>
                     <ul class="list-disc pl-6 space-y-2 text-gray-300">
-                        <li>Delivery times may vary during peak hours and holidays</li>
-                        <li>We reserve the right to refuse delivery to unsafe areas</li>
-                        <li>Weather conditions may affect delivery schedules</li>
+                        <li>Delivery times may vary during peak hours, holidays, and extreme weather conditions</li>
+                        <li>We reserve the right to refuse delivery to unsafe or inaccessible areas</li>
+                        <li>Weather conditions (snow, ice, extreme cold) may affect delivery schedules - we prioritize safety</li>
                         <li>Special dietary requests must be made 24 hours in advance</li>
-                        <li>Bulk orders require 48-hour advance notice</li>
+                        <li>Bulk orders or special events require 48-hour advance notice</li>
+                        <li>Delivery areas and schedules are subject to change - we'll notify you of any changes</li>
+                        <li>During holidays, delivery schedules may be adjusted - check your account for updates</li>
+                        <li>We comply with all local health and safety regulations in each province</li>
+                    </ul>
+                </div>
+
+                <div class="bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-6 mt-6">
+                    <h4 class="text-lg font-semibold text-white mb-3">
+                        <i class="fas fa-shipping-fast text-blue-400 mr-2"></i>Canadian Shipping Standards
+                    </h4>
+                    <p class="text-gray-300 mb-3">We adhere to Canadian food safety and shipping standards:</p>
+                    <ul class="list-disc pl-6 space-y-2 text-gray-300">
+                        <li>Compliance with Canadian Food Inspection Agency (CFIA) regulations</li>
+                        <li>Provincial health and safety standards</li>
+                        <li>Temperature control requirements for perishable foods</li>
+                        <li>Proper labeling and allergen information as required by Canadian law</li>
                     </ul>
                 </div>
 
                 <p class="text-sm text-gray-400 mt-8 text-center">Last updated: {{ now.strftime('%B %d, %Y') }}</p>
+                <p class="text-sm text-gray-400 text-center">This Shipping & Delivery Policy is governed by the laws of Canada and your province of residence.</p>
             </div>
         </div>
     </div>
 </main>
-{% endblock %} 
+{% endblock %}

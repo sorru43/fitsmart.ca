@@ -1,4 +1,4 @@
-# HealthyRizz Robots.txt - Secure Configuration
+# FitSmart Robots.txt - Secure Configuration
 # Allow Google, Bing, and AI crawlers while protecting sensitive areas
 
 User-agent: *
@@ -14,7 +14,7 @@ Allow: /about/
 Allow: /contact/
 Allow: /privacy-policy/
 Allow: /terms-of-service/
-Allow: /shipping-policy/
+Allow: /shipping-delivery-policy/
 
 # Allow Bing crawlers
 User-agent: Bingbot
@@ -33,7 +33,7 @@ Allow: /about/
 Allow: /contact/
 Allow: /privacy-policy/
 Allow: /terms-of-service/
-Allow: /shipping-policy/
+Allow: /shipping-delivery-policy/
 
 User-agent: ChatGPT-User
 Allow: /
@@ -44,7 +44,7 @@ Allow: /about/
 Allow: /contact/
 Allow: /privacy-policy/
 Allow: /terms-of-service/
-Allow: /shipping-policy/
+Allow: /shipping-delivery-policy/
 
 User-agent: CCBot
 Allow: /
@@ -169,8 +169,8 @@ Disallow: /routes/
 Disallow: /forms/
 Disallow: /models/
 Disallow: /templates/
-Disallow: /healthyrizz/
-Disallow: /healthyrizz_vps_deploy/
+Disallow: /fitsmart/
+Disallow: /fitsmart_vps_deploy/
 Disallow: /temp template/
 Disallow: /backup_*/
 Disallow: /*.py
@@ -203,8 +203,8 @@ Allow: /sitemap.xml
 Allow: /amp-sitemap.xml
 
 # Sitemap URLs
-Sitemap: https://healthyrizz.in/sitemap.xml
-Sitemap: https://healthyrizz.in/amp-sitemap.xml
+Sitemap: https://fitsmart.ca/sitemap.xml
+Sitemap: https://fitsmart.ca/amp-sitemap.xml
 
 Disallow: /android-chrome-*.png
 
@@ -221,7 +221,7 @@ Allow: /static/service-worker.js
 Crawl-delay: 1
 
 # Sitemap location
-Sitemap: https://healthyrizz.in/sitemap.xml
+Sitemap: https://fitsmart.ca/sitemap.xml
 
 # Additional security headers (handled by web server)
 # X-Robots-Tag: noindex, nofollow (for sensitive pages)

@@ -1,318 +1,1120 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}Profile - HealthyRizz{% endblock %}
+{% block title %}My Profile - Fit Smart{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-white mb-2">My Profile</h1>
-            <p class="text-gray-400">Welcome back, {{ user.name }}!</p>
-        </div>
+<div class="bg-gray-900 py-8">
+    <div class="container mx-auto px-4">
+        <h1 class="text-3xl font-bold mb-6">My Profile</h1>
         
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-darker p-6 rounded-lg border border-gray-800">
-                <div class="text-2xl font-bold text-primary">{{ total_orders }}</div>
-                <div class="text-sm text-gray-400">Total Orders</div>
-            </div>
-            <div class="bg-darker p-6 rounded-lg border border-gray-800">
-                <div class="text-2xl font-bold text-green-500">₹{{ "%.2f"|format(total_spent) }}</div>
-                <div class="text-sm text-gray-400">Total Spent</div>
-            </div>
-            <div class="bg-darker p-6 rounded-lg border border-gray-800">
-                <div class="text-2xl font-bold text-blue-500">{{ total_subscriptions }}</div>
-                <div class="text-sm text-gray-400">Subscriptions</div>
-            </div>
-            <div class="bg-darker p-6 rounded-lg border border-gray-800">
-                <div class="text-2xl font-bold text-yellow-500">{{ active_subscriptions|length }}</div>
-                <div class="text-sm text-gray-400">Active Plans</div>
-            </div>
-        </div>
-        
-        <!-- Tab Navigation -->
-        <div class="mb-6">
-            <nav class="flex space-x-8">
-                <button onclick="showTab('overview')" id="overview-tab" class="tab-button active">
-                    <i class="fas fa-chart-pie mr-2"></i>Overview
-                </button>
-                <button onclick="showTab('orders')" id="orders-tab" class="tab-button">
-                    <i class="fas fa-shopping-cart mr-2"></i>Orders ({{ orders|length }})
-                </button>
-                <button onclick="showTab('subscriptions')" id="subscriptions-tab" class="tab-button">
-                    <i class="fas fa-repeat mr-2"></i>Subscriptions ({{ total_subscriptions }})
-                </button>
-                <button onclick="showTab('payments')" id="payments-tab" class="tab-button">
-                    <i class="fas fa-credit-card mr-2"></i>Payments ({{ payment_history|length }})
-                </button>
-            </nav>
-        </div>
-        
-        <!-- Tab Content -->
-        
-        <!-- Overview Tab -->
-        <div id="overview" class="tab-content active">
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Recent Orders -->
-                <div class="bg-darker p-6 rounded-lg border border-gray-800">
-                    <h3 class="text-lg font-semibold text-white mb-4">Recent Orders</h3>
-                    {% if orders %}
-                        <div class="space-y-3">
-                            {% for order in orders[:5] %}
-                            <div class="flex justify-between items-center py-2 border-b border-gray-700">
-                                <div>
-                                    <div class="text-white font-semibold">#{{ order.id }}</div>
-                                    <div class="text-sm text-gray-400">{{ order.meal_plan_name }}</div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-primary font-semibold">₹{{ "%.2f"|format(order.amount) }}</div>
-                                    <div class="text-xs text-gray-400">{{ order.created_at.strftime('%d %b %Y') }}</div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <div class="mt-4">
-                            <button onclick="showTab('orders')" class="text-primary hover:text-green-600 text-sm">
-                                View all orders →
-                            </button>
-                        </div>
-                    {% else %}
-                        <p class="text-gray-400">No orders yet</p>
-                        <a href="{{ url_for('main.meal_plans') }}" class="text-primary hover:text-green-600 text-sm">
-                            Browse meal plans →
-                        </a>
-                    {% endif %}
-                </div>
-                
-                <!-- Active Subscriptions -->
-                <div class="bg-darker p-6 rounded-lg border border-gray-800">
-                    <h3 class="text-lg font-semibold text-white mb-4">Active Subscriptions</h3>
-                    {% if active_subscriptions %}
-                        <div class="space-y-3">
-                            {% for subscription in active_subscriptions %}
-                            <div class="border border-gray-700 rounded-lg p-3">
-                                <div class="text-white font-semibold">{{ subscription.meal_plan.name if subscription.meal_plan else 'Unknown Plan' }}</div>
-                                <div class="text-sm text-gray-400">{{ subscription.frequency.value.title() }} - ₹{{ "%.2f"|format(subscription.price) }}</div>
-                                <div class="text-xs text-green-500 mt-1">{{ subscription.status.value.title() }}</div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        <div class="mt-4">
-                            <button onclick="showTab('subscriptions')" class="text-primary hover:text-green-600 text-sm">
-                                Manage subscriptions →
-                            </button>
-                        </div>
-                    {% else %}
-                        <p class="text-gray-400">No active subscriptions</p>
-                        <a href="{{ url_for('main.meal_plans') }}" class="text-primary hover:text-green-600 text-sm">
-                            Subscribe to a plan →
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <!-- Orders Tab -->
-        <div id="orders" class="tab-content">
-            <div class="bg-darker rounded-lg border border-gray-800">
-                <div class="p-6 border-b border-gray-700">
-                    <h3 class="text-lg font-semibold text-white">Order History</h3>
-                </div>
-                
-                {% if orders %}
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-900">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Order ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Meal Plan</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Amount</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-700">
-                            {% for order in orders %}
-                            <tr>
-                                <td class="px-6 py-4 text-sm text-white font-mono">#{{ order.id }}</td>
-                                <td class="px-6 py-4 text-sm text-white">{{ order.meal_plan_name }}</td>
-                                <td class="px-6 py-4 text-sm text-primary font-semibold">₹{{ "%.2f"|format(order.amount) }}</td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                        {% if order.status == 'confirmed' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
-                                        {{ order.status.title() }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-400">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="p-6 text-center">
-                    <p class="text-gray-400">No orders found</p>
-                    <a href="{{ url_for('main.meal_plans') }}" class="text-primary hover:text-green-600 text-sm">
-                        Browse meal plans →
+        <!-- Profile Navigation Tabs -->
+        <div class="mb-8 border-b border-gray-700">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+                <li class="mr-2">
+                    <a href="#account" class="inline-block p-4 border-b-2 border-primary text-primary active" 
+                       onclick="switchTab(event, 'account')">
+                        Account Information
                     </a>
+                </li>
+                <li class="mr-2">
+                    <a href="#subscriptions" class="inline-block p-4 border-b-2 border-transparent hover:text-gray-300 hover:border-gray-600" 
+                       onclick="switchTab(event, 'subscriptions')">
+                        My Subscriptions
+                    </a>
+                </li>
+                <li class="mr-2">
+                    <a href="#payments" class="inline-block p-4 border-b-2 border-transparent hover:text-gray-300 hover:border-gray-600" 
+                       onclick="switchTab(event, 'payments')">
+                        Payment History
+                    </a>
+                </li>
+                <li class="mr-2">
+                    <a href="#nutrition" class="inline-block p-4 border-b-2 border-transparent hover:text-gray-300 hover:border-gray-600" 
+                       onclick="switchTab(event, 'nutrition')">
+                        Nutrition Tracking
+                    </a>
+                </li>
+                <li>
+                    <a href="#settings" class="inline-block p-4 border-b-2 border-transparent hover:text-gray-300 hover:border-gray-600" 
+                       onclick="switchTab(event, 'settings')">
+                        Account Settings
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Account Information Tab -->
+        <div id="account" class="tab-content">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Profile Info -->
+                <div class="lg:w-1/3">
+                    <div class="bg-black rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="bg-primary text-white p-4">
+                            <h2 class="text-xl font-semibold">Account Information</h2>
+                        </div>
+                        
+                        <div class="p-6 text-white">
+                            <div class="space-y-4">
+                                <div>
+                                    <h3 class="text-sm text-gray-400">Name</h3>
+                                    <p class="font-medium">{{ user.name }}</p>
+                                </div>
+                                
+                                <div>
+                                    <h3 class="text-sm text-gray-400">Email</h3>
+                                    <p class="font-medium">{{ user.email }}</p>
+                                </div>
+                                
+                                <div>
+                                    <h3 class="text-sm text-gray-400">Phone</h3>
+                                    <p class="font-medium">{{ user.phone or 'Not provided' }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t border-gray-700 mt-4 pt-4">
+                                <h3 class="text-sm text-gray-400 mb-2">Delivery Address</h3>
+                                <address class="not-italic">
+                                    {% if user.address %}
+                                        {{ user.address }}<br>
+                                        {{ user.city }}, {{ user.province }} {{ user.postal_code }}
+                                    {% else %}
+                                        No address provided
+                                    {% endif %}
+                                </address>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <a href="#settings" onclick="switchTab(event, 'settings')" class="text-primary hover:text-green-600 text-sm">Edit account details</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Order Summary -->
+                    <div class="bg-black rounded-lg shadow-md overflow-hidden">
+                        <div class="bg-primary text-white p-4">
+                            <h2 class="text-xl font-semibold">Order Summary</h2>
+                        </div>
+                        
+                        <div class="p-6 text-white">
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div class="bg-gray-900 rounded-lg p-3">
+                                    <div class="text-2xl font-bold text-primary">{{ orders|length if orders else 0 }}</div>
+                                    <div class="text-sm text-gray-400">Total Orders</div>
+                                </div>
+                                <div class="bg-gray-900 rounded-lg p-3">
+                                    <div class="text-2xl font-bold text-green-500">${{ "%.2f"|format(total_spent) if total_spent else 0 }}</div>
+                                    <div class="text-sm text-gray-400">Total Spent</div>
+                                </div>
+                            </div>
+                            
+                            {% if orders %}
+                                <div class="mt-4 pt-4 border-t border-gray-700">
+                                    <h3 class="text-sm font-medium text-gray-400 mb-2">Recent Orders</h3>
+                                    <div class="space-y-2">
+                                        {% for order in orders[:3] %}
+                                        <div class="flex justify-between items-center text-sm">
+                                            <span class="text-gray-300">#{{ order.id }}</span>
+                                            <span class="text-gray-400">{{ order.created_at.strftime('%b %d') }}</span>
+                                            <span class="font-medium">${{ "%.2f"|format(order.amount) }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mt-3 text-center">
+                                        <a href="#payments" onclick="switchTab(event, 'payments')" class="text-primary hover:text-green-600 text-sm">View all orders</a>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <p class="text-gray-400 text-sm">No orders yet</p>
+                                    <a href="{{ url_for('main.meal_plans') }}" class="text-primary hover:text-green-600 text-sm">Browse meal plans</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-                {% endif %}
             </div>
         </div>
         
         <!-- Subscriptions Tab -->
-        <div id="subscriptions" class="tab-content">
-            <div class="space-y-6">
-                {% if active_subscriptions %}
-                <div class="bg-darker rounded-lg border border-gray-800">
-                    <div class="p-6 border-b border-gray-700">
-                        <h3 class="text-lg font-semibold text-white">Active Subscriptions</h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="grid gap-4">
+        <div id="subscriptions" class="tab-content hidden">
+            <div class="bg-black rounded-lg shadow-md overflow-hidden mb-6">
+                <div class="bg-primary text-white p-4">
+                    <h2 class="text-xl font-semibold">My Subscriptions</h2>
+                </div>
+                
+                <div class="p-6 text-white">
+                    {% if active_subscriptions %}
+                        <h3 class="font-bold text-lg mb-4">Active Subscriptions</h3>
+                        <div class="space-y-6">
                             {% for subscription in active_subscriptions %}
-                            <div class="border border-gray-700 rounded-lg p-4">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h4 class="text-white font-semibold">{{ subscription.meal_plan.name if subscription.meal_plan else 'Unknown Plan' }}</h4>
-                                        <p class="text-gray-400 text-sm">{{ subscription.frequency.value.title() }} Subscription</p>
-                                        <p class="text-primary font-semibold">₹{{ "%.2f"|format(subscription.price) }}</p>
+                                <div class="border border-gray-700 rounded-lg overflow-hidden">
+                                    <div class="bg-gray-900 p-4 flex justify-between items-center">
+                                        <div>
+                                            <h4 class="font-semibold text-white">{{ subscription.meal_plan.name }}</h4>
+                                            <span class="text-sm text-gray-400">{{ subscription.frequency.value|capitalize }}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Active</span>
+                                        </div>
                                     </div>
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                        {{ subscription.status.value.title() }}
-                                    </span>
+                                    
+                                    <div class="p-4 bg-black text-white">
+                                        <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                                            <div>
+                                                <span class="text-gray-400">Start Date</span>
+                                                <p>{{ subscription.start_date.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400">Next Delivery</span>
+                                                {% if subscription.next_delivery_date %}
+                                                    <p>{{ subscription.next_delivery_date.strftime('%a, %b %d') }}</p>
+                                                {% else %}
+                                                    <p>{{ subscription.current_period_start.strftime('%a, %b %d') }}</p>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400">Period</span>
+                                                <p>{{ subscription.current_period_start.strftime('%b %d') }} - {{ subscription.current_period_end.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400">Price</span>
+                                                <div class="text-sm text-gray-600">
+                                                    <span class="font-medium">Price:</span> ${{ "%.2f"|format(subscription.meal_plan.get_price_weekly()) }}/week
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Upcoming Deliveries Section -->
+                                        {% if subscription_deliveries[subscription.id] %}
+                                        <div class="mt-4 border-t pt-4">
+                                            <h5 class="font-semibold text-sm mb-2">Upcoming Deliveries</h5>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                                {% for delivery in subscription_deliveries[subscription.id] %}
+                                                <div class="border rounded p-2 text-sm {% if delivery.is_skipped %}bg-gray-900{% endif %}">
+                                                    <div class="flex justify-between items-center">
+                                                        <span class="{% if delivery.is_skipped %}line-through text-gray-500{% endif %}">
+                                                            {{ delivery.formatted_date }}
+                                                        </span>
+                                                        {% if delivery.is_skipped %}
+                                                            <span class="text-xs bg-gray-200 text-gray-800 px-1 py-0.5 rounded">Skipped</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    {% if delivery.can_skip and not delivery.is_skipped %}
+                                                    <form action="{{ url_for('subscription_mgmt.skip_delivery', subscription_id=subscription.id) }}" method="POST" class="mt-1">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <input type="hidden" name="delivery_date" value="{{ delivery.date }}">
+                                                        <button type="submit" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs py-1 px-2 rounded">
+                                                            Skip this delivery
+                                                        </button>
+                                                    </form>
+                                                    {% elif delivery.is_skipped and not delivery.cutoff_passed %}
+                                                    <form action="{{ url_for('subscription_mgmt.unskip_delivery', subscription_id=subscription.id) }}" method="POST" class="mt-1">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <input type="hidden" name="delivery_date" value="{{ delivery.date }}">
+                                                        <button type="submit" class="w-full bg-green-100 hover:bg-green-200 text-green-800 text-xs py-1 px-2 rounded">
+                                                            Restore this delivery
+                                                        </button>
+                                                    </form>
+                                                    {% elif delivery.cutoff_passed %}
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        Past cutoff time
+                                                    </p>
+                                                    {% endif %}
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-2">
+                                                Note: Deliveries can be skipped up to 5 hours before the 4-10 PM delivery window.
+                                            </p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="flex justify-end space-x-2 mt-4">
+                                            <a href="{{ url_for('subscription_mgmt.change_meal_plan', subscription_id=subscription.id) }}" 
+                                               class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-1 px-3 rounded text-sm">
+                                                Change Plan
+                                            </a>
+                                            <button onclick="showDeliveryHistory({{ subscription.id }})" 
+                                                    class="bg-purple-500 hover:bg-purple-600 text-white font-medium py-1 px-3 rounded text-sm">
+                                                History
+                                            </button>
+                                            <form action="{{ url_for('subscription_mgmt.pause_subscription', subscription_id=subscription.id) }}" method="POST" class="inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-1 px-3 rounded text-sm">
+                                                    Pause
+                                                </button>
+                                            </form>
+                                            <form action="{{ url_for('subscription_mgmt.cancel_subscription', subscription_id=subscription.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this subscription?');" class="inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded text-sm">
+                                                    Cancel
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="mt-3 text-sm text-gray-400">
-                                    <p>Started: {{ subscription.start_date.strftime('%d %b %Y') }}</p>
-                                    <p>Next billing: {{ subscription.current_period_end.strftime('%d %b %Y') }}</p>
-                                </div>
-                            </div>
                             {% endfor %}
                         </div>
-                    </div>
-                </div>
-                {% endif %}
-                
-                {% if paused_subscriptions or canceled_subscriptions %}
-                <div class="bg-darker rounded-lg border border-gray-800">
-                    <div class="p-6 border-b border-gray-700">
-                        <h3 class="text-lg font-semibold text-white">Inactive Subscriptions</h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="grid gap-4">
-                            {% for subscription in paused_subscriptions + canceled_subscriptions %}
-                            <div class="border border-gray-700 rounded-lg p-4 opacity-75">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h4 class="text-white font-semibold">{{ subscription.meal_plan.name if subscription.meal_plan else 'Unknown Plan' }}</h4>
-                                        <p class="text-gray-400 text-sm">{{ subscription.frequency.value.title() }} Subscription</p>
+                    {% endif %}
+                    
+                    {% if paused_subscriptions %}
+                        <h3 class="font-bold text-lg mb-4 mt-8">Paused Subscriptions</h3>
+                        <div class="space-y-6">
+                            {% for subscription in paused_subscriptions %}
+                                <div class="border border-gray-700 rounded-lg overflow-hidden">
+                                    <div class="bg-gray-900 p-4 flex justify-between items-center">
+                                        <div>
+                                            <h4 class="font-semibold text-white">{{ subscription.meal_plan.name }}</h4>
+                                            <span class="text-sm text-gray-400">{{ subscription.frequency.value|capitalize }}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">Paused</span>
+                                        </div>
                                     </div>
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                        {% if subscription.status.value == 'paused' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
-                                        {{ subscription.status.value.title() }}
-                                    </span>
+                                    
+                                    <div class="p-4 bg-black text-white">
+                                        <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                                            <div>
+                                                <span class="text-gray-400">Start Date</span>
+                                                <p>{{ subscription.start_date.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400">Paused On</span>
+                                                <p>{{ subscription.updated_at.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400">Original Period</span>
+                                                <p>{{ subscription.current_period_start.strftime('%b %d') }} - {{ subscription.current_period_end.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400">Price</span>
+                                                <div class="text-sm text-gray-600">
+                                                    <span class="font-medium">Price:</span> ${{ "%.2f"|format(subscription.meal_plan.get_price_weekly()) }}/week
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Upcoming Deliveries Section (Paused) -->
+                                        <div class="mt-4 border-t border-gray-700 pt-4">
+                                            <h5 class="font-semibold text-sm mb-2">Upcoming Deliveries (Paused)</h5>
+                                            <p class="text-sm text-gray-400">All deliveries are paused until you resume your subscription.</p>
+                                        </div>
+                                        
+                                        <div class="flex justify-end space-x-2 mt-4">
+                                            <form action="{{ url_for('subscription_mgmt.resume_subscription', subscription_id=subscription.id) }}" method="POST">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-medium py-1 px-3 rounded text-sm">
+                                                    Resume
+                                                </button>
+                                            </form>
+                                            <form action="{{ url_for('subscription_mgmt.cancel_subscription', subscription_id=subscription.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to cancel this subscription?');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-medium py-1 px-3 rounded text-sm">
+                                                    Cancel
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
                             {% endfor %}
                         </div>
-                    </div>
+                    {% endif %}
+                    
+                    {% if canceled_subscriptions %}
+                        <h3 class="font-bold text-lg mb-4 mt-8">Canceled Subscriptions</h3>
+                        <div class="space-y-6">
+                            {% for subscription in canceled_subscriptions %}
+                                <div class="border border-gray-700 rounded-lg overflow-hidden">
+                                    <div class="bg-gray-900 p-4 flex justify-between items-center">
+                                        <div>
+                                            <h4 class="font-semibold text-white">{{ subscription.meal_plan.name }}</h4>
+                                            <span class="text-sm text-gray-400">{{ subscription.frequency.value|capitalize }}</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">Canceled</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-4 bg-black text-white">
+                                        <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                                            <div>
+                                                <span class="text-gray-400">Start Date</span>
+                                                <p>{{ subscription.start_date.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400">End Date</span>
+                                                <p>{{ subscription.updated_at.strftime('%b %d, %Y') }}</p>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400">Original Price</span>
+                                                <div class="text-sm text-gray-600">
+                                                    <span class="font-medium">Price:</span> ${{ "%.2f"|format(subscription.meal_plan.get_price_weekly()) }}/week
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex justify-center mt-4">
+                                            <a href="{{ url_for('main.meal_plans') }}" class="bg-primary hover:bg-primary-dark text-white font-medium py-1 px-3 rounded text-sm">
+                                                Subscribe Again
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    {% if not active_subscriptions and not paused_subscriptions and not canceled_subscriptions %}
+                        <div class="text-center py-8 bg-black rounded-lg border border-gray-700 p-6">
+                            <div class="h-24 w-24 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-800">
+                                <i class="fas fa-utensils text-gray-500 text-4xl"></i>
+                            </div>
+                            <h3 class="mb-2 text-xl font-medium text-white">No Subscriptions Found</h3>
+                            <p class="text-gray-400 mb-6">You don't have any meal plan subscriptions yet.</p>
+                            <a href="{{ url_for('main.meal_plans') }}" class="inline-block bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md">
+                                Browse Meal Plans
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
-                {% endif %}
-                
-                {% if not active_subscriptions and not paused_subscriptions and not canceled_subscriptions %}
-                <div class="bg-darker rounded-lg border border-gray-800 p-6 text-center">
-                    <p class="text-gray-400">No subscriptions found</p>
-                    <a href="{{ url_for('main.meal_plans') }}" class="text-primary hover:text-green-600 text-sm">
-                        Subscribe to a meal plan →
-                    </a>
-                </div>
-                {% endif %}
             </div>
         </div>
         
-        <!-- Payments Tab -->
-        <div id="payments" class="tab-content">
-            <div class="bg-darker rounded-lg border border-gray-800">
-                <div class="p-6 border-b border-gray-700">
-                    <h3 class="text-lg font-semibold text-white">Payment History</h3>
+        <!-- Payment History Tab -->
+        <div id="payments" class="tab-content hidden">
+            <!-- Order History Section -->
+            <div class="bg-black rounded-lg shadow-md overflow-hidden mb-6">
+                <div class="bg-primary text-white p-4">
+                    <h2 class="text-xl font-semibold">Order History</h2>
                 </div>
                 
-                {% if payment_history %}
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-900">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Payment ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Order</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Amount</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-700">
-                            {% for payment in payment_history %}
-                            <tr>
-                                <td class="px-6 py-4 text-sm text-white font-mono">{{ payment.payment_id[:15] }}...</td>
-                                <td class="px-6 py-4 text-sm text-white">#{{ payment.order_id }}</td>
-                                <td class="px-6 py-4 text-sm text-primary font-semibold">₹{{ "%.2f"|format(payment.amount) }}</td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                        {% if payment.status == 'captured' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
-                                        {{ payment.status.title() }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-400">{{ payment.date.strftime('%d %b %Y, %I:%M %p') }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="p-6 text-white">
+                    {% if orders %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-900">
+                                    <tr>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Order ID</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Meal Plan</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Payment ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-700">
+                                    {% for order in orders %}
+                                    <tr class="hover:bg-gray-900">
+                                        <td class="py-4 px-4 text-sm">#{{ order.id }}</td>
+                                        <td class="py-4 px-4 text-sm">{{ order.created_at.strftime('%b %d, %Y') }}</td>
+                                        <td class="py-4 px-4 text-sm">
+                                            {% if order.meal_plan %}
+                                                {{ order.meal_plan.name }}
+                                            {% else %}
+                                                {{ order.meal_plan_name or 'N/A' }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="py-4 px-4 text-sm font-medium">${{ "%.2f"|format(order.amount) }}</td>
+                                        <td class="py-4 px-4 text-sm">
+                                            <span class="px-2 py-1 text-xs rounded-full 
+                                                {% if order.payment_status == 'completed' %}bg-green-100 text-green-800
+                                                {% elif order.payment_status == 'pending' %}bg-yellow-100 text-yellow-800
+                                                {% elif order.payment_status == 'failed' %}bg-red-100 text-red-800
+                                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                {{ order.payment_status|capitalize if order.payment_status else 'N/A' }}
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-4 text-sm text-gray-400">
+                                            {{ order.payment_id[:10] + '...' if order.payment_id else 'N/A' }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Summary Stats -->
+                        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-gray-900 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-primary">{{ orders|length }}</div>
+                                <div class="text-sm text-gray-400">Total Orders</div>
+                            </div>
+                            <div class="bg-gray-900 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-green-500">${{ "%.2f"|format(total_spent) }}</div>
+                                <div class="text-sm text-gray-400">Total Spent</div>
+                            </div>
+                            <div class="bg-gray-900 rounded-lg p-4 text-center">
+                                <div class="text-2xl font-bold text-blue-500">{{ total_subscriptions }}</div>
+                                <div class="text-sm text-gray-400">Total Subscriptions</div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <div class="h-24 w-24 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-800">
+                                <i class="fas fa-shopping-cart text-gray-500 text-4xl"></i>
+                            </div>
+                            <h3 class="mb-2 text-xl font-medium text-white">No Orders Yet</h3>
+                            <p class="text-gray-400 mb-6">You haven't placed any orders yet.</p>
+                            <a href="{{ url_for('main.meal_plans') }}" class="inline-block bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md">
+                                Browse Meal Plans
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
-                {% else %}
-                <div class="p-6 text-center">
-                    <p class="text-gray-400">No payment history found</p>
+            </div>
+            
+            <!-- Payment History Section -->
+            <div class="bg-black rounded-lg shadow-md overflow-hidden">
+                <div class="bg-primary text-white p-4">
+                    <h2 class="text-xl font-semibold">Payment History</h2>
                 </div>
-                {% endif %}
+                
+                <div class="p-6 text-white">
+                    {% if payment_history %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-900">
+                                    <tr>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Date</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Order ID</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Payment ID</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
+                                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-700">
+                                    {% for payment in payment_history %}
+                                    <tr class="hover:bg-gray-900">
+                                        <td class="py-4 px-4 text-sm">{{ payment.date.strftime('%b %d, %Y') }}</td>
+                                        <td class="py-4 px-4 text-sm">#{{ payment.order_id }}</td>
+                                        <td class="py-4 px-4 text-sm text-gray-400">{{ payment.payment_id[:10] + '...' if payment.payment_id else 'N/A' }}</td>
+                                        <td class="py-4 px-4 text-sm font-medium">${{ "%.2f"|format(payment.amount) }}</td>
+                                        <td class="py-4 px-4 text-sm">
+                                            <span class="px-2 py-1 text-xs rounded-full 
+                                                {% if payment.status == 'completed' %}bg-green-100 text-green-800
+                                                {% elif payment.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                                {% elif payment.status == 'failed' %}bg-red-100 text-red-800
+                                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                {{ payment.status|capitalize }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <div class="h-24 w-24 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-800">
+                                <i class="fas fa-credit-card text-gray-500 text-4xl"></i>
+                            </div>
+                            <h3 class="mb-2 text-xl font-medium text-white">No Payment Records</h3>
+                            <p class="text-gray-400 mb-6">Your payment history will appear here once you make a subscription.</p>
+                            <a href="{{ url_for('main.meal_plans') }}" class="inline-block bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md">
+                                Browse Meal Plans
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Nutrition Tracking Tab -->
+        <div id="nutrition" class="tab-content hidden">
+            <div class="bg-black rounded-lg shadow-md overflow-hidden mb-6">
+                <div class="bg-primary text-white p-4">
+                    <h2 class="text-xl font-semibold">Nutrition Tracking</h2>
+                </div>
+                
+                <div class="p-6 text-white">
+                    <!-- Coming Soon Message -->
+                    <div class="text-center py-12">
+                        <div class="h-24 w-24 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-800">
+                            <i class="fas fa-chart-line text-gray-500 text-4xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-4">Coming Soon!</h3>
+                        <p class="text-gray-400 mb-6 max-w-md mx-auto">
+                            We're working on bringing you comprehensive nutrition tracking features. 
+                            Soon you'll be able to:
+                        </p>
+                        <ul class="text-gray-300 space-y-2 mb-8 max-w-md mx-auto text-left">
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Track your daily nutrition intake
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                View detailed nutrition trends and charts
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Monitor your progress towards goals
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                Get personalized nutrition insights
+                            </li>
+                        </ul>
+                        <p class="text-sm text-gray-500">
+                            Stay tuned for updates on this exciting new feature!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Account Settings Tab -->
+        <div id="settings" class="tab-content hidden">
+            <div class="bg-gray-900 rounded-lg shadow-md overflow-hidden mb-6">
+                <div class="bg-primary text-white p-4">
+                    <h2 class="text-xl font-semibold">Account Settings</h2>
+                </div>
+                
+                <div class="p-6">
+                    <form action="{{ url_for('main.update_profile') }}" method="POST" class="space-y-6">
+                        <input type="hidden" name="form_section" value="settings">
+                        <!-- Personal Information -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-4">Personal Information</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                    <input type="text" id="name" name="name" value="{{ user.name }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-black bg-white">
+                                </div>
+                                
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                    <input type="email" id="email" name="email" value="{{ user.email }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-black bg-white">
+                                </div>
+                                
+                                <div>
+                                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                    <input type="tel" id="phone" name="phone" value="{{ user.phone }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-black bg-white">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delivery Address -->
+                        <div class="border-t pt-6">
+                            <h3 class="text-lg font-medium mb-4">Delivery Address</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
+                                    <input type="text" id="address" name="address" value="{{ user.address }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-black bg-white">
+                                </div>
+                                
+                                <div>
+                                    <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                                    <input type="text" id="city" name="city" value="{{ user.city }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-black bg-white">
+                                </div>
+                                
+                                <div>
+                                    <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                                    <select id="state" name="state" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-black bg-white">
+                                        <option value="">Select State</option>
+                                        <option value="AP" {% if user.province == 'AP' %}selected{% endif %}>Andhra Pradesh</option>
+                                        <option value="AR" {% if user.province == 'AR' %}selected{% endif %}>Arunachal Pradesh</option>
+                                        <option value="AS" {% if user.province == 'AS' %}selected{% endif %}>Assam</option>
+                                        <option value="BR" {% if user.province == 'BR' %}selected{% endif %}>Bihar</option>
+                                        <option value="CG" {% if user.province == 'CG' %}selected{% endif %}>Chhattisgarh</option>
+                                        <option value="GA" {% if user.province == 'GA' %}selected{% endif %}>Goa</option>
+                                        <option value="GJ" {% if user.province == 'GJ' %}selected{% endif %}>Gujarat</option>
+                                        <option value="HR" {% if user.province == 'HR' %}selected{% endif %}>Haryana</option>
+                                        <option value="HP" {% if user.province == 'HP' %}selected{% endif %}>Himachal Pradesh</option>
+                                        <option value="JK" {% if user.province == 'JK' %}selected{% endif %}>Jammu and Kashmir</option>
+                                        <option value="JH" {% if user.province == 'JH' %}selected{% endif %}>Jharkhand</option>
+                                        <option value="KA" {% if user.province == 'KA' %}selected{% endif %}>Karnataka</option>
+                                        <option value="KL" {% if user.province == 'KL' %}selected{% endif %}>Kerala</option>
+                                        <option value="MP" {% if user.province == 'MP' %}selected{% endif %}>Madhya Pradesh</option>
+                                        <option value="MH" {% if user.province == 'MH' %}selected{% endif %}>Maharashtra</option>
+                                        <option value="MN" {% if user.province == 'MN' %}selected{% endif %}>Manipur</option>
+                                        <option value="ML" {% if user.province == 'ML' %}selected{% endif %}>Meghalaya</option>
+                                        <option value="MZ" {% if user.province == 'MZ' %}selected{% endif %}>Mizoram</option>
+                                        <option value="NL" {% if user.province == 'NL' %}selected{% endif %}>Nagaland</option>
+                                        <option value="OD" {% if user.province == 'OD' %}selected{% endif %}>Odisha</option>
+                                        <option value="PB" {% if user.province == 'PB' %}selected{% endif %}>Punjab</option>
+                                        <option value="RJ" {% if user.province == 'RJ' %}selected{% endif %}>Rajasthan</option>
+                                        <option value="SK" {% if user.province == 'SK' %}selected{% endif %}>Sikkim</option>
+                                        <option value="TN" {% if user.province == 'TN' %}selected{% endif %}>Tamil Nadu</option>
+                                        <option value="TS" {% if user.province == 'TS' %}selected{% endif %}>Telangana</option>
+                                        <option value="TR" {% if user.province == 'TR' %}selected{% endif %}>Tripura</option>
+                                        <option value="UP" {% if user.province == 'UP' %}selected{% endif %}>Uttar Pradesh</option>
+                                        <option value="UK" {% if user.province == 'UK' %}selected{% endif %}>Uttarakhand</option>
+                                        <option value="WB" {% if user.province == 'WB' %}selected{% endif %}>West Bengal</option>
+                                        <option value="AN" {% if user.province == 'AN' %}selected{% endif %}>Andaman and Nicobar Islands</option>
+                                        <option value="CH" {% if user.province == 'CH' %}selected{% endif %}>Chandigarh</option>
+                                        <option value="DN" {% if user.province == 'DN' %}selected{% endif %}>Dadra and Nagar Haveli</option>
+                                        <option value="DD" {% if user.province == 'DD' %}selected{% endif %}>Daman and Diu</option>
+                                        <option value="DL" {% if user.province == 'DL' %}selected{% endif %}>Delhi</option>
+                                        <option value="LD" {% if user.province == 'LD' %}selected{% endif %}>Lakshadweep</option>
+                                        <option value="PY" {% if user.province == 'PY' %}selected{% endif %}>Puducherry</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label for="pincode" class="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
+                                    <input type="text" id="pincode" name="pincode" value="{{ user.postal_code }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-black bg-white">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Password Change -->
+                        <div class="border-t pt-6">
+                            <h3 class="text-lg font-medium mb-4">Change Password</h3>
+                            
+                            <form action="{{ url_for('main.change_password') }}" method="POST" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="current_password" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                                        <input type="password" id="current_password" name="current_password" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-black bg-white">
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="new_password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                        <input type="password" id="new_password" name="new_password" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-black bg-white">
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                                        <input type="password" id="confirm_password" name="confirm_password" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-black bg-white">
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Password must be at least 8 characters long and include uppercase, lowercase, and numbers.</p>
+                                <div class="border-t pt-6 flex justify-end">
+                                    <button type="submit" id="change-password-btn" class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md">
+                                        <span id="change-btn-text">Change Password</span>
+                                        <span id="change-btn-loading" class="hidden">
+                                            <i class="fas fa-spinner fa-spin mr-1"></i>Changing...
+                                        </span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Notification Preferences -->
+                        <div class="border-t pt-6">
+                            <h3 class="text-lg font-medium mb-4">Notification Preferences</h3>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="email_notifications" name="email_notifications" class="h-4 w-4 rounded text-primary focus:ring-primary" checked>
+                                    <label for="email_notifications" class="ml-2 block text-sm">Email notifications for deliveries and promotions</label>
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="sms_notifications" name="sms_notifications" class="h-4 w-4 rounded text-primary focus:ring-primary" checked>
+                                    <label for="sms_notifications" class="ml-2 block text-sm">SMS notifications for delivery updates</label>
+                                </div>
+                                
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="newsletter" name="newsletter" class="h-4 w-4 rounded text-primary focus:ring-primary" checked>
+                                    <label for="newsletter" class="ml-2 block text-sm">Receive weekly nutrition tips and recipes</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Submission -->
+                        <div class="border-t pt-6 flex justify-end">
+                            <button type="submit" id="save-changes-btn" class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-md">
+                                <span id="btn-text">Save Changes</span>
+                                <span id="btn-loading" class="hidden">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>Saving...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Success/Error Messages for AJAX -->
+                    <div id="ajax-message" class="hidden mt-4 p-4 rounded-md">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i id="message-icon" class="fas"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p id="message-text" class="text-sm font-medium"></p>
+                            </div>
+                            <div class="ml-auto pl-3">
+                                <button id="close-message" class="inline-flex text-gray-400 hover:text-gray-600" onclick="document.getElementById('ajax-message').classList.add('hidden')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-.tab-button {
-    @apply px-4 py-2 text-gray-400 hover:text-white border-b-2 border-transparent hover:border-primary transition-colors;
-}
-
-.tab-button.active {
-    @apply text-white border-primary;
-}
-
-.tab-content {
-    @apply hidden;
-}
-
-.tab-content.active {
-    @apply block;
-}
+    .tab-content {
+        transition: opacity 0.3s ease;
+    }
 </style>
 
 <script>
-function showTab(tabName) {
-    // Hide all tab contents
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
+    // AJAX form submission for profile updates
+    document.addEventListener('DOMContentLoaded', function() {
+        // Only target the profile update form, not the password change form
+        let profileForm = document.querySelector('form[action="{{ url_for("main.update_profile") }}"]');
+        
+        if (!profileForm) {
+            // Try alternative selectors
+            profileForm = document.querySelector('#settings form[action="{{ url_for("main.update_profile") }}"]');
+        }
+        
+        if (!profileForm) {
+            // Try finding form by method and action
+            profileForm = document.querySelector('form[method="POST"][action="{{ url_for("main.update_profile") }}"]');
+        }
+        
+        if (profileForm) {
+            console.log('✅ Profile form found - setting up AJAX submission');
+            console.log('Form action:', profileForm.action);
+            console.log('Form method:', profileForm.method);
+            
+            profileForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent normal form submission
+                console.log('🚀 AJAX FORM SUBMISSION STARTED');
+                
+                // Show loading state
+                const btnText = document.getElementById('btn-text');
+                const btnLoading = document.getElementById('btn-loading');
+                const saveBtn = document.getElementById('save-changes-btn');
+                
+                if (btnText && btnLoading && saveBtn) {
+                    btnText.classList.add('hidden');
+                    btnLoading.classList.remove('hidden');
+                    saveBtn.disabled = true;
+                }
+                
+                // Prepare form data
+                const formData = new FormData(this);
+                
+                // Convert FormData to URLSearchParams
+                const urlParams = new URLSearchParams();
+                for (let [key, value] of formData.entries()) {
+                    urlParams.append(key, value);
+                }
+                
+                // Log what we're sending
+                console.log('📤 Sending form data...');
+                for (let [key, value] of urlParams.entries()) {
+                    if (key.includes('password')) {
+                        console.log(`${key}: ${value ? '[PROVIDED]' : '[EMPTY]'}`);
+                    } else {
+                        console.log(`${key}: ${value}`);
+                    }
+                }
+                
+                // Send AJAX request
+                fetch(this.action, {
+                    method: 'POST',
+                    body: urlParams,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log('📥 Response received:', response.status);
+                    console.log('📥 Response headers:', response.headers);
+                    
+                    // Log the response text for debugging
+                    return response.text().then(text => {
+                        console.log('📥 Response text:', text);
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}, response: ${text}`);
+                        }
+                        
+                        // Try to parse as JSON
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error('❌ Failed to parse JSON:', e);
+                            throw new Error(`Invalid JSON response: ${text}`);
+                        }
+                    });
+                })
+                .then(data => {
+                    console.log('✅ Response data:', data);
+                    
+                    // Reset button state
+                    if (btnText && btnLoading && saveBtn) {
+                        btnText.classList.remove('hidden');
+                        btnLoading.classList.add('hidden');
+                        saveBtn.disabled = false;
+                    }
+                    
+                    // Show message
+                    showMessage(data.status, data.message);
+                    
+                    // Clear password fields on success
+                    if (data.status === 'success') {
+                        const currentPwd = document.getElementById('current_password');
+                        const newPwd = document.getElementById('new_password');
+                        const confirmPwd = document.getElementById('confirm_password');
+                        
+                        if (currentPwd) currentPwd.value = '';
+                        if (newPwd) newPwd.value = '';
+                        if (confirmPwd) confirmPwd.value = '';
+                        console.log('🔐 Password fields cleared');
+                        
+                        // Reload the page after a short delay to show updated data
+                        setTimeout(() => {
+                            console.log('🔄 Reloading page to show updated data...');
+                            window.location.reload();
+                        }, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ AJAX Error:', error);
+                    console.error('❌ Error details:', error.message);
+                    
+                    // Reset button state
+                    if (btnText && btnLoading && saveBtn) {
+                        btnText.classList.remove('hidden');
+                        btnLoading.classList.add('hidden');
+                        saveBtn.disabled = false;
+                    }
+                    
+                    // Show detailed error message
+                    showMessage('error', `Error: ${error.message}`);
+                });
+            });
+        } else {
+            console.error('❌ Profile form not found!');
+            console.log('Available forms:', document.querySelectorAll('form'));
+        }
+        
+        // Function to show success/error messages
+        function showMessage(type, text) {
+            const messageDiv = document.getElementById('ajax-message');
+            const messageIcon = document.getElementById('message-icon');
+            const messageText = document.getElementById('message-text');
+            
+            if (!messageDiv || !messageIcon || !messageText) {
+                console.error('❌ Message elements not found!');
+                // Fallback to alert
+                alert(`${type.toUpperCase()}: ${text}`);
+                return;
+            }
+            
+            // Set message content
+            messageText.textContent = text;
+            
+            // Clear previous classes
+            messageDiv.className = 'mt-4 p-4 rounded-md';
+            messageIcon.className = 'fas';
+            
+            // Set styles based on type
+            if (type === 'success') {
+                messageDiv.classList.add('bg-green-50', 'border', 'border-green-200');
+                messageIcon.classList.add('fa-check-circle', 'text-green-500');
+                messageText.className = 'text-sm font-medium text-green-800';
+            } else {
+                messageDiv.classList.add('bg-red-50', 'border', 'border-red-200');
+                messageIcon.classList.add('fa-exclamation-circle', 'text-red-500');
+                messageText.className = 'text-sm font-medium text-red-800';
+            }
+            
+            // Show message
+            messageDiv.classList.remove('hidden');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 5000);
+            
+            console.log(`💬 Message shown: ${type} - ${text}`);
+        }
     });
     
-    // Remove active class from all tab buttons
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active');
+    function switchTab(event, tabId) {
+        event.preventDefault();
+        
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(content => {
+            content.classList.add('hidden');
+        });
+        
+        // Remove active class from all tab links
+        const tabLinks = document.querySelectorAll('.border-b li a');
+        tabLinks.forEach(link => {
+            link.classList.remove('border-primary', 'text-primary');
+            link.classList.add('border-transparent');
+        });
+        
+        // Show the selected tab content
+        const selectedTab = document.getElementById(tabId);
+        selectedTab.classList.remove('hidden');
+        
+        // Add active class to clicked tab link
+        event.target.classList.remove('border-transparent');
+        event.target.classList.add('border-primary', 'text-primary');
+        
+        // Update URL hash without scrolling
+        const scrollPosition = window.pageYOffset;
+        window.location.hash = tabId;
+        window.scrollTo(0, scrollPosition);
+    }
+    
+    // Handle URL hash on page load and hash changes
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('🔄 Profile page loaded, checking for hash...');
+        const hash = window.location.hash.substring(1);
+        console.log('🔍 Current hash:', hash);
+        
+        if (hash && document.getElementById(hash)) {
+            console.log('✅ Hash found, switching to tab:', hash);
+            const tabLink = document.querySelector(`a[href="#${hash}"]`);
+            if (tabLink) {
+                // Trigger the tab switch
+                switchTab({ preventDefault: () => {}, target: tabLink }, hash);
+                console.log('🎯 Tab switched to:', hash);
+            } else {
+                console.log('❌ Tab link not found for hash:', hash);
+            }
+        } else {
+            console.log('ℹ️ No hash found, staying on default tab (account)');
+        }
     });
     
-    // Show the selected tab content
-    document.getElementById(tabName).classList.add('active');
+    // Also listen for hash changes (in case of browser back/forward)
+    window.addEventListener('hashchange', () => {
+        console.log('🔄 Hash changed to:', window.location.hash);
+        const hash = window.location.hash.substring(1);
+        if (hash && document.getElementById(hash)) {
+            const tabLink = document.querySelector(`a[href="#${hash}"]`);
+            if (tabLink) {
+                switchTab({ preventDefault: () => {}, target: tabLink }, hash);
+            }
+        }
+    });
     
-    // Add active class to the selected tab button
-    document.getElementById(tabName + '-tab').classList.add('active');
-}
+    // Delivery History Modal
+    function showDeliveryHistory(subscriptionId) {
+        fetch(`/subscription_mgmt/delivery_history/${subscriptionId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showHistoryModal('Delivery History', data.delivery_history, 'delivery');
+                } else {
+                    alert('Error loading delivery history');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading delivery history');
+            });
+    }
+    
+    // Subscription History Modal
+    function showSubscriptionHistory(subscriptionId) {
+        fetch(`/subscription_mgmt/subscription_history/${subscriptionId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showHistoryModal('Subscription History', data.subscription_history, 'subscription');
+                } else {
+                    alert('Error loading subscription history');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading subscription history');
+            });
+    }
+    
+    // Generic History Modal
+    function showHistoryModal(title, historyData, type) {
+        // Create modal HTML
+        let modalHTML = `
+            <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-96 overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-white">${title}</h2>
+                        <button onclick="closeHistoryModal()" class="text-gray-400 hover:text-white">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+        `;
+        
+        if (type === 'delivery') {
+            historyData.forEach(item => {
+                const statusColor = item.status === 'delivered' ? 'text-green-400' : 
+                                  item.status === 'skipped' ? 'text-yellow-400' : 'text-gray-400';
+                
+                modalHTML += `
+                    <div class="border border-gray-700 rounded-lg p-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-white font-medium">${item.date_formatted}</p>
+                                <p class="text-sm ${statusColor}">${item.status.toUpperCase()}</p>
+                                ${item.tracking_number ? `<p class="text-sm text-gray-400">Tracking: ${item.tracking_number}</p>` : ''}
+                                ${item.notes ? `<p class="text-sm text-gray-400">${item.notes}</p>` : ''}
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-block px-2 py-1 text-xs rounded ${item.type === 'delivery' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}">
+                                    ${item.type}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else if (type === 'subscription') {
+            historyData.forEach(item => {
+                modalHTML += `
+                    <div class="border border-gray-700 rounded-lg p-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-white font-medium">${item.description}</p>
+                                <p class="text-sm text-gray-400">${item.date_formatted}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-block px-2 py-1 text-xs rounded bg-gray-100 text-gray-800">
+                                    ${item.event.replace('_', ' ')}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        modalHTML += `
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // Close History Modal
+    function closeHistoryModal() {
+        const modal = document.getElementById('historyModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+    
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('historyModal');
+        if (modal && event.target === modal) {
+            closeHistoryModal();
+        }
+    });
 </script>
 {% endblock %}

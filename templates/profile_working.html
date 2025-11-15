@@ -182,7 +182,7 @@
                 <div class="stat-label">Total Orders</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value">₹{{ "%.2f"|format(total_spent) }}</div>
+                <div class="stat-value">${{ "%.2f"|format(total_spent) }}</div>
                 <div class="stat-label">Total Spent</div>
             </div>
             <div class="stat-card">
@@ -213,7 +213,7 @@
                     <tr>
                         <td>#{{ order.id }}</td>
                         <td>{{ order.meal_plan_name }}</td>
-                        <td>₹{{ "%.2f"|format(order.amount) }}</td>
+                        <td>${{ "%.2f"|format(order.amount) }}</td>
                         <td>
                             <span class="status-badge status-{{ order.payment_status }}">
                                 {{ order.payment_status.title() }}
@@ -257,7 +257,7 @@
                     <tr>
                         <td>#{{ order.id }}</td>
                         <td>{{ order.meal_plan_name }}</td>
-                        <td>₹{{ "%.2f"|format(order.amount) }}</td>
+                        <td>${{ "%.2f"|format(order.amount) }}</td>
                         <td>
                             <span class="status-badge status-{{ order.status }}">
                                 {{ order.status.title() }}
@@ -305,7 +305,7 @@
                     <tr>
                         <td>#{{ payment.order_id }}</td>
                         <td>{{ payment.payment_id[:20] }}...</td>
-                        <td>₹{{ "%.2f"|format(payment.amount) }}</td>
+                        <td>${{ "%.2f"|format(payment.amount) }}</td>
                         <td>
                             <span class="status-badge status-{{ payment.status }}">
                                 {{ payment.status.title() }}
@@ -370,7 +370,7 @@
                             </span>
                         </td>
                         <td>{{ sub.frequency.value.title() }}</td>
-                        <td>₹{{ "%.2f"|format(sub.price) }}</td>
+                        <td>${{ "%.2f"|format(sub.price) }}</td>
                         <td>{{ sub.start_date.strftime('%Y-%m-%d') }}</td>
                     </tr>
                     {% endfor %}

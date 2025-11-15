@@ -53,6 +53,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mobile Menu Toggle
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    
+    function closeMobileMenu() {
+        if (mobileMenu) {
+            mobileMenu.classList.remove('show');
+            mobileMenuButton?.setAttribute('aria-expanded', 'false');
+            
+            // Reset icon
+            const icon = mobileMenuButton?.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+    }
     
     if (mobileMenuButton && mobileMenu) {
         mobileMenuButton.addEventListener('click', function() {
@@ -74,20 +89,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Mobile Menu Close Button
+    if (mobileMenuClose) {
+        mobileMenuClose.addEventListener('click', closeMobileMenu);
+    }
+    
+    // Close mobile menu when any link inside it is clicked
+    if (mobileMenu) {
+        const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+        mobileMenuLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Add a small delay to allow navigation to start
+                setTimeout(closeMobileMenu, 100);
+            });
+        });
+    }
+    
     // Close mobile menu when clicking outside
     document.addEventListener('click', function(event) {
         if (mobileMenu && mobileMenu.classList.contains('show') && 
             !mobileMenu.contains(event.target) && 
-            !mobileMenuButton.contains(event.target)) {
-            mobileMenu.classList.remove('show');
-            mobileMenuButton.setAttribute('aria-expanded', 'false');
-            
-            // Reset icon
-            const icon = mobileMenuButton.querySelector('i');
-            if (icon) {
-                icon.classList.remove('fa-times');
-                icon.classList.add('fa-bars');
-            }
+            !mobileMenuButton?.contains(event.target)) {
+            closeMobileMenu();
         }
     });
     

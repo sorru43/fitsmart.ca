@@ -1,0 +1,234 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Meal Tracking Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-white">🍽️ Meal Tracking Dashboard</h1>
+        <form method="POST" action="{{ url_for('admin.update_meal_counts') }}" class="inline">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                🔄 Update All Meal Counts
+            </button>
+        </form>
+    </div>
+
+    <!-- Overall Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-gray-800 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-blue-600 rounded-lg">
+                    <i class="fas fa-users text-white"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-400 text-sm">Active Subscriptions</p>
+                    <p class="text-white text-2xl font-bold">{{ overall_stats.total_subscriptions }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-green-600 rounded-lg">
+                    <i class="fas fa-utensils text-white"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-400 text-sm">Total Promised Meals</p>
+                    <p class="text-white text-2xl font-bold">{{ overall_stats.total_promised_meals }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-yellow-600 rounded-lg">
+                    <i class="fas fa-check-circle text-white"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-400 text-sm">Delivered Meals</p>
+                    <p class="text-white text-2xl font-bold">{{ overall_stats.total_delivered_meals }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="p-2 bg-red-600 rounded-lg">
+                    <i class="fas fa-exclamation-triangle text-white"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-400 text-sm">Need Renewal</p>
+                    <p class="text-white text-2xl font-bold">{{ overall_stats.subscriptions_needing_renewal }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="bg-gray-800 rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-semibold text-white mb-4">Overall Meal Completion</h3>
+        <div class="w-full bg-gray-700 rounded-full h-4">
+            <div class="bg-green-600 h-4 rounded-full transition-all duration-300" 
+                 style="width: {{ overall_stats.overall_completion_percentage }}%"></div>
+        </div>
+        <div class="flex justify-between text-sm text-gray-400 mt-2">
+            <span>{{ overall_stats.total_delivered_meals }} / {{ overall_stats.total_promised_meals }} meals delivered</span>
+            <span>{{ overall_stats.overall_completion_percentage }}% complete</span>
+        </div>
+    </div>
+
+    <!-- Subscriptions Table -->
+    <div class="bg-gray-800 rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-700">
+            <h3 class="text-lg font-semibold text-white">Subscription Meal Status</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Meal Plan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Frequency</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Promised</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Delivered</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Skipped</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Remaining</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Progress</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-gray-800 divide-y divide-gray-700">
+                    {% for item in meal_tracking_data %}
+                    <tr class="hover:bg-gray-700">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
+                                        <span class="text-white font-medium">{{ item.user.name[0] if item.user.name else 'U' }}</span>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-white">{{ item.user.name }}</div>
+                                    <div class="text-sm text-gray-400">{{ item.user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-white">{{ item.meal_plan.name }}</div>
+                            <div class="text-sm text-gray-400">ID: {{ item.subscription.id }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                       {% if item.subscription.frequency.value == 'weekly' %}bg-blue-100 text-blue-800{% else %}bg-purple-100 text-purple-800{% endif %}">
+                                {{ item.subscription.frequency.value.title() }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                            {{ item.meal_status.promised_meals }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-400">
+                            {{ item.meal_status.delivered_meals }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-yellow-400">
+                            {{ item.meal_status.skipped_meals }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">
+                            {{ item.meal_status.remaining_meals }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="w-24 bg-gray-700 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full transition-all duration-300" 
+                                     style="width: {{ item.meal_status.completion_percentage }}%"></div>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">{{ item.meal_status.completion_percentage }}%</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if item.meal_status.needs_renewal %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Needs Renewal
+                                </span>
+                            {% elif item.meal_status.completion_percentage >= 90 %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Almost Complete
+                                </span>
+                            {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{{ url_for('admin.subscription_meal_details', subscription_id=item.subscription.id) }}" 
+                               class="text-blue-400 hover:text-blue-300">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div class="bg-gray-800 rounded-lg p-6">
+            <h4 class="text-lg font-semibold text-white mb-4">📊 Meal Statistics</h4>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Total Skipped:</span>
+                    <span class="text-white">{{ overall_stats.total_skipped_meals }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Remaining Meals:</span>
+                    <span class="text-white">{{ overall_stats.total_remaining_meals }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Avg Completion:</span>
+                    <span class="text-white">{{ overall_stats.overall_completion_percentage }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6">
+            <h4 class="text-lg font-semibold text-white mb-4">⚠️ Renewal Alerts</h4>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Need Renewal:</span>
+                    <span class="text-red-400 font-semibold">{{ overall_stats.subscriptions_needing_renewal }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Active:</span>
+                    <span class="text-green-400">{{ overall_stats.total_subscriptions - overall_stats.subscriptions_needing_renewal }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg p-6">
+            <h4 class="text-lg font-semibold text-white mb-4">🔧 Quick Actions</h4>
+            <div class="space-y-3">
+                <button onclick="location.reload()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                    🔄 Refresh Data
+                </button>
+                <a href="{{ url_for('admin.admin_dashboard') }}" class="block w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm text-center">
+                    📊 Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh every 30 seconds
+setTimeout(function() {
+    location.reload();
+}, 30000);
+
+// Add loading state to update button
+document.querySelector('form').addEventListener('submit', function() {
+    const button = this.querySelector('button');
+    button.disabled = true;
+    button.innerHTML = '🔄 Updating...';
+});
+</script>
+{% endblock %}

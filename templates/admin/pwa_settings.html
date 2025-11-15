@@ -1,6 +1,6 @@
 {% extends 'admin/base_admin.html' %}
 
-{% block title %}PWA Settings - HealthyRizz{% endblock %}
+{% block title %}PWA Settings - FitSmart{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -158,8 +158,8 @@
 <script>
 function resetToDefaults() {
     if (confirm('Are you sure you want to reset all PWA settings to defaults?')) {
-        document.getElementById('pwa_name').value = 'HealthyRizz - Healthy Meal Delivery';
-        document.getElementById('pwa_short_name').value = 'HealthyRizz';
+        document.getElementById('pwa_name').value = 'FitSmart - Healthy Meal Delivery';
+        document.getElementById('pwa_short_name').value = 'FitSmart';
         document.getElementById('pwa_description').value = 'Fresh, healthy meal plans delivered to your doorstep';
         document.getElementById('pwa_theme_color').value = '#10b981';
         document.getElementById('pwa_background_color').value = '#ffffff';

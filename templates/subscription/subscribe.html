@@ -11,8 +11,8 @@
                 <h2 class="text-2xl font-bold mb-4">{{ plan.name }}</h2>
                 <p class="text-gray-600 mb-4">{{ plan.description }}</p>
                 <div class="flex justify-between items-center mb-4">
-                    <span class="text-2xl font-bold">₹{{ plan.price }}</span>
-                    <span class="text-sm text-gray-500">+ 5% GST</span>
+                    <span class="text-2xl font-bold">${{ plan.price }}</span>
+                    <span class="text-sm text-gray-500">+ 13% HST</span>
                 </div>
                 <div class="mb-4">
                     <label class="flex items-center">
@@ -30,8 +30,8 @@
     </div>
 </div>
 
-<!-- Razorpay Integration -->
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<!-- Stripe Integration -->
+<script src="https://js.stripe.com/v3/"></script>
 <script>
 function subscribe(mealPlanId) {
     const isVegetarian = document.getElementById(`veg_${mealPlanId}`).checked;
@@ -42,80 +42,38 @@ function subscribe(mealPlanId) {
     button.textContent = 'Processing...';
     button.disabled = true;
     
-    // Create order
-    fetch('/subscribe', {
+    // Create checkout session
+    fetch('/process_checkout', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({
-            meal_plan_id: mealPlanId,
-            is_vegetarian: isVegetarian
+        body: new URLSearchParams({
+            plan_id: mealPlanId,
+            frequency: 'weekly', // Default, can be made dynamic
+            customer_name: '{{ current_user.name if current_user.is_authenticated else "" }}',
+            customer_email: '{{ current_user.email if current_user.is_authenticated else "" }}',
+            customer_phone: '{{ current_user.phone if current_user.is_authenticated else "" }}',
+            vegetarian_days: isVegetarian ? 'all' : ''
         })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.error) {
-            throw new Error(data.error);
+        if (!data.success) {
+            throw new Error(data.error || 'Error creating checkout session');
         }
         
-        // Initialize Razorpay
-        const options = {
-            key: data.key,
-            amount: data.amount,
-            currency: data.currency,
-            order_id: data.order_id,
-            name: 'HealthyRizz',
-            description: 'Meal Plan Subscription',
-            handler: function (response) {
-                // Verify payment
-                verifyPayment(response);
-            },
-            prefill: {
-                name: '{{ current_user.name if current_user.is_authenticated else "" }}',
-                email: '{{ current_user.email if current_user.is_authenticated else "" }}',
-                contact: '{{ current_user.phone if current_user.is_authenticated else "" }}'
-            },
-            theme: {
-                color: '#4F46E5'
-            }
-        };
-        
-        const rzp = new Razorpay(options);
-        rzp.open();
+        // Redirect to Stripe Checkout
+        if (data.checkout_url) {
+            window.location.href = data.checkout_url;
+        } else {
+            throw new Error('No checkout URL received');
+        }
     })
     .catch(error => {
         alert('Error: ' + error.message);
-    })
-    .finally(() => {
-        // Reset button state
         button.textContent = originalText;
         button.disabled = false;
-    });
-}
-
-function verifyPayment(response) {
-    fetch('/payment/verify', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_signature: response.razorpay_signature
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        alert('Payment successful! Your subscription is now active.');
-        window.location.href = '/dashboard';
-    })
-    .catch(error => {
-        alert('Error verifying payment: ' + error.message);
     });
 }
 </script>

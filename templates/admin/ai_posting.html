@@ -1,0 +1,368 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}AI Posting Agent - FitSmart Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-white">🤖 AI Posting Agent</h1>
+        <div class="flex space-x-4">
+            <a href="{{ url_for('admin.admin_ai_settings') }}" class="btn-secondary">
+                <i class="fas fa-cog mr-2"></i>Settings
+            </a>
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-6 text-white">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-500 bg-opacity-30">
+                    <i class="fas fa-robot text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm opacity-75">AI Posts</p>
+                    <p class="text-2xl font-bold">{{ total_ai_posts }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-6 text-white">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-500 bg-opacity-30">
+                    <i class="fas fa-chart-line text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm opacity-75">AI Percentage</p>
+                    <p class="text-2xl font-bold">{{ "%.1f"|format(ai_percentage) }}%</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg p-6 text-white">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-500 bg-opacity-30">
+                    <i class="fas fa-file-alt text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm opacity-75">Total Posts</p>
+                    <p class="text-2xl font-bold">{{ total_posts }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-orange-600 to-orange-700 rounded-lg p-6 text-white">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-orange-500 bg-opacity-30">
+                    <i class="fas fa-bolt text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm opacity-75">API Status</p>
+                    <p class="text-2xl font-bold">DeepSeek</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Market Analysis -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-chart-bar mr-2 text-blue-600"></i>Market Analysis
+            </h2>
+            
+            <form id="market-analysis-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                    <input type="text" name="location" value="India" class="form-input w-full" placeholder="Enter location for analysis">
+                </div>
+                
+                <button type="submit" class="btn-primary w-full">
+                    <i class="fas fa-search mr-2"></i>Analyze Market
+                </button>
+            </form>
+            
+            <div id="market-analysis-result" class="mt-6 hidden">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 mb-3">Analysis Results</h3>
+                    <div id="analysis-content" class="space-y-3 text-sm">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Generation -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-magic mr-2 text-green-600"></i>Content Generation
+            </h2>
+            
+            <form id="content-generation-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Topic</label>
+                    <input type="text" name="topic" class="form-input w-full" placeholder="Enter topic for content generation" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Content Type</label>
+                    <select name="content_type" class="form-input w-full">
+                        <option value="lifestyle_blog">Lifestyle Blog</option>
+                        <option value="meal_plan_showcase">Meal Plan Showcase</option>
+                        <option value="nutrition_tips">Nutrition Tips</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Meal Plan (Optional)</label>
+                    <select name="meal_plan_id" class="form-input w-full">
+                        <option value="">Select a meal plan...</option>
+                        {% for plan in meal_plans %}
+                        <option value="{{ plan.id }}">{{ plan.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn-primary w-full">
+                    <i class="fas fa-magic mr-2"></i>Generate Content
+                </button>
+            </form>
+            
+            <div id="content-generation-result" class="mt-6 hidden">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 mb-3">Generated Content</h3>
+                    <div id="generated-content" class="space-y-3 text-sm">
+                        <!-- Generated content will be populated here -->
+                    </div>
+                    <div class="mt-4">
+                        <button id="save-content-btn" class="btn-secondary mr-2">
+                            <i class="fas fa-save mr-2"></i>Save as Draft
+                        </button>
+                        <button id="publish-content-btn" class="btn-primary">
+                            <i class="fas fa-paper-plane mr-2"></i>Publish Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto Posting Section -->
+    <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-clock mr-2 text-purple-600"></i>Automatic Posting
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-3">Quick Post</h3>
+                <form id="auto-post-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Frequency</label>
+                        <select name="frequency" class="form-input w-full">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="biweekly">Bi-weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary w-full">
+                        <i class="fas fa-rocket mr-2"></i>Trigger Auto Post
+                    </button>
+                </form>
+            </div>
+            
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-3">Recent AI Posts</h3>
+                <div class="space-y-3 max-h-64 overflow-y-auto">
+                    {% for post in ai_posts %}
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <h4 class="font-medium text-gray-800">{{ post.title }}</h4>
+                        <p class="text-sm text-gray-600">{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <div class="flex space-x-2 mt-2">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">{{ post.category }}</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">AI Generated</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 text-sm">No AI posts yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Agent Information -->
+    <div class="mt-8 bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg p-6 text-white">
+        <h2 class="text-xl font-bold mb-4">
+            <i class="fas fa-robot mr-2"></i>AI Agent Information
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="font-semibold mb-3">Capabilities</h3>
+                <ul class="space-y-2 text-sm">
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Market analysis and insights</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Competitor analysis</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Content generation</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Automatic posting</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>SEO optimization</li>
+                    <li><i class="fas fa-check text-green-400 mr-2"></i>Brand alignment</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 class="font-semibold mb-3">Brand Understanding</h3>
+                <ul class="space-y-2 text-sm">
+                    <li><i class="fas fa-info text-blue-400 mr-2"></i>Healthy meal delivery focus</li>
+                    <li><i class="fas fa-info text-blue-400 mr-2"></i>Premium positioning</li>
+                    <li><i class="fas fa-info text-blue-400 mr-2"></i>Indian market expertise</li>
+                    <li><i class="fas fa-info text-blue-400 mr-2"></i>Health-conscious audience</li>
+                    <li><i class="fas fa-info text-blue-400 mr-2"></i>Convenience and quality</li>
+                    <li><i class="fas fa-info text-blue-400 mr-2"></i>Nutritionist-approved content</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Market Analysis Form
+    const marketAnalysisForm = document.getElementById('market-analysis-form');
+    const marketAnalysisResult = document.getElementById('market-analysis-result');
+    const analysisContent = document.getElementById('analysis-content');
+    
+    marketAnalysisForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('{{ url_for("admin.admin_analyze_market") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const analysis = data.market_analysis;
+                
+                analysisContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Target Audience</h4>
+                            <ul class="text-sm text-gray-600 mt-1">
+                                ${analysis.target_audience.map(audience => `<li>• ${audience}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Competitors</h4>
+                            <ul class="text-sm text-gray-600 mt-1">
+                                ${analysis.competitors.map(competitor => `<li>• ${competitor}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Market Trends</h4>
+                            <ul class="text-sm text-gray-600 mt-1">
+                                ${analysis.market_trends.map(trend => `<li>• ${trend}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-700">Seasonal Factors</h4>
+                            <ul class="text-sm text-gray-600 mt-1">
+                                ${analysis.seasonal_factors.map(factor => `<li>• ${factor}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                
+                marketAnalysisResult.classList.remove('hidden');
+            } else {
+                alert('Error analyzing market: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error analyzing market');
+        });
+    });
+    
+    // Content Generation Form
+    const contentGenerationForm = document.getElementById('content-generation-form');
+    const contentGenerationResult = document.getElementById('content-generation-result');
+    const generatedContent = document.getElementById('generated-content');
+    
+    contentGenerationForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('{{ url_for("admin.admin_generate_content") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const content = data.content;
+                
+                generatedContent.innerHTML = `
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Title</h4>
+                        <p class="text-gray-600 mt-1">${content.title}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700">Content Preview</h4>
+                        <div class="text-gray-600 mt-1 max-h-32 overflow-y-auto">
+                            ${content.content.substring(0, 300)}...
+                        </div>
+                    </div>
+                `;
+                
+                contentGenerationResult.classList.remove('hidden');
+            } else {
+                alert('Error generating content: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating content');
+        });
+    });
+    
+    // Auto Post Form
+    const autoPostForm = document.getElementById('auto-post-form');
+    
+    autoPostForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('{{ url_for("admin.admin_auto_post") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Content auto-posted successfully!');
+                location.reload();
+            } else {
+                alert('Error auto-posting content');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error auto-posting content');
+        });
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,310 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Email Campaigns Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white mb-2">
+            <i class="fas fa-envelope text-primary mr-2"></i>
+            Email Campaigns Dashboard
+        </h1>
+        <p class="text-gray-400">Manage and track your email marketing campaigns</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Campaigns -->
+        <div class="bg-dark-lighter rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Total Campaign Types</p>
+                    <p class="text-2xl font-bold text-white">{{ stats.total_campaigns if stats else 6 }}</p>
+                </div>
+                <div class="bg-blue-500 rounded-full p-3">
+                    <i class="fas fa-chart-line text-white"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campaigns Sent -->
+        <div class="bg-dark-lighter rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Campaigns Sent</p>
+                    <p class="text-2xl font-bold text-white">{{ stats.campaigns_sent if stats else 0 }}</p>
+                </div>
+                <div class="bg-green-500 rounded-full p-3">
+                    <i class="fas fa-paper-plane text-white"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Open Rate -->
+        <div class="bg-dark-lighter rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Open Rate</p>
+                    <p class="text-2xl font-bold text-white">{{ "%.1f"|format((stats.open_rate * 100) if stats else 0) }}%</p>
+                </div>
+                <div class="bg-yellow-500 rounded-full p-3">
+                    <i class="fas fa-eye text-white"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Click Rate -->
+        <div class="bg-dark-lighter rounded-lg p-6 border border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm">Click Rate</p>
+                    <p class="text-2xl font-bold text-white">{{ "%.1f"|format((stats.click_rate * 100) if stats else 0) }}%</p>
+                </div>
+                <div class="bg-red-500 rounded-full p-3">
+                    <i class="fas fa-mouse-pointer text-white"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Segments -->
+    <div class="bg-dark-lighter rounded-lg border border-gray-700 mb-8">
+        <div class="bg-dark p-4 border-b border-gray-700">
+            <h3 class="text-lg font-semibold text-white">
+                <i class="fas fa-users text-primary mr-2"></i>
+                User Segments
+            </h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Total Users -->
+                <div class="flex items-center p-4 bg-dark rounded-lg border border-gray-700">
+                    <div class="bg-primary rounded-full p-3 mr-4">
+                        <i class="fas fa-users text-white"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Total Users</p>
+                        <p class="text-xl font-bold text-white">{{ total_users }}</p>
+                    </div>
+                </div>
+
+                <!-- Active Users -->
+                <div class="flex items-center p-4 bg-dark rounded-lg border border-gray-700">
+                    <div class="bg-green-500 rounded-full p-3 mr-4">
+                        <i class="fas fa-user-check text-white"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Active Users</p>
+                        <p class="text-xl font-bold text-white">{{ active_users }}</p>
+                    </div>
+                </div>
+
+                <!-- New Users This Week -->
+                <div class="flex items-center p-4 bg-dark rounded-lg border border-gray-700">
+                    <div class="bg-blue-500 rounded-full p-3 mr-4">
+                        <i class="fas fa-user-plus text-white"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">New This Week</p>
+                        <p class="text-xl font-bold text-white">{{ new_users_this_week }}</p>
+                    </div>
+                </div>
+
+                <!-- Inactive Users -->
+                <div class="flex items-center p-4 bg-dark rounded-lg border border-gray-700">
+                    <div class="bg-yellow-500 rounded-full p-3 mr-4">
+                        <i class="fas fa-user-clock text-white"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Inactive Users</p>
+                        <p class="text-xl font-bold text-white">{{ inactive_users }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Quick Campaigns -->
+        <div class="bg-dark-lighter rounded-lg border border-gray-700">
+            <div class="bg-dark p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-rocket text-primary mr-2"></i>
+                    Quick Campaigns
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <!-- Welcome Series -->
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Welcome Series</h4>
+                            <p class="text-gray-400 text-sm">Send welcome emails to new users</p>
+                        </div>
+                        <a href="{{ url_for('email_campaign.welcome_series_campaign') }}" 
+                           class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                            <i class="fas fa-play mr-2"></i>Start
+                        </a>
+                    </div>
+
+                    <!-- Holiday Notification -->
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Holiday Notification</h4>
+                            <p class="text-gray-400 text-sm">Notify users about upcoming holidays</p>
+                        </div>
+                        <a href="{{ url_for('email_campaign.holiday_notification_campaign') }}" 
+                           class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                            <i class="fas fa-play mr-2"></i>Start
+                        </a>
+                    </div>
+
+                    <!-- Meal Plan Promotion -->
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Meal Plan Promotion</h4>
+                            <p class="text-gray-400 text-sm">Promote specific meal plans</p>
+                        </div>
+                        <a href="{{ url_for('email_campaign.meal_plan_promotion_campaign') }}" 
+                           class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                            <i class="fas fa-play mr-2"></i>Start
+                        </a>
+                    </div>
+
+                    <!-- Win-Back Campaign -->
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Win-Back Campaign</h4>
+                            <p class="text-gray-400 text-sm">Re-engage inactive users</p>
+                        </div>
+                        <a href="{{ url_for('email_campaign.win_back_campaign') }}" 
+                           class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                            <i class="fas fa-play mr-2"></i>Start
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Campaigns -->
+        <div class="bg-dark-lighter rounded-lg border border-gray-700">
+            <div class="bg-dark p-4 border-b border-gray-700">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-cogs text-primary mr-2"></i>
+                    Advanced Campaigns
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <!-- Custom Campaign -->
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Custom Campaign</h4>
+                            <p class="text-gray-400 text-sm">Create personalized email campaigns</p>
+                        </div>
+                        <a href="{{ url_for('email_campaign.custom_campaign') }}" 
+                           class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
+                            <i class="fas fa-edit mr-2"></i>Create
+                        </a>
+                    </div>
+
+                    <!-- Abandoned Cart -->
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Abandoned Cart</h4>
+                            <p class="text-gray-400 text-sm">Recover abandoned shopping carts</p>
+                        </div>
+                        <a href="{{ url_for('email_campaign.abandoned_cart_campaign') }}" 
+                           class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
+                            <i class="fas fa-shopping-cart mr-2"></i>Manage
+                        </a>
+                    </div>
+
+                    <!-- Referral Program -->
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Referral Program</h4>
+                            <p class="text-gray-400 text-sm">Encourage user referrals</p>
+                        </div>
+                        <a href="{{ url_for('email_campaign.referral_program_campaign') }}" 
+                           class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
+                            <i class="fas fa-share-alt mr-2"></i>Manage
+                        </a>
+                    </div>
+
+                    <!-- Analytics -->
+                    <div class="flex items-center justify-between p-4 bg-dark rounded-lg border border-gray-700">
+                        <div>
+                            <h4 class="text-white font-semibold">Analytics</h4>
+                            <p class="text-gray-400 text-sm">View campaign performance</p>
+                        </div>
+                        <a href="{{ url_for('email_campaign.email_analytics') }}" 
+                           class="bg-info text-white px-4 py-2 rounded-lg hover:bg-info-dark transition-colors">
+                            <i class="fas fa-chart-bar mr-2"></i>View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Campaigns -->
+    <div class="bg-dark-lighter rounded-lg border border-gray-700 mt-8">
+        <div class="bg-dark p-4 border-b border-gray-700">
+            <h3 class="text-lg font-semibold text-white">
+                <i class="fas fa-history text-primary mr-2"></i>
+                Recent Campaigns
+            </h3>
+        </div>
+        <div class="p-6">
+            {% if recent_campaigns %}
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="bg-dark">
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Campaign</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Sent</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            {% for campaign in recent_campaigns %}
+                            <tr class="hover:bg-dark-lightest">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ campaign.name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ campaign.type }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ campaign.sent_count }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-900 text-green-200">
+                                        Sent
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-inbox text-gray-500 text-4xl mb-4"></i>
+                    <p class="text-gray-400">No campaigns have been sent yet</p>
+                    <p class="text-gray-500 text-sm">Start your first campaign to see it here</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Auto-refresh statistics every 30 seconds
+    setInterval(function() {
+        location.reload();
+    }, 30000);
+});
+</script>
+{% endblock %}

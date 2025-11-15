@@ -2,7 +2,7 @@
 Script to create an admin user for the HealthyRizz application.
 """
 from app import create_app, db
-from models import User
+from database.models import User
 
 def create_admin_user():
     """Create an admin user in the database"""

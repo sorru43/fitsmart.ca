@@ -1,5 +1,5 @@
 from app import create_app, db
-from models import User, MealPlan, Subscription, SubscriptionStatus, SubscriptionFrequency
+from database.models import User, MealPlan, Subscription, SubscriptionStatus, SubscriptionFrequency
 from datetime import datetime, timedelta
 
 def create_test_subscription():

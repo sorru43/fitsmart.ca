@@ -3,29 +3,225 @@
 {% block title %}Meal Calculator - Fit Smart{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/calculator.css') }}">
 <style>
-    .fade-in {
-        animation: fadeIn 0.5s ease-in forwards;
-        opacity: 0;
+    :root {
+        --color-primary: #10b981;
+        --color-primary-dark: #059669;
+        --color-dark: #151515;
+        --color-darker: #0A0A0A;
+        --color-darkest: #000000;
+        --color-light: #FFFFFF;
+        --color-gray-700: #616161;
+        --color-gray-500: #9E9E9E;
     }
-    
-    @keyframes fadeIn {
-        from { 
-            opacity: 0; 
-            transform: translateY(10px); 
-        }
-        to { 
-            opacity: 1; 
-            transform: translateY(0); 
-        }
+    .calculator-container {
+        background: var(--color-darkest);
+        min-height: 100vh;
+        padding: 1rem;
     }
-    
+    .calculator-card {
+        background: var(--color-dark);
+        border-radius: 18px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+        border: 1.5px solid var(--color-darker);
+        max-width: 480px;
+        margin: 0 auto;
+        color: var(--color-light);
+    }
+    .calculator-header {
+        background: var(--color-darker);
+        color: var(--color-light);
+        padding: 1.5rem 1.25rem 1rem 1.25rem;
+        text-align: center;
+        border-top-left-radius: 18px;
+        border-top-right-radius: 18px;
+    }
+    .calculator-header h1 {
+        font-size: 1.7rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        color: var(--color-primary);
+        letter-spacing: 0.5px;
+    }
+    .calculator-header p {
+        opacity: 0.85;
+        font-size: 1rem;
+        color: var(--color-gray-500);
+    }
+    .form-section {
+        padding: 1.5rem 1.25rem 1rem 1.25rem;
+    }
+    .input-group {
+        margin-bottom: 1.25rem;
+    }
+    .input-label {
+        display: block;
+        font-weight: 600;
+        color: var(--color-light);
+        margin-bottom: 0.5rem;
+        font-size: 0.98rem;
+    }
+    .input-field {
+        width: 100%;
+        padding: 0.9rem 1rem;
+        border: 1.5px solid var(--color-gray-700);
+        border-radius: 10px;
+        font-size: 1rem;
+        background: var(--color-darker);
+        color: var(--color-light);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-field:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px rgba(16,185,129,0.12);
+        background: var(--color-dark);
+    }
+    .input-field.error {
+        border-color: var(--color-gray-700);
+        background: var(--color-darker);
+    }
+    .error-message {
+        display: none !important;
+    }
+    .calculate-btn {
+        width: 100%;
+        background: var(--color-primary);
+        color: var(--color-light);
+        border: none;
+        padding: 1.1rem;
+        border-radius: 10px;
+        font-size: 1.08rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 8px rgba(16,185,129,0.10);
+        margin-top: 0.5rem;
+    }
+    .calculate-btn:hover {
+        background: var(--color-primary-dark);
+    }
+    .calculate-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+    .results-section {
+        background: var(--color-darker);
+        padding: 1.5rem 1.25rem 1.5rem 1.25rem;
+        border-bottom-left-radius: 18px;
+        border-bottom-right-radius: 18px;
+        border-top: 1.5px solid var(--color-dark);
+    }
+    .results-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .results-header h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: 0.3rem;
+    }
+    .results-header p {
+        color: var(--color-gray-500);
+        font-size: 0.98rem;
+    }
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .metric-card {
+        background: var(--color-dark);
+        padding: 1.1rem 0.5rem;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid var(--color-darker);
+    }
+    .metric-value {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--color-primary);
+        margin-bottom: 0.3rem;
+        line-height: 1;
+    }
+    .metric-label {
+        font-size: 0.88rem;
+        color: var(--color-gray-500);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .macro-breakdown {
+        background: var(--color-dark);
+        border-radius: 10px;
+        padding: 1.1rem 0.7rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid var(--color-darker);
+    }
+    .macro-title {
+        font-size: 1.08rem;
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: 0.7rem;
+        text-align: center;
+    }
+    .macro-bars {
+        display: flex;
+        gap: 0.3rem;
+        margin-bottom: 0.7rem;
+    }
+    .macro-bar {
+        flex: 1;
+        height: 7px;
+        border-radius: 4px;
+        position: relative;
+        min-width: 20px;
+        transition: width 0.3s ease;
+    }
+    .macro-bar.protein { background: #3b82f6; }
+    .macro-bar.carbs { background: #10b981; }
+    .macro-bar.fat { background: #f59e0b; }
+    .macro-details {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        text-align: center;
+    }
+    .macro-item {
+        padding: 0.5rem 0.2rem;
+        border-radius: 7px;
+        background: var(--color-darker);
+    }
+    .macro-item.protein { border-left: 3px solid #3b82f6; }
+    .macro-item.carbs { border-left: 3px solid #10b981; }
+    .macro-item.fat { border-left: 3px solid #f59e0b; }
+    .macro-amount {
+        font-size: 1.08rem;
+        font-weight: 700;
+        margin-bottom: 0.18rem;
+    }
+    .macro-item.protein .macro-amount { color: #3b82f6; }
+    .macro-item.carbs .macro-amount { color: #10b981; }
+    .macro-item.fat .macro-amount { color: #f59e0b; }
+    .macro-percentage {
+        font-size: 0.85rem;
+        color: var(--color-gray-500);
+        font-weight: 500;
+    }
+    .macro-description {
+        font-size: 0.75rem;
+        color: var(--color-gray-500);
+        font-weight: 400;
+        margin-top: 0.2rem;
+        line-height: 1.2;
+    }
     .loading {
         position: relative;
         pointer-events: none;
     }
-    
     .loading::after {
         content: '';
         position: absolute;
@@ -33,148 +229,186 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 0.5rem;
+        background: rgba(0,0,0,0.18);
+        border-radius: 10px;
         z-index: 10;
     }
-    
     .loading::before {
         content: 'Calculating...';
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        color: white;
+        color: var(--color-primary);
         z-index: 11;
-        font-weight: 500;
+        font-weight: 600;
+        font-size: 1.08rem;
     }
-    
-    .input-error {
-        border-color: #ef4444 !important;
-    }
-    
-    .error-message {
-        color: #ef4444;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-
-    #result {
+    .fade-in {
+        animation: fadeInUp 0.6s ease-out forwards;
         opacity: 0;
-        transition: opacity 0.5s ease-in;
+        transform: translateY(20px);
     }
-
-    #result.fade-in {
-        opacity: 1;
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    @media (max-width: 768px) {
+        .calculator-container {
+            padding: 0.5rem;
+        }
+        .calculator-card {
+            max-width: 100%;
+        }
+        .calculator-header {
+            padding: 1.1rem 0.7rem 0.7rem 0.7rem;
+        }
+        .form-section {
+            padding: 1.1rem 0.7rem 0.7rem 0.7rem;
+        }
+        .results-section {
+            padding: 1.1rem 0.7rem 1.1rem 0.7rem;
+        }
+        .metrics-grid {
+            grid-template-columns: 1fr;
+            gap: 0.7rem;
+        }
+        .metric-card {
+            padding: 0.8rem 0.3rem;
+        }
+        .macro-details {
+            grid-template-columns: 1fr;
+            gap: 0.4rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-center mb-8">Meal Calculator</h1>
-    
-    <div class="max-w-2xl mx-auto bg-dark rounded-lg shadow-lg p-6">
-        <form id="mealCalculatorForm" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Age -->
-                <div>
-                    <label for="age" class="block text-sm font-medium text-gray-300">Age</label>
-                    <input type="number" id="age" name="age" min="10" max="120" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                    <div id="ageError" class="error-message hidden"></div>
+<div class="calculator-container">
+    <div class="calculator-card">
+        <!-- Header -->
+        <div class="calculator-header">
+            <h1>Meal Calculator</h1>
+            <p>Get personalized nutrition recommendations based on your profile</p>
+        </div>
+        <!-- Form Section -->
+        <div class="form-section">
+            <form id="mealCalculatorForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Age -->
+                    <div class="input-group">
+                        <label for="age" class="input-label">Age</label>
+                        <input type="number" id="age" name="age" min="10" max="120" 
+                               class="input-field" placeholder="Enter your age" required>
+                    </div>
+                    <!-- Gender -->
+                    <div class="input-group">
+                        <label for="gender" class="input-label">Gender</label>
+                        <select id="gender" name="gender" class="input-field" required>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <!-- Weight -->
+                    <div class="input-group">
+                        <label for="weight" class="input-label">Weight (kg)</label>
+                        <input type="number" id="weight" name="weight" min="30" max="300" step="0.1" 
+                               class="input-field" placeholder="Enter your weight" required>
+                    </div>
+                    <!-- Height -->
+                    <div class="input-group">
+                        <label for="height" class="input-label">Height (cm)</label>
+                        <input type="number" id="height" name="height" min="100" max="250" 
+                               class="input-field" placeholder="Enter your height" required>
+                    </div>
+                    <!-- Activity Level -->
+                    <div class="input-group md:col-span-2">
+                        <label for="activity" class="input-label">Activity Level</label>
+                        <select id="activity" name="activity" class="input-field" required>
+                            <option value="">Select Activity Level</option>
+                            <option value="sedentary">Sedentary (little or no exercise)</option>
+                            <option value="light">Lightly active (1-3 days/week)</option>
+                            <option value="moderate">Moderately active (3-5 days/week)</option>
+                            <option value="very">Very active (6-7 days/week)</option>
+                            <option value="extra">Extra active (very active & physical job)</option>
+                        </select>
+                    </div>
+                    <!-- Goal -->
+                    <div class="input-group md:col-span-2">
+                        <label for="goal" class="input-label">Goal</label>
+                        <select id="goal" name="goal" class="input-field" required>
+                            <option value="">Select Goal</option>
+                            <option value="lose">Lose Weight</option>
+                            <option value="maintain">Maintain Weight</option>
+                            <option value="gain">Gain Weight</option>
+                        </select>
+                    </div>
                 </div>
-                
-                <!-- Gender -->
-                <div>
-                    <label for="gender" class="block text-sm font-medium text-gray-300">Gender</label>
-                    <select id="gender" name="gender" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                        <option value="">Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
-                    <div id="genderError" class="error-message hidden"></div>
-                </div>
-                
-                <!-- Weight -->
-                <div>
-                    <label for="weight" class="block text-sm font-medium text-gray-300">Weight (kg)</label>
-                    <input type="number" id="weight" name="weight" min="30" max="300" step="0.1" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                    <div id="weightError" class="error-message hidden"></div>
-                </div>
-                
-                <!-- Height -->
-                <div>
-                    <label for="height" class="block text-sm font-medium text-gray-300">Height (cm)</label>
-                    <input type="number" id="height" name="height" min="100" max="250" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                    <div id="heightError" class="error-message hidden"></div>
-                </div>
-                
-                <!-- Activity Level -->
-                <div>
-                    <label for="activity" class="block text-sm font-medium text-gray-300">Activity Level</label>
-                    <select id="activity" name="activity" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                        <option value="">Select Activity Level</option>
-                        <option value="sedentary">Sedentary (little or no exercise)</option>
-                        <option value="light">Lightly active (1-3 days/week)</option>
-                        <option value="moderate">Moderately active (3-5 days/week)</option>
-                        <option value="very">Very active (6-7 days/week)</option>
-                        <option value="extra">Extra active (very active & physical job)</option>
-                    </select>
-                    <div id="activityError" class="error-message hidden"></div>
-                </div>
-                
-                <!-- Goal -->
-                <div>
-                    <label for="goal" class="block text-sm font-medium text-gray-300">Goal</label>
-                    <select id="goal" name="goal" class="mt-1 block w-full rounded-md border-gray-700 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" required>
-                        <option value="">Select Goal</option>
-                        <option value="lose">Lose Weight</option>
-                        <option value="maintain">Maintain Weight</option>
-                        <option value="gain">Gain Weight</option>
-                    </select>
-                    <div id="goalError" class="error-message hidden"></div>
-                </div>
-            </div>
-            
-            <div class="flex justify-center">
-                <button type="submit" id="calculateButton" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors duration-200">
-                    Calculate
+                <button type="submit" id="calculateButton" class="calculate-btn">
+                    Calculate My Meal Plan
                 </button>
+            </form>
+        </div>
+        <!-- Results Section -->
+        <div id="result" class="results-section hidden">
+            <div class="results-header">
+                <h2>Your Personalized Nutrition Plan</h2>
+                <p>Based on your profile, here are your recommended daily targets</p>
             </div>
-        </form>
-        
-        <div id="result" class="mt-8 hidden fade-in">
-            <h2 class="text-2xl font-bold text-center mb-4">Your Recommended Meal Plan</h2>
-            <div class="bg-darker rounded-lg p-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="text-center">
-                        <h3 class="text-lg font-semibold mb-2">Calories</h3>
-                        <p id="calories" class="text-3xl font-bold text-primary">-</p>
-                    </div>
-                    <div class="text-center">
-                        <h3 class="text-lg font-semibold mb-2">Protein</h3>
-                        <p id="protein" class="text-3xl font-bold text-primary">-</p>
-                    </div>
-                    <div class="text-center">
-                        <h3 class="text-lg font-semibold mb-2">Carbs</h3>
-                        <p id="carbs" class="text-3xl font-bold text-primary">-</p>
-                    </div>
+            <!-- Key Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="calories">-</div>
+                    <div class="metric-label">Daily Calories</div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                    <div class="text-center">
-                        <h3 class="text-lg font-semibold mb-2">Fat</h3>
-                        <p id="fat" class="text-3xl font-bold text-primary">-</p>
+                <div class="metric-card">
+                    <div class="metric-value" id="protein">-</div>
+                    <div class="metric-label">Protein (g)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="carbs">-</div>
+                    <div class="metric-label">Carbs (g)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="fat">-</div>
+                    <div class="metric-label">Fat (g)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="bmr">-</div>
+                    <div class="metric-label">BMR</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="tdee">-</div>
+                    <div class="metric-label">TDEE</div>
+                </div>
+            </div>
+            <!-- Macro Breakdown -->
+            <div class="macro-breakdown">
+                <h3 class="macro-title">Macronutrient Breakdown</h3>
+                <div class="macro-bars">
+                    <div class="macro-bar protein" id="proteinBar" style="width: 33%"></div>
+                    <div class="macro-bar carbs" id="carbsBar" style="width: 33%"></div>
+                    <div class="macro-bar fat" id="fatBar" style="width: 33%"></div>
+                </div>
+                <div class="macro-details">
+                    <div class="macro-item protein">
+                        <div class="macro-amount" id="proteinAmount">-</div>
+                        <div class="macro-percentage" id="proteinPercent">-</div>
+                        <div class="macro-description">Builds & repairs muscles</div>
                     </div>
-                    <div class="text-center">
-                        <h3 class="text-lg font-semibold mb-2">BMR</h3>
-                        <p id="bmr" class="text-3xl font-bold text-primary">-</p>
+                    <div class="macro-item carbs">
+                        <div class="macro-amount" id="carbsAmount">-</div>
+                        <div class="macro-percentage" id="carbsPercent">-</div>
+                        <div class="macro-description">Primary energy source</div>
                     </div>
-                    <div class="text-center">
-                        <h3 class="text-lg font-semibold mb-2">TDEE</h3>
-                        <p id="tdee" class="text-3xl font-bold text-primary">-</p>
+                    <div class="macro-item fat">
+                        <div class="macro-amount" id="fatAmount">-</div>
+                        <div class="macro-percentage" id="fatPercent">-</div>
+                        <div class="macro-description">Hormone production & absorption</div>
                     </div>
                 </div>
             </div>
@@ -188,9 +422,8 @@
 document.getElementById('mealCalculatorForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // Reset previous errors
-    document.querySelectorAll('.error-message').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+    // Reset previous errors (silently, no visual feedback)
+    document.querySelectorAll('.input-field').forEach(el => el.classList.remove('error'));
     
     // Get form data
     const formData = {
@@ -202,52 +435,36 @@ document.getElementById('mealCalculatorForm').addEventListener('submit', async f
         goal: document.getElementById('goal').value
     };
     
-    // Validate form data
+    // Validate form data (silent validation, no red error messages)
     let hasError = false;
     
     if (!formData.age || formData.age < 10 || formData.age > 120) {
-        document.getElementById('age').classList.add('input-error');
-        document.getElementById('ageError').textContent = 'Age must be between 10 and 120 years';
-        document.getElementById('ageError').classList.remove('hidden');
         hasError = true;
     }
     
     if (!formData.gender) {
-        document.getElementById('gender').classList.add('input-error');
-        document.getElementById('genderError').textContent = 'Please select a gender';
-        document.getElementById('genderError').classList.remove('hidden');
         hasError = true;
     }
     
     if (!formData.weight || formData.weight < 30 || formData.weight > 300) {
-        document.getElementById('weight').classList.add('input-error');
-        document.getElementById('weightError').textContent = 'Weight must be between 30 and 300 kg';
-        document.getElementById('weightError').classList.remove('hidden');
         hasError = true;
     }
     
     if (!formData.height || formData.height < 100 || formData.height > 250) {
-        document.getElementById('height').classList.add('input-error');
-        document.getElementById('heightError').textContent = 'Height must be between 100 and 250 cm';
-        document.getElementById('heightError').classList.remove('hidden');
         hasError = true;
     }
     
     if (!formData.activity) {
-        document.getElementById('activity').classList.add('input-error');
-        document.getElementById('activityError').textContent = 'Please select an activity level';
-        document.getElementById('activityError').classList.remove('hidden');
         hasError = true;
     }
     
     if (!formData.goal) {
-        document.getElementById('goal').classList.add('input-error');
-        document.getElementById('goalError').textContent = 'Please select a goal';
-        document.getElementById('goalError').classList.remove('hidden');
         hasError = true;
     }
     
     if (hasError) {
+        // Use browser's native validation instead of showing red errors
+        document.getElementById('mealCalculatorForm').reportValidity();
         return;
     }
     
@@ -256,6 +473,7 @@ document.getElementById('mealCalculatorForm').addEventListener('submit', async f
     const button = document.getElementById('calculateButton');
     form.classList.add('loading');
     button.disabled = true;
+    button.textContent = 'Calculating...';
     
     try {
         const response = await fetch('/calculate-meal', {
@@ -274,6 +492,9 @@ document.getElementById('mealCalculatorForm').addEventListener('submit', async f
         }
         
         if (data.success) {
+            // Clear all error styling
+            document.querySelectorAll('.input-field').forEach(el => el.classList.remove('error'));
+            
             // Update the UI with the calculated values
             document.getElementById('calories').textContent = data.calories;
             document.getElementById('protein').textContent = data.protein + 'g';
@@ -281,6 +502,25 @@ document.getElementById('mealCalculatorForm').addEventListener('submit', async f
             document.getElementById('fat').textContent = data.fat + 'g';
             document.getElementById('bmr').textContent = data.bmr;
             document.getElementById('tdee').textContent = data.tdee;
+            
+            // Update macro breakdown
+            const totalCalories = parseInt(data.calories);
+            const proteinCalories = data.protein * 4;
+            const carbsCalories = data.carbs * 4;
+            const fatCalories = data.fat * 9;
+            
+            document.getElementById('proteinAmount').textContent = data.protein + 'g';
+            document.getElementById('carbsAmount').textContent = data.carbs + 'g';
+            document.getElementById('fatAmount').textContent = data.fat + 'g';
+            
+            document.getElementById('proteinPercent').textContent = Math.round((proteinCalories / totalCalories) * 100) + '%';
+            document.getElementById('carbsPercent').textContent = Math.round((carbsCalories / totalCalories) * 100) + '%';
+            document.getElementById('fatPercent').textContent = Math.round((fatCalories / totalCalories) * 100) + '%';
+            
+            // Update macro bars
+            document.getElementById('proteinBar').style.width = (proteinCalories / totalCalories * 100) + '%';
+            document.getElementById('carbsBar').style.width = (carbsCalories / totalCalories * 100) + '%';
+            document.getElementById('fatBar').style.width = (fatCalories / totalCalories * 100) + '%';
             
             // Show results with animation
             const resultDiv = document.getElementById('result');
@@ -292,34 +532,37 @@ document.getElementById('mealCalculatorForm').addEventListener('submit', async f
         }
     } catch (error) {
         console.error('Error:', error);
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            response: error.response
-        });
         alert(error.message || 'An error occurred while calculating your meal plan');
     } finally {
         // Remove loading state
         form.classList.remove('loading');
         button.disabled = false;
+        button.textContent = 'Calculate My Meal Plan';
     }
 });
 
-// Add input validation on blur
+// Remove error styling on input (no visual error feedback)
 const inputs = document.querySelectorAll('input, select');
 inputs.forEach(input => {
-    input.addEventListener('blur', function() {
-        const errorId = this.id + 'Error';
-        const errorElement = document.getElementById(errorId);
-        
-        if (!this.value) {
-            this.classList.add('input-error');
-            errorElement.textContent = 'This field is required';
-            errorElement.classList.remove('hidden');
-        } else {
-            this.classList.remove('input-error');
-            errorElement.classList.add('hidden');
-        }
+    input.addEventListener('input', function() {
+        this.classList.remove('error');
+    });
+});
+
+// Add smooth scrolling for better mobile experience
+document.addEventListener('DOMContentLoaded', function() {
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
     });
 });
 </script>

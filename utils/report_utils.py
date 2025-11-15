@@ -31,6 +31,7 @@ from database.models import (
     SubscriptionFrequency
 )
 from utils.email_utils import send_email
+from utils.timezone_utils import convert_to_ist
 
 def get_daily_orders(date=None):
     """
@@ -61,7 +62,7 @@ def get_daily_orders(date=None):
                 # Check if delivery is skipped for this date
                 skipped_delivery = SkippedDelivery.query.filter_by(
                     subscription_id=subscription.id,
-                    skip_date=date
+                    delivery_date=date
                 ).first()
                 
                 if skipped_delivery:
@@ -75,14 +76,17 @@ def get_daily_orders(date=None):
                 
                 # Determine if this is a vegetarian day
                 veg_days = []
-                if subscription.veg_days_json:
+                if subscription.vegetarian_days:
                     try:
-                        veg_days = json.loads(subscription.veg_days_json)
+                        veg_days = json.loads(subscription.vegetarian_days)
                     except:
                         veg_days = []
                 
                 weekday = date.weekday()  # 0 = Monday, 6 = Sunday
                 is_veg_day = weekday in veg_days or meal_plan.is_vegetarian
+                
+                # Convert created_at to IST before formatting
+                created_at_ist = convert_to_ist(subscription.created_at)
                 
                 # Create order dictionary
                 order = {
@@ -97,14 +101,14 @@ def get_daily_orders(date=None):
                     'delivery_postal_code': subscription.delivery_postal_code,
                     'meal_plan_name': meal_plan.name,
                     'is_vegetarian': is_veg_day,
-                    'with_breakfast': subscription.with_breakfast,
-                    'notes': subscription.delivery_notes or '',
+                    'with_breakfast': meal_plan.includes_breakfast,  # Use meal plan setting instead
+                    'notes': '',  # No delivery_notes field in Subscription model
                     'subscription_id': subscription.id,
                     'delivery_status': delivery.status.value if delivery else 'PENDING',
                     'is_skipped': False,
                     'subscription_status': subscription.status.value,
                     'delivery_id': delivery.id if delivery else None,
-                    'created_at': subscription.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    'created_at': created_at_ist.strftime('%Y-%m-%d %H:%M:%S'),
                     'frequency': subscription.frequency.value,
                     'delivery_days': subscription.delivery_days
                 }
@@ -154,7 +158,8 @@ def should_deliver_on_date(subscription, check_date):
 
 def get_skipped_deliveries(date):
     """
-    Get deliveries that have been cancelled/skipped for a specific date
+    Get deliveries that have been skipped for a specific date
+    This includes both SkippedDelivery records and cancelled deliveries
     
     Args:
         date (datetime.date): The date to get skipped deliveries for
@@ -163,13 +168,47 @@ def get_skipped_deliveries(date):
         list: List of dictionaries containing skipped delivery information
     """
     try:
-        # Get all cancelled deliveries for the date
+        skipped = []
+        
+        # 1. Get skipped deliveries from SkippedDelivery table
+        skipped_deliveries = SkippedDelivery.query.filter_by(
+            delivery_date=date
+        ).all()
+        
+        for skipped_delivery in skipped_deliveries:
+            subscription = Subscription.query.get(skipped_delivery.subscription_id)
+            if not subscription:
+                continue
+                
+            user = User.query.get(subscription.user_id)
+            meal_plan = MealPlan.query.get(subscription.meal_plan_id)
+            
+            if not user or not meal_plan:
+                continue
+                
+            skipped.append({
+                'subscription_id': subscription.id,
+                'user_id': user.id,
+                'user_name': user.name,
+                'user_email': user.email,
+                'user_phone': user.phone,
+                'meal_plan_name': meal_plan.name,
+                'delivery_date': date,
+                'delivery_id': None,  # No delivery record for skipped meals
+                'notes': f'Skipped by customer on {skipped_delivery.created_at.strftime("%Y-%m-%d %H:%M")}',
+                'skip_type': 'customer_skipped',
+                'delivery_address': subscription.delivery_address,
+                'delivery_city': subscription.delivery_city,
+                'delivery_state': subscription.delivery_province,
+                'delivery_postal_code': subscription.delivery_postal_code
+            })
+        
+        # 2. Get cancelled deliveries from Delivery table
         cancelled_deliveries = Delivery.query.filter_by(
             delivery_date=date,
             status=DeliveryStatus.CANCELLED
         ).all()
         
-        skipped = []
         for delivery in cancelled_deliveries:
             subscription = Subscription.query.get(delivery.subscription_id)
             user = User.query.get(delivery.user_id)
@@ -183,10 +222,16 @@ def get_skipped_deliveries(date):
                 'user_id': user.id,
                 'user_name': user.name,
                 'user_email': user.email,
+                'user_phone': user.phone,
                 'meal_plan_name': meal_plan.name,
                 'delivery_date': date,
                 'delivery_id': delivery.id,
-                'notes': delivery.notes
+                'notes': delivery.notes or 'Cancelled by admin',
+                'skip_type': 'admin_cancelled',
+                'delivery_address': subscription.delivery_address if subscription else 'N/A',
+                'delivery_city': subscription.delivery_city if subscription else 'N/A',
+                'delivery_state': subscription.delivery_province if subscription else 'N/A',
+                'delivery_postal_code': subscription.delivery_postal_code if subscription else 'N/A'
             })
                 
         return skipped
@@ -246,13 +291,21 @@ def generate_orders_spreadsheet(date_str=None):
                 order.get('created_at', 'N/A')
             ])
 
+        # Write summary section
+        writer.writerow([])  # Empty row as separator
+        writer.writerow(['SUMMARY'])
+        writer.writerow(['Total Active Orders', len(orders)])
+        writer.writerow(['Total Skipped Meals', len(skipped_deliveries)])
+        writer.writerow(['Net Meals to Prepare', len(orders) - len(skipped_deliveries)])
+
         # Write skipped deliveries section
         if skipped_deliveries:
             writer.writerow([])  # Empty row as separator
-            writer.writerow(['Skipped Deliveries'])
+            writer.writerow(['SKIPPED DELIVERIES'])
             writer.writerow([
-                'Subscription ID', 'Customer Name', 'Email', 'Meal Plan',
-                'Delivery Date', 'Created At'
+                'Subscription ID', 'Customer Name', 'Email', 'Phone', 'Address',
+                'City', 'Province', 'Postal Code', 'Meal Plan', 'Skip Type', 'Notes',
+                'Delivery Date'
             ])
             
             for skip in skipped_deliveries:
@@ -260,9 +313,15 @@ def generate_orders_spreadsheet(date_str=None):
                     skip.get('subscription_id', 'N/A'),
                     skip.get('user_name', 'N/A'),
                     skip.get('user_email', 'N/A'),
+                    skip.get('user_phone', 'N/A'),
+                    skip.get('delivery_address', 'N/A'),
+                    skip.get('delivery_city', 'N/A'),
+                    skip.get('delivery_state', 'N/A'),
+                    skip.get('delivery_postal_code', 'N/A'),
                     skip.get('meal_plan_name', 'N/A'),
-                    target_date.strftime('%Y-%m-%d'),
-                    skip.get('delivery_id', 'N/A')
+                    skip.get('skip_type', 'N/A'),
+                    skip.get('notes', 'N/A'),
+                    target_date.strftime('%Y-%m-%d')
                 ])
 
         # Make sure to close the file to flush the buffer
@@ -721,7 +780,7 @@ def email_daily_orders_report(date=None, recipient_email=None):
 def create_test_subscriptions():
     """Create test subscriptions for daily orders testing."""
     from datetime import datetime, timedelta
-    from models import db, Subscription, User, MealPlan, DeliveryStatus
+    from database.models import db, Subscription, User, MealPlan, DeliveryStatus
     
     # Create test users if they don't exist
     test_users = [
@@ -1164,3 +1223,164 @@ def get_order_completion_notifications():
         logger = logging.getLogger(__name__)
         logger.error(f"Error getting order completion notifications: {str(e)}")
         return []
+
+def generate_barcode_labels_4x4(date=None):
+    """
+    Generate 4x4 inch stylish black and white labels for label printers.
+    Each label contains essential information optimized for packing.
+    
+    Args:
+        date (datetime.date, optional): The date to generate labels for. Defaults to today.
+        
+    Returns:
+        BytesIO: PDF file as bytes optimized for 4x4 inch label printers
+    """
+    if not date:
+        date = datetime.now().date()
+    
+    # Get orders for the date
+    orders = get_daily_orders(date)
+    
+    if not orders:
+        return None
+    
+    # Sort orders by postal code for efficient delivery
+    orders.sort(key=lambda x: x.get('delivery_postal_code', ''))
+    
+    # Create PDF - 4x4 inch = 101.6mm x 101.6mm (square format)
+    pdf = FPDF(orientation='P', unit='mm', format=(101.6, 101.6))
+    pdf.set_auto_page_break(auto=False)
+    
+    # Set default text color to black
+    pdf.set_text_color(0, 0, 0)
+    
+    # Generate a label for each active order
+    for order in orders:
+        # Skip cancelled deliveries
+        if order.get('is_skipped', False):
+            continue
+            
+        pdf.add_page()
+        
+        # Set margins and dimensions for 4x4 inch label
+        margin = 4  # Slightly larger margins for cleaner look
+        label_width = 101.6 - (margin * 2)
+        label_height = 101.6 - (margin * 2)
+        
+        # Main border around entire label with rounded corners effect
+        pdf.set_line_width(1.5)
+        pdf.set_draw_color(0, 0, 0)
+        pdf.rect(margin, margin, label_width, label_height)
+        
+        # Inner border for stylish effect
+        pdf.set_line_width(0.5)
+        pdf.rect(margin + 2, margin + 2, label_width - 4, label_height - 4)
+        
+        # Header section with company name and date
+        header_height = 15
+        pdf.set_fill_color(0, 0, 0)  # Black background
+        pdf.rect(margin + 3, margin + 3, label_width - 6, header_height, 'F')
+        
+        pdf.set_xy(margin + 4, margin + 5)
+        pdf.set_font('Arial', 'B', 12)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(label_width - 8, 6, 'HEALTHYRIZZ', 0, 1, 'C')
+        
+        pdf.set_xy(margin + 4, margin + 11)
+        pdf.set_font('Arial', '', 8)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(label_width - 8, 4, f"Date: {date.strftime('%d/%m/%Y')}", 0, 1, 'C')
+        
+        # Customer name - prominent display
+        customer_y = margin + header_height + 6
+        pdf.set_xy(margin + 4, customer_y)
+        pdf.set_font('Arial', 'B', 16)
+        pdf.set_text_color(0, 0, 0)
+        customer_name = order.get('user_name', 'N/A')
+        if len(customer_name) > 18:
+            customer_name = customer_name[:18] + '...'
+        pdf.cell(label_width - 8, 8, customer_name, 0, 1, 'C')
+        
+        # VEG/NON-VEG indicator (smaller)
+        veg_y = customer_y + 12
+        veg_height = 6
+        
+        veg_text = 'VEG' if order.get('is_vegetarian', False) else 'NON-VEG'
+        
+        # Simple black border for VEG/NON-VEG
+        pdf.set_line_width(0.8)
+        pdf.rect(margin + 4, veg_y, label_width - 8, veg_height)
+        pdf.set_xy(margin + 4, veg_y + 1)
+        pdf.set_font('Arial', 'B', 8)
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(label_width - 8, 4, veg_text, 0, 1, 'C')
+        
+        # Meal plan information
+        meal_y = veg_y + veg_height + 4
+        pdf.set_xy(margin + 4, meal_y)
+        pdf.set_font('Arial', 'B', 10)
+        pdf.set_text_color(0, 0, 0)
+        meal_plan = order.get('meal_plan_name', 'N/A')
+        if len(meal_plan) > 22:
+            meal_plan = meal_plan[:22] + '...'
+        pdf.cell(label_width - 8, 5, meal_plan, 0, 1, 'C')
+        
+        # Address section
+        address_y = meal_y + 8
+        pdf.set_xy(margin + 4, address_y)
+        pdf.set_font('Arial', 'B', 9)
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(label_width - 8, 4, "ADDRESS:", 0, 1, 'L')
+        
+        pdf.set_xy(margin + 4, address_y + 4)
+        pdf.set_font('Arial', '', 8)
+        pdf.set_text_color(0, 0, 0)
+        address = order.get('delivery_address', 'N/A')
+        if address and len(str(address)) > 35:
+            address = str(address)[:35] + '...'
+        pdf.multi_cell(label_width - 8, 3.5, str(address))
+        
+        # Phone number (if available)
+        phone_y = address_y + 12
+        pdf.set_xy(margin + 4, phone_y)
+        pdf.set_font('Arial', 'B', 9)
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(label_width - 8, 4, "PHONE:", 0, 1, 'L')
+        
+        pdf.set_xy(margin + 4, phone_y + 4)
+        pdf.set_font('Arial', '', 8)
+        pdf.set_text_color(0, 0, 0)
+        phone = order.get('user_phone', 'N/A')
+        if phone and len(str(phone)) > 20:
+            phone = str(phone)[:20] + '...'
+        pdf.cell(label_width - 8, 3.5, str(phone), 0, 1, 'L')
+        
+        # Special instructions (if any)
+        if order.get('notes'):
+            notes_y = phone_y + 10
+            pdf.set_xy(margin + 4, notes_y)
+            pdf.set_font('Arial', 'B', 8)
+            pdf.set_text_color(0, 0, 0)
+            pdf.cell(label_width - 8, 3, "NOTES:", 0, 1, 'L')
+            
+            pdf.set_xy(margin + 4, notes_y + 3)
+            pdf.set_font('Arial', '', 7)
+            pdf.set_text_color(0, 0, 0)
+            notes = order.get('notes')
+            if notes and len(str(notes)) > 40:
+                notes = str(notes)[:40] + '...'
+            pdf.multi_cell(label_width - 8, 3, str(notes))
+        
+        # Delivery ID (small, bottom right)
+        delivery_id = str(order.get('delivery_id', 'N/A'))
+        pdf.set_xy(margin + 4, label_height + margin - 6)
+        pdf.set_font('Arial', 'B', 7)
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(label_width - 8, 3, f"ID: {delivery_id}", 0, 1, 'R')
+    
+    # Convert to bytes
+    pdf_bytes = pdf.output(dest='S')
+    buffer = BytesIO(pdf_bytes)
+    buffer.seek(0)
+    
+    return buffer

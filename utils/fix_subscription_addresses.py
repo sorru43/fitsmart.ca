@@ -1,5 +1,5 @@
 from app import create_app
-from models import Subscription, SubscriptionStatus, db
+from database.models import Subscription, SubscriptionStatus, db
 
 def fix_addresses():
     app = create_app()

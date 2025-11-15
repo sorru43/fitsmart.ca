@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{% block title %}Admin Dashboard{% endblock %} - HealthyRizz</title>
+    <meta name="csrf-token" content="{{ csrf_token() if csrf_token else "" }}">
+    <title>{% block title %}Admin Dashboard{% endblock %} - FitSmart</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ site_settings.get('site_favicon', '/static/favicon.ico') }}">
@@ -30,7 +30,13 @@
     </script>
     
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-forms.css') }}">
+    
+    <!-- Quill.js CSS for Blog Editor -->
+    <link href="https://unpkg.com/quill@1.3.6/dist/quill.snow.css" rel="stylesheet">
     
     <!-- CSRF Token Script -->
     <script>
@@ -85,6 +91,19 @@
         .sidebar-link.active {
             background-color: #379777;
             color: #FFFFFF;
+            border-left: 4px solid #FFC107;
+        }
+
+        /* Active sidebar item styling */
+        .sidebar a[href*="{{ request.endpoint }}"] {
+            background-color: #379777 !important;
+            color: #FFFFFF !important;
+            border-left: 4px solid #FFC107;
+            font-weight: 600;
+        }
+
+        .sidebar a[href*="{{ request.endpoint }}"] i {
+            color: #FFFFFF !important;
         }
 
         /* Card and Container Styles */
@@ -284,9 +303,9 @@
     <div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-dark text-white p-3 flex justify-between items-center shadow-lg">
         <div class="flex items-center">
             {% if site_settings.site_logo %}
-                <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.company_name|default('HealthyRizz') }}" class="h-8 w-auto mr-2">
+                <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.company_name|default('FitSmart') }}" class="h-8 w-auto mr-2">
             {% else %}
-                <span class="text-xl font-bold text-primary">{{ site_settings.company_name|default('HealthyRizz') }}</span>
+                <span class="text-xl font-bold text-primary">{{ site_settings.company_name|default('FitSmart') }}</span>
             {% endif %}
             <span class="ml-2 text-sm bg-primary px-2 py-0.5 rounded text-white">Admin</span>
         </div>
@@ -297,13 +316,13 @@
 
     <div class="flex flex-col md:flex-row h-screen">
         <!-- Sidebar -->
-        <aside id="sidebar" class="hidden md:block md:w-64 bg-dark text-white flex-shrink-0 h-screen md:sticky md:top-0 transform transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 fixed top-0 left-0 z-40 w-64 h-full overflow-y-auto">
+        <aside id="sidebar" class="md:block md:w-64 bg-dark text-white flex-shrink-0 h-screen md:sticky md:top-0 fixed top-0 left-0 z-40 w-64 h-full overflow-y-auto transform transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0">
             <div class="p-4 border-b border-dark-lighter hidden md:block">
                 <a href="{{ url_for('admin.admin_dashboard') }}" class="flex items-center">
                     {% if site_settings.site_logo %}
-                        <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.company_name|default('HealthyRizz') }}" class="h-8 w-auto mr-2">
+                        <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.company_name|default('FitSmart') }}" class="h-8 w-auto mr-2">
                     {% else %}
-                        <span class="text-xl font-bold text-primary">{{ site_settings.company_name|default('HealthyRizz') }}</span>
+                        <span class="text-xl font-bold text-primary">{{ site_settings.company_name|default('FitSmart') }}</span>
                     {% endif %}
                     <span class="ml-2 text-sm bg-primary px-2 py-0.5 rounded text-white">Admin</span>
                 </a>
@@ -311,84 +330,151 @@
             
             <nav class="flex-1 p-4">
                 <ul class="space-y-2">
+                    <!-- Dashboard -->
                     <li>
-                        <a href="{{ url_for('admin.admin_dashboard') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_dashboard' in request.endpoint %}bg-dark-lighter{% endif %}">
+                        <a href="{{ url_for('admin.admin_dashboard') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_dashboard' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
                             <i class="fas fa-tachometer-alt w-6"></i>
                             <span>Dashboard</span>
                         </a>
                     </li>
+                    
+                    <!-- User Management -->
                     <li>
-                        <a href="{{ url_for('admin.admin_notifications') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_notifications' in request.endpoint %}bg-dark-lighter{% endif %}">
-                            <i class="fas fa-bell w-6"></i>
-                            <span>Notifications</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('admin.admin_users') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if request.endpoint == 'admin.admin_users' %}bg-dark-lighter{% endif %}">
+                        <a href="{{ url_for('admin.admin_users') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_users' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
                             <i class="fas fa-users w-6"></i>
                             <span>User Management</span>
                         </a>
                     </li>
+                    
+                    <!-- Orders & Subscriptions -->
                     <li>
-                        <a href="{{ url_for('admin.admin_location_tree') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_location_tree' in request.endpoint %}bg-dark-lighter{% endif %}">
-                            <i class="fas fa-map-marker-alt w-6"></i>
-                            <span>Delivery Locations</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('admin.admin_coupons') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_coupons' in request.endpoint %}bg-dark-lighter{% endif %}">
-                            <i class="fas fa-ticket-alt w-6"></i>
-                            <span>Coupon Codes</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('admin.admin_banners') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_banners' in request.endpoint %}bg-dark-lighter{% endif %}">
-                            <i class="fas fa-bullhorn w-6"></i>
-                            <span>Promotional Banners</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('admin.admin_meal_plans') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_meal_plans' in request.endpoint %}bg-dark-lighter{% endif %}">
-                            <i class="fas fa-utensils w-6"></i>
-                            <span>Meal Plans</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('admin.admin_blog') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_blog' in request.endpoint %}bg-dark-lighter{% endif %}">
-                            <i class="fas fa-newspaper w-6"></i>
-                            <span>Blog Management</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('admin.admin_faqs') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_faqs' in request.endpoint %}bg-dark-lighter{% endif %}">
-                            <i class="fas fa-question-circle w-6"></i>
-                            <span>FAQs</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('admin.admin_newsletters') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_newsletters' in request.endpoint %}bg-dark-lighter{% endif %}">
-                            <i class="fas fa-envelope-open-text w-6"></i>
-                            <span>Newsletter Subscribers</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('admin.admin_subscriptions') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_subscriptions' in request.endpoint %}bg-dark-lighter{% endif %}">
-                            <i class="fas fa-sync-alt w-6"></i>
-                            <span>Subscriptions</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('admin.admin_orders') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_orders' in request.endpoint %}bg-dark-lighter{% endif %}">
+                        <a href="{{ url_for('admin.admin_orders') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_orders' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
                             <i class="fas fa-truck w-6"></i>
                             <span>Daily Orders</span>
                         </a>
                     </li>
                     <li>
-                        <a href="{{ url_for('admin.admin_trial_requests') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter {% if 'admin.admin_trial_requests' in request.endpoint %}bg-dark-lighter{% endif %}">
+                        <a href="{{ url_for('admin.admin_subscriptions') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_subscriptions' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-sync-alt w-6"></i>
+                            <span>Subscriptions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.admin_trial_requests') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_trial_requests' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
                             <i class="fas fa-flask w-6"></i>
                             <span>Trial Requests</span>
                         </a>
                     </li>
+                    
+                    <!-- Content Management -->
+                    <li>
+                        <a href="{{ url_for('admin.admin_meal_plans') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_meal_plans' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-utensils w-6"></i>
+                            <span>Meal Plans</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.admin_blog') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_blog' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-newspaper w-6"></i>
+                            <span>Blog Management</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.admin_ai_posting') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_ai_posting' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-robot w-6"></i>
+                            <span>AI Posting Agent</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.admin_faqs') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_faqs' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-question-circle w-6"></i>
+                            <span>FAQs</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Marketing & Promotions -->
+                    <li>
+                        <a href="{{ url_for('admin.admin_banners') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_banners' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-bullhorn w-6"></i>
+                            <span>Promotional Banners</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.admin_coupons') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_coupons' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-ticket-alt w-6"></i>
+                            <span>Coupon Codes</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.admin_newsletters') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_newsletters' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-envelope-open-text w-6"></i>
+                            <span>Newsletter Subscribers</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Communication & Marketing -->
+                    <li>
+                        <a href="{{ url_for('admin.admin_holidays') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_holidays' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-calendar-alt w-6"></i>
+                            <span>Holiday Management</span>
+                        </a>
+                    </li>
+                    {% if has_blueprint('admin_whatsapp') %}
+                    <li>
+                        <a href="{{ url_for('admin_whatsapp.whatsapp_campaigns_dashboard') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin_whatsapp.whatsapp_campaigns_dashboard' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fab fa-whatsapp w-6"></i>
+                            <span>WhatsApp Business API</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="{{ url_for('email_campaign.email_campaigns_dashboard') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'email_campaign.email_campaigns_dashboard' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-envelope w-6"></i>
+                            <span>Email Campaigns</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.meal_tracking_dashboard') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.meal_tracking_dashboard' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-utensils w-6"></i>
+                            <span>Meal Tracking</span>
+                        </a>
+                    </li>
+                    
+                    <!-- System Management -->
+                    <li>
+                        <a href="{{ url_for('admin.admin_profile') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_profile' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-user-cog w-6"></i>
+                            <span>Admin Profile</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.admin_location_tree') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_location_tree' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-map-marker-alt w-6"></i>
+                            <span>Delivery Locations</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.admin_notifications') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_notifications' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-bell w-6"></i>
+                            <span>Notifications</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.admin_media') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_media' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-images w-6"></i>
+                            <span>Media Management</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Contact & Support -->
+                    <li>
+                        <a href="{{ url_for('admin.admin_contact_inquiries') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter transition-colors duration-200 {% if request.endpoint == 'admin.admin_contact_inquiries' %}bg-primary text-white{% else %}text-gray-300{% endif %}">
+                            <i class="fas fa-envelope w-6"></i>
+                            <span>Contact Inquiries</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Navigation -->
                     <li class="border-t border-dark-lighter my-2 pt-2">
                         <a href="{{ url_for('main.index') }}" class="flex items-center p-2 rounded hover:bg-dark-lighter">
                             <i class="fas fa-globe w-6"></i>
@@ -455,68 +541,144 @@
             const sidebar = document.getElementById('sidebar');
             let isMenuOpen = false;
 
-            // Function to toggle menu
-            function toggleMenu() {
-                isMenuOpen = !isMenuOpen;
-                if (isMenuOpen) {
-                    sidebar.classList.remove('hidden');
-                    sidebar.classList.remove('-translate-x-full');
-                    sidebar.classList.add('translate-x-0');
-                    // Add overlay
-                    const overlay = document.createElement('div');
-                    overlay.id = 'menu-overlay';
-                    overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden';
-                    overlay.addEventListener('click', toggleMenu);
-                    document.body.appendChild(overlay);
-                    // Prevent body scroll
-                    document.body.style.overflow = 'hidden';
-                        } else {
+            // Function to set active sidebar item
+            function setActiveSidebarItem() {
+                const currentPath = window.location.pathname;
+                const sidebarLinks = document.querySelectorAll('#sidebar a');
+                
+                sidebarLinks.forEach(link => {
+                    link.classList.remove('bg-primary', 'text-white');
+                    link.classList.add('text-gray-300');
+                    
+                    // Check if this link matches the current path
+                    if (link.getAttribute('href') === currentPath || 
+                        (currentPath.includes('/admin/') && link.getAttribute('href').includes('/admin/') && 
+                         currentPath.split('/').pop() === link.getAttribute('href').split('/').pop())) {
+                        link.classList.remove('text-gray-300');
+                        link.classList.add('bg-primary', 'text-white');
+                    }
+                });
+            }
+
+            // Function to check if we're on mobile
+            function isMobile() {
+                return window.innerWidth < 768;
+            }
+
+            // Function to initialize sidebar state
+            function initializeSidebar() {
+                if (isMobile()) {
+                    // On mobile: sidebar should be hidden by default
                     sidebar.classList.add('-translate-x-full');
                     sidebar.classList.remove('translate-x-0');
+                    isMenuOpen = false;
+                } else {
+                    // On desktop: sidebar should be visible
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.classList.add('translate-x-0');
+                    isMenuOpen = false;
+                }
+            }
+
+            // Function to close mobile menu
+            function closeMobileMenu() {
+                if (isMobile()) {
+                    sidebar.classList.add('-translate-x-full');
+                    sidebar.classList.remove('translate-x-0');
+                    isMenuOpen = false;
+                    
                     // Remove overlay
                     const overlay = document.getElementById('menu-overlay');
                     if (overlay) {
                         overlay.remove();
                     }
+                    
                     // Restore body scroll
                     document.body.style.overflow = '';
                 }
             }
 
+            // Function to open mobile menu
+            function openMobileMenu() {
+                if (isMobile()) {
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.classList.add('translate-x-0');
+                    isMenuOpen = true;
+                    
+                    // Add overlay
+                    const overlay = document.createElement('div');
+                    overlay.id = 'menu-overlay';
+                    overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden';
+                    overlay.addEventListener('click', closeMobileMenu);
+                    document.body.appendChild(overlay);
+                    
+                    // Prevent body scroll
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+
+            // Function to toggle menu
+            function toggleMenu() {
+                if (isMobile()) {
+                    if (isMenuOpen) {
+                        closeMobileMenu();
+                    } else {
+                        openMobileMenu();
+                    }
+                }
+            }
+
+            // Initialize sidebar on page load
+            initializeSidebar();
+            setActiveSidebarItem();
+
             // Add click event listener to toggle button
             mobileMenuToggle.addEventListener('click', function(e) {
                 e.stopPropagation();
                 toggleMenu();
-                });
+            });
                 
             // Close menu when clicking outside
             document.addEventListener('click', function(event) {
                 const isClickInsideSidebar = sidebar.contains(event.target);
                 const isClickOnToggle = mobileMenuToggle.contains(event.target);
                     
-                if (!isClickInsideSidebar && !isClickOnToggle && isMenuOpen) {
-                    toggleMenu();
+                if (!isClickInsideSidebar && !isClickOnToggle && isMenuOpen && isMobile()) {
+                    closeMobileMenu();
                 }
             });
                         
-            // Close menu on window resize
+            // Handle window resize
             window.addEventListener('resize', function() {
-                if (window.innerWidth >= 768 && isMenuOpen) {
-                    toggleMenu();
+                const wasMobile = isMenuOpen && isMobile();
+                
+                if (window.innerWidth >= 768) {
+                    // Switched to desktop
+                    if (wasMobile) {
+                        closeMobileMenu();
                     }
-                });
+                    initializeSidebar();
+                } else {
+                    // Switched to mobile
+                    initializeSidebar();
+                }
+            });
                 
             // Add touch support for mobile
             let touchStartX = 0;
             let touchEndX = 0;
 
             document.addEventListener('touchstart', function(event) {
-                touchStartX = event.changedTouches[0].screenX;
+                if (isMobile()) {
+                    touchStartX = event.changedTouches[0].screenX;
+                }
             }, false);
 
             document.addEventListener('touchend', function(event) {
-                touchEndX = event.changedTouches[0].screenX;
-                handleSwipe();
+                if (isMobile()) {
+                    touchEndX = event.changedTouches[0].screenX;
+                    handleSwipe();
+                }
             }, false);
 
             function handleSwipe() {
@@ -524,17 +686,26 @@
                 if (touchEndX < touchStartX - swipeThreshold) {
                     // Swipe left - close menu
                     if (isMenuOpen) {
-                        toggleMenu();
+                        closeMobileMenu();
                     }
                 } else if (touchEndX > touchStartX + swipeThreshold) {
                     // Swipe right - open menu
                     if (!isMenuOpen) {
-                        toggleMenu();
-                            }
-                        }
+                        openMobileMenu();
+                    }
+                }
             }
+
+            // Close menu when clicking on sidebar links (mobile only)
+            sidebar.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A' && isMobile()) {
+                    // Small delay to allow the navigation to happen
+                    setTimeout(closeMobileMenu, 100);
+                }
+            });
         });
     </script>
     {% endblock %}
 </body>
 </html>
+

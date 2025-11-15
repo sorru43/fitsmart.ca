@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}Change Meal Plan - {{ subscription.meal_plan.name }}{% endblock %}
+
+{% block content %}
+<div class="bg-gray-900 py-8">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-white mb-2">Change Meal Plan</h1>
+                <p class="text-gray-400">Upgrade or downgrade your current meal plan</p>
+            </div>
+
+            <!-- Current Plan Info -->
+            <div class="bg-black rounded-lg p-6 mb-8">
+                <h2 class="text-xl font-semibold text-white mb-4">Current Plan</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <h3 class="text-lg font-medium text-white">{{ subscription.meal_plan.name }}</h3>
+                        <p class="text-gray-400 text-sm">{{ subscription.meal_plan.description }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Frequency</p>
+                        <p class="text-white font-medium">{{ subscription.frequency.value|title }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Current Price</p>
+                        <p class="text-white font-medium">${{ "%.2f"|format(subscription.price) }}/{{ subscription.frequency.value }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meal Plan Selection -->
+            <form method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- Plan Selection -->
+                <div class="bg-black rounded-lg p-6">
+                    <h2 class="text-xl font-semibold text-white mb-4">Choose New Plan</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for plan in meal_plans %}
+                        <div class="border border-gray-700 rounded-lg p-4 hover:border-primary transition-colors">
+                            <input type="radio" name="new_meal_plan_id" value="{{ plan.id }}" 
+                                   id="plan_{{ plan.id }}" class="hidden"
+                                   {% if plan.id == subscription.meal_plan_id %}checked{% endif %}>
+                            <label for="plan_{{ plan.id }}" class="cursor-pointer block">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="text-lg font-medium text-white">{{ plan.name }}</h3>
+                                    {% if plan.id == subscription.meal_plan_id %}
+                                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Current</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="text-gray-400 text-sm mb-3">{{ plan.description }}</p>
+                                
+                                <!-- Price Comparison -->
+                                <div class="mb-3">
+                                    {% if subscription.frequency.value == 'weekly' %}
+                                        <p class="text-white font-medium">${{ "%.2f"|format(plan.price_weekly) }}/week</p>
+                                        {% set price_diff = plan.price_weekly - subscription.price %}
+                                    {% else %}
+                                        <p class="text-white font-medium">${{ "%.2f"|format(plan.price_monthly) }}/month</p>
+                                        {% set price_diff = plan.price_monthly - subscription.price %}
+                                    {% endif %}
+                                    
+                                    {% if price_diff != 0 %}
+                                        <p class="text-sm {% if price_diff > 0 %}text-red-400{% else %}text-green-400{% endif %}">
+                                            {% if price_diff > 0 %}
+                                                +${{ "%.2f"|format(price_diff) }} more
+                                            {% else %}
+                                                ${{ "%.2f"|format(price_diff|abs) }} less
+                                            {% endif %}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Meal Details -->
+                                <div class="space-y-1 text-sm text-gray-400">
+                                    <div class="flex items-center">
+                                        <span class="w-2 h-2 bg-primary rounded-full mr-2"></span>
+                                        {{ plan.calories }} calories
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="w-2 h-2 bg-primary rounded-full mr-2"></span>
+                                        {{ plan.protein }} protein
+                                    </div>
+                                    {% if plan.includes_breakfast %}
+                                    <div class="flex items-center">
+                                        <span class="w-2 h-2 bg-primary rounded-full mr-2"></span>
+                                        Breakfast included
+                                    </div>
+                                    {% endif %}
+                                    {% if plan.includes_lunch %}
+                                    <div class="flex items-center">
+                                        <span class="w-2 h-2 bg-primary rounded-full mr-2"></span>
+                                        Lunch included
+                                    </div>
+                                    {% endif %}
+                                    {% if plan.includes_dinner %}
+                                    <div class="flex items-center">
+                                        <span class="w-2 h-2 bg-primary rounded-full mr-2"></span>
+                                        Dinner included
+                                    </div>
+                                    {% endif %}
+                                    {% if plan.includes_snacks %}
+                                    <div class="flex items-center">
+                                        <span class="w-2 h-2 bg-primary rounded-full mr-2"></span>
+                                        Snacks included
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Dietary Tags -->
+                                {% if plan.dietary_tags %}
+                                <div class="mt-3">
+                                    {% for tag in plan.dietary_tags %}
+                                    <span class="inline-block bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded mr-1 mb-1">
+                                        {{ tag }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Effective Date Selection -->
+                <div class="bg-black rounded-lg p-6">
+                    <h2 class="text-xl font-semibold text-white mb-4">When to Apply Changes</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <input type="radio" name="effective_date" value="next_billing" id="next_billing" 
+                                   class="text-primary focus:ring-primary" checked>
+                            <label for="next_billing" class="ml-3 text-white">
+                                <span class="font-medium">Next Billing Period</span>
+                                <p class="text-gray-400 text-sm">
+                                    Changes will take effect at the start of your next billing period 
+                                    ({{ subscription.current_period_end.strftime('%B %d, %Y') }})
+                                </p>
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="radio" name="effective_date" value="immediate" id="immediate" 
+                                   class="text-primary focus:ring-primary">
+                            <label for="immediate" class="ml-3 text-white">
+                                <span class="font-medium">Immediately</span>
+                                <p class="text-gray-400 text-sm">
+                                    Changes will take effect immediately. Any price difference will be prorated.
+                                </p>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between items-center">
+                    <a href="{{ url_for('main.profile') }}#subscriptions" 
+                       class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors">
+                        Cancel
+                    </a>
+                    
+                    <button type="submit" 
+                            class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg transition-colors">
+                        Change Meal Plan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add visual feedback for plan selection
+document.querySelectorAll('input[name="new_meal_plan_id"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Remove all selected states
+        document.querySelectorAll('.border-gray-700').forEach(div => {
+            div.classList.remove('border-primary', 'bg-gray-800');
+            div.classList.add('border-gray-700');
+        });
+        
+        // Add selected state to current plan
+        if (this.checked) {
+            const planDiv = this.closest('.border-gray-700');
+            planDiv.classList.remove('border-gray-700');
+            planDiv.classList.add('border-primary', 'bg-gray-800');
+        }
+    });
+});
+
+// Initialize selected state
+document.querySelector('input[name="new_meal_plan_id"]:checked').dispatchEvent(new Event('change'));
+</script>
+{% endblock %}

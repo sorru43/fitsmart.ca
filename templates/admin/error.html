@@ -1,0 +1,27 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Error - FitSmart Admin{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-red-900/20 border border-red-500 rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-red-400 mb-4">Error Loading Dashboard</h1>
+        <p class="text-white mb-4">{{ error }}</p>
+        {% if error_details %}
+        <details class="mt-4">
+            <summary class="text-gray-400 cursor-pointer hover:text-white">Show Error Details</summary>
+            <pre class="mt-2 p-4 bg-dark rounded text-xs text-gray-300 overflow-auto">{{ error_details }}</pre>
+        </details>
+        {% endif %}
+        <div class="mt-6">
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg">
+                Try Again
+            </a>
+            <a href="{{ url_for('main.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg ml-2">
+                Go to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

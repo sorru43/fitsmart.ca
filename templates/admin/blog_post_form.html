@@ -1,20 +1,83 @@
-{% extends "admin/base.html" %}
+{% extends "admin/base_admin.html" %}
 
 {% block title %}{{ 'Edit' if post else 'Create' }} Blog Post - Fit Smart Admin{% endblock %}
 
 {% block extra_css %}
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link href="https://unpkg.com/quill@1.3.6/dist/quill.snow.css" rel="stylesheet">
 <style>
+    /* Override dark theme for Quill editor */
     .ql-editor {
         min-height: 300px;
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        border: 1px solid #E5E7EB !important;
     }
+    
     .ql-toolbar {
         border-top-left-radius: 0.375rem;
         border-top-right-radius: 0.375rem;
+        background-color: #F9FAFB !important;
+        border: 1px solid #E5E7EB !important;
+        border-bottom: none !important;
     }
+    
     .ql-container {
         border-bottom-left-radius: 0.375rem;
         border-bottom-right-radius: 0.375rem;
+        background-color: #FFFFFF !important;
+        border: 1px solid #E5E7EB !important;
+        border-top: none !important;
+    }
+    
+    /* Ensure Quill buttons are visible */
+    .ql-toolbar button,
+    .ql-toolbar .ql-picker {
+        color: #374151 !important;
+        background-color: transparent !important;
+    }
+    
+    .ql-toolbar button:hover,
+    .ql-toolbar .ql-picker:hover {
+        color: #000000 !important;
+        background-color: #E5E7EB !important;
+    }
+    
+    .ql-toolbar button.ql-active {
+        color: #379777 !important;
+        background-color: #E5E7EB !important;
+    }
+    
+    /* Fix dropdown colors */
+    .ql-picker-options {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E5E7EB !important;
+        color: #000000 !important;
+    }
+    
+    .ql-picker-item {
+        color: #000000 !important;
+    }
+    
+    .ql-picker-item:hover {
+        background-color: #F3F4F6 !important;
+    }
+    
+    /* Ensure editor content is readable */
+    .ql-editor p,
+    .ql-editor h1,
+    .ql-editor h2,
+    .ql-editor h3,
+    .ql-editor h4,
+    .ql-editor h5,
+    .ql-editor h6,
+    .ql-editor blockquote,
+    .ql-editor pre {
+        color: #000000 !important;
+    }
+    
+    /* Fix placeholder text */
+    .ql-editor.ql-blank::before {
+        color: #9CA3AF !important;
     }
 </style>
 {% endblock %}
@@ -126,6 +189,7 @@
                     <input type="checkbox" 
                            name="is_published" 
                            id="is_published"
+                           value="true"
                            {% if post and post.is_published %}checked{% endif %}
                            class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
                     <label for="is_published" class="ml-2 block text-sm text-gray-900">
@@ -151,39 +215,88 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="https://unpkg.com/quill@1.3.6/dist/quill.min.js"></script>
 <script>
-    // Initialize Quill editor
-    var quill = new Quill('#editor', {
-        theme: 'snow',
-        modules: {
-            toolbar: [
-                [{ 'header': [1, 2, 3, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                ['blockquote', 'code-block'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                [{ 'script': 'sub'}, { 'script': 'super' }],
-                [{ 'indent': '-1'}, { 'indent': '+1' }],
-                [{ 'color': [] }, { 'background': [] }],
-                ['link', 'image'],
-                ['clean']
-            ]
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing Quill editor...');
+        
+        // Check if Quill is loaded
+        if (typeof Quill === 'undefined') {
+            console.error('Quill.js not loaded!');
+            return;
+        }
+        
+        // Check if editor container exists
+        const editorContainer = document.getElementById('editor');
+        if (!editorContainer) {
+            console.error('Editor container not found!');
+            return;
+        }
+        
+        console.log('Editor container found:', editorContainer);
+        
+        try {
+            // Initialize Quill editor
+            var quill = new Quill('#editor', {
+                theme: 'snow',
+                placeholder: 'Start writing your blog post content here...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'script': 'sub'}, { 'script': 'super' }],
+                        [{ 'indent': '-1'}, { 'indent': '+1' }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
+                }
+            });
+            
+            console.log('Quill editor initialized successfully:', quill);
+            
+            // Set initial content if editing
+            var initialContent = document.getElementById('editor').innerHTML;
+            if (initialContent && initialContent.trim() !== '') {
+                quill.root.innerHTML = initialContent;
+                console.log('Set initial content from post');
+            }
+            
+            // Auto-generate slug from title
+            const titleInput = document.getElementById('title');
+            const slugInput = document.getElementById('slug');
+            
+            if (titleInput && slugInput) {
+                titleInput.addEventListener('input', function(e) {
+                    if (!slugInput.value) {
+                        slugInput.value = e.target.value
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, '-')
+                            .replace(/(^-|-$)/g, '');
+                    }
+                });
+            }
+            
+            // Update hidden input with editor content before form submission
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const content = quill.root.innerHTML;
+                    document.getElementById('content').value = content;
+                    console.log('Form submitted with content:', content);
+                });
+            }
+            
+            // Add focus event for debugging
+            quill.on('text-change', function() {
+                console.log('Editor content changed');
+            });
+            
+        } catch (error) {
+            console.error('Error initializing Quill editor:', error);
         }
     });
-
-    // Auto-generate slug from title
-    document.getElementById('title').addEventListener('input', function(e) {
-        if (!document.getElementById('slug').value) {
-            document.getElementById('slug').value = e.target.value
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/(^-|-$)/g, '');
-        }
-    });
-
-    // Update hidden input with editor content before form submission
-    document.querySelector('form').onsubmit = function() {
-        document.getElementById('content').value = quill.root.innerHTML;
-    };
 </script>
 {% endblock %} 

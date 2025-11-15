@@ -23,10 +23,15 @@ reportlab==4.1.0
 PyPDF2==3.0.1
 fpdf2==2.7.8
 
+# Barcode Generation
+python-barcode==0.15.1
+Pillow==10.2.0
+
 # Email and Notifications
 sendgrid==6.11.0
 twilio==8.12.0
 email-validator==2.1.0
+firebase-admin==6.5.0
 
 # Security
 bcrypt==4.1.2
@@ -34,12 +39,12 @@ PyJWT==2.8.0
 cryptography==42.0.2
 python-dotenv==1.0.1
 itsdangerous==2.1.2
+authlib==1.3.0
 
 # Utilities
 python-dateutil==2.8.2
 pytz==2024.1
 requests==2.31.0
-Pillow==10.2.0
 Werkzeug==3.0.1
 
 # Production Server

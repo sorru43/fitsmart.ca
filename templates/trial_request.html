@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Request Trial - {{ meal_plan.name }} - HealthyRizz{% endblock %}
+{% block title %}Request Trial - {{ meal_plan.name }} - FitSmart{% endblock %}
 
 {% block content %}
 <div class="bg-darker pt-12 pb-16 md:pt-16 md:pb-20">
@@ -87,19 +87,35 @@
                         </div>
 
                         <div>
+                            <label for="province" class="block text-sm font-medium text-gray-300 mb-2">State</label>
+                            <select id="state-select" name="province" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50" required>
+                                <option value="">Select State</option>
+                                {% for state in locations_data %}
+                                    <option value="{{ state.name }}" data-state-id="{{ state.id }}">
+                                        {{ state.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.province.errors %}
+                            <p class="mt-1 text-sm text-red-500">{{ form.province.errors[0] }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
                             <label for="city" class="block text-sm font-medium text-gray-300 mb-2">City</label>
-                            {{ form.city(class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50") }}
+                            <select id="city-select" name="city" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50" required disabled>
+                                <option value="">Select State First</option>
+                            </select>
                             {% if form.city.errors %}
                             <p class="mt-1 text-sm text-red-500">{{ form.city.errors[0] }}</p>
                             {% endif %}
                         </div>
 
                         <div>
-                            <label for="province" class="block text-sm font-medium text-gray-300 mb-2">State</label>
-                            {{ form.province(class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50") }}
-                            {% if form.province.errors %}
-                            <p class="mt-1 text-sm text-red-500">{{ form.province.errors[0] }}</p>
-                            {% endif %}
+                            <label for="area" class="block text-sm font-medium text-gray-300 mb-2">Area</label>
+                            <select id="area-select" name="area" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50" required disabled>
+                                <option value="">Select City First</option>
+                            </select>
                         </div>
 
                         <div>
@@ -138,5 +154,80 @@
     tomorrow.setDate(tomorrow.getDate() + 1);
     const minDate = tomorrow.toISOString().split('T')[0];
     document.getElementById('preferred_date').min = minDate;
+
+    // Location data from backend (admin-added locations)
+    const locationsData = {{ locations_data|tojson|safe }};
+
+    // Cascading dropdown functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const stateSelect = document.getElementById('state-select');
+        const citySelect = document.getElementById('city-select');
+        const areaSelect = document.getElementById('area-select');
+        
+        // State change handler
+        stateSelect.addEventListener('change', function() {
+            const selectedStateId = this.options[this.selectedIndex].dataset.stateId;
+            
+            // Reset city and area dropdowns
+            citySelect.innerHTML = '<option value="">Select City</option>';
+            areaSelect.innerHTML = '<option value="">Select City First</option>';
+            citySelect.disabled = true;
+            areaSelect.disabled = true;
+            
+            if (selectedStateId) {
+                // Find the selected state data
+                const stateData = locationsData.find(state => state.id == selectedStateId);
+                if (stateData && stateData.cities.length > 0) {
+                    // Populate cities
+                    stateData.cities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.name;
+                        option.dataset.cityId = city.id;
+                        option.textContent = city.name;
+                        citySelect.appendChild(option);
+                    });
+                    citySelect.disabled = false;
+                }
+            }
+        });
+        
+        // City change handler
+        citySelect.addEventListener('change', function() {
+            const selectedCityId = this.options[this.selectedIndex].dataset.cityId;
+            
+            // Reset area dropdown
+            areaSelect.innerHTML = '<option value="">Select Area</option>';
+            areaSelect.disabled = true;
+            
+            if (selectedCityId) {
+                // Find the selected city data
+                const selectedStateId = stateSelect.options[stateSelect.selectedIndex].dataset.stateId;
+                const stateData = locationsData.find(state => state.id == selectedStateId);
+                if (stateData) {
+                    const cityData = stateData.cities.find(city => city.id == selectedCityId);
+                    if (cityData && cityData.areas.length > 0) {
+                        // Populate areas
+                        cityData.areas.forEach(area => {
+                            const option = document.createElement('option');
+                            option.value = area.name;
+                            option.textContent = area.name;
+                            areaSelect.appendChild(option);
+                        });
+                        areaSelect.disabled = false;
+                    }
+                }
+            }
+        });
+        
+        // Initialize state dropdown if user has a state selected
+        if (stateSelect.value) {
+            stateSelect.dispatchEvent(new Event('change'));
+            
+            // Set city if user has one
+            if (citySelect.value) {
+                citySelect.dispatchEvent(new Event('change'));
+            }
+        }
+    });
 </script>
 {% endblock %}

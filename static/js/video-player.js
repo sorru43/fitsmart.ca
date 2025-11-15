@@ -408,7 +408,7 @@ function playReel(videoId) {
         // Get video data from the card
         const reelCard = videoElement.closest('.reel-card');
         if (reelCard) {
-            const title = reelCard.querySelector('h3')?.textContent || 'HealthyRizz Reel';
+            const title = reelCard.querySelector('h3')?.textContent || 'FitSmart Reel';
             const description = reelCard.querySelector('p')?.textContent || '';
             
             modalTitle.textContent = title;
