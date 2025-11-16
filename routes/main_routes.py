@@ -381,7 +381,7 @@ def about():
 @main_bp.route('/contact', methods=['GET', 'POST'])
 def contact():
     """Contact page route with multi-purpose form"""
-    from contact_forms import MultiPurposeContactForm
+    from forms.contact_forms import MultiPurposeContactForm
     from database.models import ContactInquiry
     
     form = MultiPurposeContactForm()
@@ -1855,6 +1855,8 @@ def daily_meal_prep():
                     'veg_count': 0,
                     'nonveg_count': 0,
                     'breakfast_count': 0,
+                    'lunch_count': 0,
+                    'dinner_count': 0,
                     'total_count': 0,
                     'customers': []
                 }
@@ -1865,8 +1867,13 @@ def daily_meal_prep():
             else:
                 meal_prep_data[meal_plan.id]['nonveg_count'] += 1
             
-            if subscription.with_breakfast:
+            # Count individual meal types based on meal plan configuration
+            if meal_plan.includes_breakfast:
                 meal_prep_data[meal_plan.id]['breakfast_count'] += 1
+            if meal_plan.includes_lunch:
+                meal_prep_data[meal_plan.id]['lunch_count'] += 1
+            if meal_plan.includes_dinner:
+                meal_prep_data[meal_plan.id]['dinner_count'] += 1
             
             meal_prep_data[meal_plan.id]['total_count'] += 1
             
@@ -1876,7 +1883,9 @@ def daily_meal_prep():
                 'email': subscription.user.email,
                 'address': subscription.delivery_address,
                 'is_veg': is_veg_day,
-                'with_breakfast': subscription.with_breakfast
+                'with_breakfast': meal_plan.includes_breakfast,
+                'with_lunch': meal_plan.includes_lunch,
+                'with_dinner': meal_plan.includes_dinner
             })
     
     return render_template('admin/daily_meal_prep.html', 
@@ -2680,7 +2689,41 @@ def cancellation_refund_policy():
 @main_bp.route('/shipping-delivery-policy')
 def shipping_delivery_policy():
     """Shipping & Delivery Policy page"""
-    return render_template('shipping_delivery_policy.html')
+    # Get all active delivery locations grouped by province
+    from collections import defaultdict
+    
+    locations_by_province = defaultdict(list)
+    delivery_locations = DeliveryLocation.query.filter_by(is_active=True).order_by(
+        DeliveryLocation.province, DeliveryLocation.city
+    ).all()
+    
+    # Group locations by province
+    for location in delivery_locations:
+        locations_by_province[location.province].append(location.city)
+    
+    # Convert to regular dict and sort provinces
+    locations_dict = dict(sorted(locations_by_province.items()))
+    
+    # Province names mapping
+    province_names = {
+        'AB': 'Alberta',
+        'BC': 'British Columbia',
+        'MB': 'Manitoba',
+        'NB': 'New Brunswick',
+        'NL': 'Newfoundland and Labrador',
+        'NS': 'Nova Scotia',
+        'ON': 'Ontario',
+        'PE': 'Prince Edward Island',
+        'QC': 'Quebec',
+        'SK': 'Saskatchewan',
+        'NT': 'Northwest Territories',
+        'NU': 'Nunavut',
+        'YT': 'Yukon'
+    }
+    
+    return render_template('shipping_delivery_policy.html', 
+                         locations_by_province=locations_dict,
+                         province_names=province_names)
 
 @main_bp.route('/check-location', methods=['POST'])
 def check_location():

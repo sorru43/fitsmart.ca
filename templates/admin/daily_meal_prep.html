@@ -44,6 +44,8 @@
             {% set total_veg = meal_prep_data.values() | sum(attribute='veg_count') %}
             {% set total_nonveg = meal_prep_data.values() | sum(attribute='nonveg_count') %}
             {% set total_breakfast = meal_prep_data.values() | sum(attribute='breakfast_count') %}
+            {% set total_lunch = meal_prep_data.values() | sum(attribute='lunch_count') %}
+            {% set total_dinner = meal_prep_data.values() | sum(attribute='dinner_count') %}
             {% set total_meals = meal_prep_data.values() | sum(attribute='total_count') %}
             
             <div class="row mb-4">
@@ -79,7 +81,7 @@
                     </div>
                 </div>
                 
-                <div class="col-lg-3 col-md-6">
+                <div class="col-lg-2 col-md-4 col-sm-6">
                     <div class="card bg-warning text-white">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
@@ -88,7 +90,39 @@
                                 </div>
                                 <div>
                                     <div class="h4 mb-0">{{ total_breakfast }}</div>
-                                    <div>Breakfasts</div>
+                                    <div>Breakfast</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-sun fa-2x"></i>
+                                </div>
+                                <div>
+                                    <div class="h4 mb-0">{{ total_lunch }}</div>
+                                    <div>Lunch</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <div class="card bg-dark text-white">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="mr-3">
+                                    <i class="fas fa-moon fa-2x"></i>
+                                </div>
+                                <div>
+                                    <div class="h4 mb-0">{{ total_dinner }}</div>
+                                    <div>Dinner</div>
                                 </div>
                             </div>
                         </div>
@@ -104,7 +138,7 @@
                                 </div>
                                 <div>
                                     <div class="h4 mb-0">{{ total_meals }}</div>
-                                    <div>Total Meals</div>
+                                    <div>Total Orders</div>
                                 </div>
                             </div>
                         </div>
@@ -147,6 +181,16 @@
                                             <i class="fas fa-coffee"></i> {{ plan_data.breakfast_count }} Breakfast
                                         </span>
                                         {% endif %}
+                                        {% if plan_data.lunch_count > 0 %}
+                                        <span class="badge badge-primary mr-2">
+                                            <i class="fas fa-sun"></i> {{ plan_data.lunch_count }} Lunch
+                                        </span>
+                                        {% endif %}
+                                        {% if plan_data.dinner_count > 0 %}
+                                        <span class="badge badge-dark mr-2">
+                                            <i class="fas fa-moon"></i> {{ plan_data.dinner_count }} Dinner
+                                        </span>
+                                        {% endif %}
                                         <span class="badge badge-info">
                                             <i class="fas fa-utensils"></i> {{ plan_data.total_count }} Total
                                         </span>
@@ -170,6 +214,8 @@
                                                 <th>Address</th>
                                                 <th>Meal Type</th>
                                                 <th>Breakfast</th>
+                                                <th>Lunch</th>
+                                                <th>Dinner</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -188,6 +234,20 @@
                                                 <td>
                                                     {% if customer.with_breakfast %}
                                                     <span class="badge badge-warning">Yes</span>
+                                                    {% else %}
+                                                    <span class="badge badge-secondary">No</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if customer.with_lunch %}
+                                                    <span class="badge badge-primary">Yes</span>
+                                                    {% else %}
+                                                    <span class="badge badge-secondary">No</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if customer.with_dinner %}
+                                                    <span class="badge badge-dark">Yes</span>
                                                     {% else %}
                                                     <span class="badge badge-secondary">No</span>
                                                     {% endif %}
@@ -278,7 +338,7 @@ function exportToCSV() {
     const data = [];
     
     // Add headers
-    data.push(['Date', 'Meal Plan', 'Customer', 'Email', 'Address', 'Meal Type', 'Breakfast']);
+    data.push(['Date', 'Meal Plan', 'Customer', 'Email', 'Address', 'Meal Type', 'Breakfast', 'Lunch', 'Dinner']);
     
     // Add data rows
     {% for plan_id, plan_data in meal_prep_data.items() %}
@@ -290,7 +350,9 @@ function exportToCSV() {
         "{{ customer.email }}",
         "{{ customer.address }}",
         "{{ 'Vegetarian' if customer.is_veg else 'Non-Vegetarian' }}",
-        "{{ 'Yes' if customer.with_breakfast else 'No' }}"
+        "{{ 'Yes' if customer.with_breakfast else 'No' }}",
+        "{{ 'Yes' if customer.with_lunch else 'No' }}",
+        "{{ 'Yes' if customer.with_dinner else 'No' }}"
     ]);
     {% endfor %}
     {% endfor %}

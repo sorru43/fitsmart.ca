@@ -19,43 +19,72 @@
                     <i class="fas fa-map-marker-alt text-primary mr-2"></i>Delivery Areas
                 </h3>
                 <div class="bg-gray-800 rounded-lg p-6 mb-6">
-                    <h4 class="text-lg font-medium text-white mb-3">Primary Delivery Zones:</h4>
-                    <ul class="list-disc pl-6 mb-4 space-y-2">
-                        <li><strong>Greater Toronto Area (GTA):</strong> Toronto, Mississauga, Brampton, Markham, Vaughan, Richmond Hill, Oakville, Burlington</li>
-                        <li><strong>Ottawa Region:</strong> Ottawa, Kanata, Orleans, Nepean, Barrhaven</li>
-                        <li><strong>Montreal Area:</strong> Montreal, Laval, Longueuil, West Island</li>
-                        <li><strong>Vancouver Area:</strong> Vancouver, Burnaby, Richmond, Surrey, North Vancouver, West Vancouver</li>
-                        <li><strong>Calgary:</strong> All major areas within city limits</li>
-                        <li><strong>Edmonton:</strong> All major areas within city limits</li>
-                        <li><strong>Other Major Cities:</strong> We're expanding! Contact us to check availability in your area</li>
-                    </ul>
-                    <p class="text-sm text-gray-400 bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-3 mt-4">
-                        <i class="fas fa-info-circle text-blue-400 mr-2"></i>
-                        Don't see your area? <a href="{{ url_for('main.contact') }}" class="text-primary hover:underline">Contact us</a> to check availability. We're continuously expanding our delivery network across Canada.
-                    </p>
+                    {% if locations_by_province %}
+                        <div class="space-y-4">
+                            {% for province_code, cities in locations_by_province.items() %}
+                                <div class="border-l-4 border-primary pl-4 py-2">
+                                    <h5 class="text-white font-semibold mb-2">
+                                        <i class="fas fa-map-pin text-primary mr-2"></i>
+                                        {{ province_names.get(province_code, province_code) }} ({{ province_code }})
+                                    </h5>
+                                    <div class="flex flex-wrap gap-2">
+                                        {% for city in cities %}
+                                            <span class="inline-block bg-gray-700 text-gray-200 px-3 py-1 rounded-md text-sm">
+                                                {{ city }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <p class="text-sm text-gray-400 bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-3 mt-6">
+                            <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                            Don't see your area? <a href="{{ url_for('main.contact') }}" class="text-primary hover:underline">Contact us</a> to check availability. We're continuously expanding our delivery network across Canada.
+                        </p>
+                    {% else %}
+                        <div class="bg-yellow-900 bg-opacity-20 border border-yellow-700 rounded-lg p-4 mb-4">
+                            <h4 class="text-lg font-medium text-white mb-2">
+                                <i class="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>Delivery Locations Being Updated
+                            </h4>
+                            <p class="text-gray-300 text-sm">
+                                Our delivery locations are currently being updated. Please <a href="{{ url_for('main.contact') }}" class="text-primary hover:underline">contact us</a> to check if we deliver to your area.
+                            </p>
+                        </div>
+                        <p class="text-sm text-gray-400 bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-3">
+                            <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                            We're continuously expanding our delivery network across Canada. Contact us to check availability in your area.
+                        </p>
+                    {% endif %}
                 </div>
 
                 <h3 class="text-xl font-semibold text-white mt-8 mb-4">
                     <i class="fas fa-clock text-primary mr-2"></i>Delivery Schedule
                 </h3>
-                <div class="grid md:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-gray-800 rounded-lg p-6">
-                        <h4 class="text-lg font-medium text-white mb-3">Morning Delivery</h4>
+                <div class="bg-gray-800 rounded-lg p-6 mb-6">
+                    <div class="bg-primary bg-opacity-10 border border-primary rounded-lg p-4 mb-4">
+                        <h4 class="text-lg font-medium text-white mb-3">
+                            <i class="fas fa-calendar-day text-primary mr-2"></i>Delivery Timing
+                        </h4>
+                        <p class="text-gray-300 mb-3">
+                            <strong>We deliver all your meals (breakfast, lunch, and dinner) together one day before consumption in the evening.</strong> 
+                            This ensures you have fresh meals ready for the entire next day.
+                        </p>
                         <ul class="space-y-2 text-gray-300">
-                            <li><i class="fas fa-sun text-primary mr-2"></i>7:00 AM - 10:00 AM (Local Time)</li>
-                            <li><i class="fas fa-utensils text-primary mr-2"></i>Breakfast & Lunch Meals</li>
-                            <li><i class="fas fa-check text-primary mr-2"></i>Fresh from kitchen</li>
-                            <li><i class="fas fa-snowflake text-primary mr-2"></i>Temperature-controlled delivery</li>
+                            <li><i class="fas fa-moon text-primary mr-2"></i><strong>Evening Delivery:</strong> 5:00 PM - 9:00 PM (Local Time)</li>
+                            <li><i class="fas fa-utensils text-primary mr-2"></i><strong>All Meals Included:</strong> Breakfast, Lunch, and Dinner delivered together in one package</li>
+                            <li><i class="fas fa-calendar-day text-primary mr-2"></i>Meals are prepared fresh and delivered the evening before your consumption day</li>
+                            <li><i class="fas fa-check text-primary mr-2"></i>Temperature-controlled delivery in insulated packaging</li>
+                            <li><i class="fas fa-snowflake text-primary mr-2"></i>Proper storage instructions included with each delivery</li>
                         </ul>
                     </div>
-                    <div class="bg-gray-800 rounded-lg p-6">
-                        <h4 class="text-lg font-medium text-white mb-3">Evening Delivery</h4>
-                        <ul class="space-y-2 text-gray-300">
-                            <li><i class="fas fa-moon text-primary mr-2"></i>5:00 PM - 8:00 PM (Local Time)</li>
-                            <li><i class="fas fa-utensils text-primary mr-2"></i>Dinner Meals</li>
-                            <li><i class="fas fa-check text-primary mr-2"></i>Prepared fresh daily</li>
-                            <li><i class="fas fa-snowflake text-primary mr-2"></i>Insulated packaging</li>
-                        </ul>
+                    <div class="bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg p-4">
+                        <h5 class="text-white font-medium mb-2">
+                            <i class="fas fa-info-circle text-blue-400 mr-2"></i>Example Schedule
+                        </h5>
+                        <p class="text-gray-300 text-sm">
+                            If you need meals for <strong>Tuesday</strong> (breakfast, lunch, and dinner), we will deliver all three meals together on <strong>Monday evening</strong>. 
+                            This gives you time to store them properly in your refrigerator and have them ready for consumption throughout the next day.
+                        </p>
                     </div>
                 </div>
 
@@ -87,14 +116,48 @@
                         </div>
                     </div>
                     
-                    <div class="mt-6 p-4 bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg">
-                        <h5 class="text-white font-medium mb-2">
-                            <i class="fas fa-info-circle text-blue-400 mr-2"></i>Meal Skipping
-                        </h5>
-                        <p class="text-gray-300 text-sm">
-                            If you don't want delivery for a particular day, you can easily skip it through your account dashboard. 
-                            No need to call us - just log in and manage your delivery schedule anytime. Changes require 24 hours' notice.
-                        </p>
+                    <div class="mt-6 space-y-4">
+                        <div class="bg-green-900 bg-opacity-20 border border-green-700 rounded-lg p-4">
+                            <h5 class="text-white font-medium mb-2">
+                                <i class="fas fa-check-circle text-green-400 mr-2"></i>Skip Before 10:00 AM - Free
+                            </h5>
+                            <p class="text-gray-300 text-sm mb-2">
+                                You can skip your delivery for any day <strong>before 10:00 AM</strong> on the delivery day at no charge. 
+                                Simply log into your account dashboard and skip the delivery. No fees apply.
+                            </p>
+                            <ul class="text-gray-300 text-sm space-y-1 ml-4">
+                                <li><i class="fas fa-clock text-green-400 mr-2"></i>Skip deadline: 10:00 AM on delivery day</li>
+                                <li><i class="fas fa-dollar-sign text-green-400 mr-2"></i>No cancellation charges</li>
+                                <li><i class="fas fa-user text-green-400 mr-2"></i>Manage through your account dashboard</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-yellow-900 bg-opacity-20 border border-yellow-700 rounded-lg p-4">
+                            <h5 class="text-white font-medium mb-2">
+                                <i class="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>Cancel After 10:00 AM - Charged
+                            </h5>
+                            <p class="text-gray-300 text-sm mb-2">
+                                If you cancel your delivery <strong>after 10:00 AM</strong> on the delivery day, you will be charged for the meal. 
+                                However, your meal will be donated to those in need, ensuring no food goes to waste.
+                            </p>
+                            <ul class="text-gray-300 text-sm space-y-1 ml-4">
+                                <li><i class="fas fa-clock text-yellow-400 mr-2"></i>Cancellation after 10:00 AM on delivery day</li>
+                                <li><i class="fas fa-dollar-sign text-yellow-400 mr-2"></i>Full meal charge applies</li>
+                                <li><i class="fas fa-heart text-yellow-400 mr-2"></i>Meal will be donated to those in need</li>
+                                <li><i class="fas fa-recycle text-yellow-400 mr-2"></i>No food waste - helping the community</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-primary bg-opacity-10 border border-primary rounded-lg p-4">
+                            <h5 class="text-white font-medium mb-2">
+                                <i class="fas fa-heart text-primary mr-2"></i>Donation Program
+                            </h5>
+                            <p class="text-gray-300 text-sm">
+                                When meals are cancelled after 10:00 AM, we partner with local food banks and community organizations 
+                                to ensure these meals reach people who need them most. Your cancellation helps feed someone in need, 
+                                making a positive impact in our community.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -264,6 +327,10 @@
                         <i class="fas fa-info-circle text-primary mr-2"></i>Important Notes
                     </h3>
                     <ul class="list-disc pl-6 space-y-2 text-gray-300">
+                        <li><strong>Delivery Timing:</strong> All meals (breakfast, lunch, and dinner) are delivered together one day before consumption in the evening (5:00 PM - 9:00 PM)</li>
+                        <li><strong>All Meals Included:</strong> Each delivery contains breakfast, lunch, and dinner for the next day in one package</li>
+                        <li><strong>Skip Deadline:</strong> You can skip deliveries before 10:00 AM on the delivery day at no charge</li>
+                        <li><strong>Cancellation Policy:</strong> Cancellations after 10:00 AM on delivery day will be charged, but meals will be donated to those in need</li>
                         <li>Delivery times may vary during peak hours, holidays, and extreme weather conditions</li>
                         <li>We reserve the right to refuse delivery to unsafe or inaccessible areas</li>
                         <li>Weather conditions (snow, ice, extreme cold) may affect delivery schedules - we prioritize safety</li>
