@@ -1,0 +1,55 @@
+/* Mobile Footer Fixes - Cleaner Layout */
+@media (max-width: 767px) {
+    /* Reduce footer spacing */
+    footer .space-y-4 > * + * {
+        margin-top: 0.75rem !important;
+    }
+    
+    footer .space-y-3 > * + * {
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Social media icons - ensure horizontal alignment */
+    footer .flex.justify-center.items-center {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 0.75rem !important;
+    }
+    
+    footer .flex.justify-center.items-center a {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2rem !important;
+        height: 2rem !important;
+    }
+    
+    /* Footer text sizes */
+    footer h3 {
+        font-size: 1rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    footer h4 {
+        font-size: 0.875rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Reduce padding in footer sections */
+    footer .text-center {
+        padding: 0.5rem 0 !important;
+    }
+    
+    /* Newsletter form spacing */
+    footer form {
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Contact info spacing */
+    footer .space-y-1 > * + * {
+        margin-top: 0.25rem !important;
+    }
+}
+

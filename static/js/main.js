@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function closeMobileMenu() {
         if (mobileMenu) {
             mobileMenu.classList.remove('show');
+            document.body.classList.remove('menu-open');
             mobileMenuButton?.setAttribute('aria-expanded', 'false');
             
             // Reset icon
@@ -69,22 +70,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function openMobileMenu() {
+        if (mobileMenu) {
+            mobileMenu.classList.add('show');
+            document.body.classList.add('menu-open');
+            mobileMenuButton?.setAttribute('aria-expanded', 'true');
+            
+            // Change icon
+            const icon = mobileMenuButton?.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            }
+        }
+    }
+    
     if (mobileMenuButton && mobileMenu) {
         mobileMenuButton.addEventListener('click', function() {
-            mobileMenu.classList.toggle('show');
             const isExpanded = mobileMenu.classList.contains('show');
-            mobileMenuButton.setAttribute('aria-expanded', isExpanded);
-            
-            // Change icon based on menu state
-            const icon = mobileMenuButton.querySelector('i');
-            if (icon) {
-                if (isExpanded) {
-                    icon.classList.remove('fa-bars');
-                    icon.classList.add('fa-times');
-                } else {
-                    icon.classList.remove('fa-times');
-                    icon.classList.add('fa-bars');
-                }
+            if (isExpanded) {
+                closeMobileMenu();
+            } else {
+                openMobileMenu();
             }
         });
     }
