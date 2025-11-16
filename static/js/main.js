@@ -59,6 +59,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (mobileMenu) {
             mobileMenu.classList.remove('show');
             document.body.classList.remove('menu-open');
+            
+            // Remove inline styles
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            
             mobileMenuButton?.setAttribute('aria-expanded', 'false');
             
             // Reset icon
@@ -74,6 +81,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (mobileMenu) {
             mobileMenu.classList.add('show');
             document.body.classList.add('menu-open');
+            
+            // Simple overflow hidden - doesn't break layout
+            document.body.style.overflow = 'hidden';
+            
             mobileMenuButton?.setAttribute('aria-expanded', 'true');
             
             // Change icon

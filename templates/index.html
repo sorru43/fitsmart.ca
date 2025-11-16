@@ -193,12 +193,31 @@
 
 {% block content %}
 
+{# Preload first hero image for LCP optimization #}
+{% if hero_slides and hero_slides|length > 0 %}
+<link rel="preload" as="image" href="{{ hero_slides[0].image_url }}" fetchpriority="high">
+{% endif %}
+
 {# --- Hero Section --- #}
 <div class="relative h-screen w-full overflow-hidden bg-black">
   <!-- Image Slider -->
   <div class="absolute inset-0 z-0 transition-all duration-1000">
     {% for slide in hero_slides %}
-      <img src="{{ slide.image_url }}" class="object-cover w-full h-full absolute inset-0 transition-opacity duration-1000 hero-slide {% if loop.index0 == 0 %}opacity-100{% else %}opacity-0{% endif %}" />
+      <img 
+        src="{{ slide.image_url }}" 
+        {% if loop.index0 == 0 %}
+          fetchpriority="high" 
+          loading="eager"
+          decoding="sync"
+        {% else %}
+          loading="lazy" 
+          decoding="async"
+        {% endif %}
+        width="1920" 
+        height="1080"
+        class="object-cover w-full h-full absolute inset-0 transition-opacity duration-1000 hero-slide {% if loop.index0 == 0 %}opacity-100{% else %}opacity-0{% endif %}" 
+        alt="FitSmart Hero Image {{ loop.index }}"
+        style="{% if loop.index0 == 0 %}content-visibility: auto;{% endif %}" />
     {% endfor %}
   </div>
   <!-- Overlay -->

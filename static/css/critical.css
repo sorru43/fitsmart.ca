@@ -1,0 +1,63 @@
+/* Critical CSS - Above the fold content only */
+/* This should be inlined in <head> for fastest LCP */
+
+body {
+    background-color: #000000;
+    color: #FFFFFF;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+}
+
+/* Critical header styles */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background-color: #000000;
+}
+
+/* Critical hero section */
+.relative.h-screen {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    background-color: #000000;
+}
+
+/* Critical image loading */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Prevent layout shift */
+.hero-slide {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Critical text styles */
+h1, h2, h3 {
+    margin: 0;
+    font-weight: 700;
+}
+
+p {
+    margin: 0;
+}
+
+/* Loading state */
+.loading {
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.loaded {
+    opacity: 1;
+}
+
