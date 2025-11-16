@@ -1,0 +1,43 @@
+# Quick GitHub Setup Commands for CloudPanel
+# Copy and paste these commands one by one into your terminal
+
+# 1. Navigate to project directory
+cd /home/fitsmart/htdocs/www.fitsmart.ca
+
+# 2. Check if git is initialized
+git status
+
+# 3. If not initialized, initialize git
+git init
+
+# 4. Configure git user
+git config user.name "FitSmart"
+git config user.email "122971823+sorru43@users.noreply.github.com"
+
+# 5. Add GitHub remote (or update if exists)
+git remote add origin https://github.com/sorru43/fitsmart.ca.git
+# OR if remote exists:
+# git remote set-url origin https://github.com/sorru43/fitsmart.ca.git
+
+# 6. Verify remote
+git remote -v
+
+# 7. For HTTPS authentication, configure credential helper
+git config --global credential.helper store
+
+# 8. Pull from GitHub (will prompt for credentials first time)
+git pull origin main --allow-unrelated-histories
+# OR if branch is 'master':
+# git pull origin master --allow-unrelated-histories
+
+# 9. If you have local changes to commit first:
+# git add .
+# git commit -m "Initial commit from CloudPanel"
+
+# 10. Push to GitHub (will prompt for credentials first time)
+# Username: sorru43
+# Password: [your GitHub Personal Access Token]
+git push -u origin main
+# OR if branch is 'master':
+# git push -u origin master
+
