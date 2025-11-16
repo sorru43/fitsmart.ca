@@ -1,0 +1,47 @@
+# Quick SSH Setup Commands for GitHub
+# Run these commands on your CloudPanel server
+
+# 1. Navigate to project directory
+cd /home/fitsmart/htdocs/www.fitsmart.ca
+
+# 2. Fix ownership issue (if running as root)
+git config --global --add safe.directory /home/fitsmart/htdocs/www.fitsmart.ca
+
+# 3. Generate SSH key
+ssh-keygen -t ed25519 -C "fitsmart-cloudpanel"
+# Press Enter for default location
+# Press Enter for no passphrase (or set one if you want)
+
+# 4. Display your public key (COPY THIS!)
+cat ~/.ssh/id_ed25519.pub
+
+# 5. Add the key to GitHub:
+#    - Go to: https://github.com/settings/keys
+#    - Click "New SSH key"
+#    - Paste the key from step 4
+#    - Save
+
+# 6. Test SSH connection
+ssh -T git@github.com
+# Should see: "Hi sorru43! You've successfully authenticated..."
+
+# 7. Configure git user
+git config user.name "FitSmart"
+git config user.email "122971823+sorru43@users.noreply.github.com"
+
+# 8. Change remote to SSH (if you set it up with HTTPS before)
+git remote set-url origin git@github.com:sorru43/fitsmart.ca.git
+
+# 9. Verify remote
+git remote -v
+# Should show: git@github.com:sorru43/fitsmart.ca.git
+
+# 10. Rename branch to main (if needed)
+git branch -m master main
+
+# 11. Pull from GitHub (no password needed!)
+git pull origin main --allow-unrelated-histories
+
+# 12. Push to GitHub (no password needed!)
+git push -u origin main
+

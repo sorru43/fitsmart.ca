@@ -154,6 +154,24 @@ git checkout main
 
 ## Troubleshooting
 
+### If you get "dubious ownership" error (running as root):
+This happens when running git as root on a directory owned by another user. 
+
+**Option 1: Global config (affects all git operations, but safe - only adds this directory to safe list):**
+```bash
+git config --global --add safe.directory /home/fitsmart/htdocs/www.fitsmart.ca
+```
+
+**Option 2: Local config (only affects this project, more isolated):**
+```bash
+cd /home/fitsmart/htdocs/www.fitsmart.ca
+git config --local --add safe.directory /home/fitsmart/htdocs/www.fitsmart.ca
+```
+
+**Note:** The global option is safe and won't break other projects - it just adds this directory to a list of trusted directories. Other projects will continue to work normally.
+
+Then retry your git commands.
+
 ### If you get "permission denied" errors:
 - Check your GitHub token/SSH key is set up correctly
 - Verify you have write access to the repository
@@ -161,6 +179,20 @@ git checkout main
 ### If you get "refusing to merge unrelated histories":
 ```bash
 git pull origin main --allow-unrelated-histories
+```
+
+### If branch name mismatch (master vs main):
+If your local branch is `master` but remote is `main`:
+
+```bash
+git branch -m master main
+git push -u origin main
+```
+
+Or if remote is `master`:
+
+```bash
+git pull origin master --allow-unrelated-histories
 ```
 
 ### If you need to force push (use with caution):
