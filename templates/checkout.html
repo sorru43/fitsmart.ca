@@ -158,13 +158,13 @@
                                       rows="3" placeholder="Enter your complete address">{{ current_user.address if current_user.is_authenticated else '' }}</textarea>
                         </div>
                         
-                        <!-- Location dropdowns - responsive grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 location-grid">
+                        <!-- Location dropdowns - Canadian standard format -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 location-grid">
                             <div>
-                                <label class="block text-sm font-medium mb-2 text-white">State *</label>
+                                <label class="block text-sm font-medium mb-2 text-white">Province *</label>
                                 <select id="state-select" name="customer_state" required 
                                         class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base">
-                                    <option value="">Select State</option>
+                                    <option value="">Select Province</option>
                                     {% for state in locations_data %}
                                         <option value="{{ state.name }}" 
                                                 data-state-id="{{ state.id }}"
@@ -179,25 +179,19 @@
                                 <select id="city-select" name="customer_city" required 
                                         class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base" 
                                         disabled>
-                                    <option value="">Select State First</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2 text-white">Area *</label>
-                                <select id="area-select" name="customer_area" required 
-                                        class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base" 
-                                        disabled>
-                                    <option value="">Select City First</option>
+                                    <option value="">Select Province First</option>
                                 </select>
                             </div>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium mb-2 text-white">PIN Code *</label>
+                            <label class="block text-sm font-medium mb-2 text-white">Postal Code *</label>
                             <input type="text" name="customer_pincode" required 
                                    class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base"
                                    value="{{ current_user.postal_code if current_user.is_authenticated else '' }}"
-                                   placeholder="Enter PIN code">
+                                   placeholder="e.g., M5V 2H1"
+                                   pattern="[A-Za-z][0-9][A-Za-z] ?[0-9][A-Za-z][0-9]"
+                                   title="Canadian postal code format: A1A 1A1">
                         </div>
                         
                         <div>
@@ -616,17 +610,14 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
     const stateSelect = document.getElementById('state-select');
     const citySelect = document.getElementById('city-select');
-    const areaSelect = document.getElementById('area-select');
     
     // State change handler
     stateSelect.addEventListener('change', function() {
         const selectedStateId = this.options[this.selectedIndex].dataset.stateId;
         
-        // Reset city and area dropdowns
+        // Reset city dropdown
         citySelect.innerHTML = '<option value="">Select City</option>';
-        areaSelect.innerHTML = '<option value="">Select City First</option>';
         citySelect.disabled = true;
-        areaSelect.disabled = true;
         
         if (selectedStateId) {
             // Find the selected state data
@@ -641,34 +632,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     citySelect.appendChild(option);
                 });
                 citySelect.disabled = false;
-            }
-        }
-    });
-    
-    // City change handler
-    citySelect.addEventListener('change', function() {
-        const selectedCityId = this.options[this.selectedIndex].dataset.cityId;
-        
-        // Reset area dropdown
-        areaSelect.innerHTML = '<option value="">Select Area</option>';
-        areaSelect.disabled = true;
-        
-        if (selectedCityId) {
-            // Find the selected city data
-            const selectedStateId = stateSelect.options[stateSelect.selectedIndex].dataset.stateId;
-            const stateData = locationsData.find(state => state.id == selectedStateId);
-            if (stateData) {
-                const cityData = stateData.cities.find(city => city.id == selectedCityId);
-                if (cityData && cityData.areas.length > 0) {
-                    // Populate areas
-                    cityData.areas.forEach(area => {
-                        const option = document.createElement('option');
-                        option.value = area.name;
-                        option.textContent = area.name;
-                        areaSelect.appendChild(option);
-                    });
-                    areaSelect.disabled = false;
-                }
             }
         }
     });
@@ -689,7 +652,7 @@ document.getElementById('checkout-form').addEventListener('submit', function(e) 
     e.preventDefault();
     
     // Validate required fields
-    const requiredFields = ['customer_name', 'customer_email', 'customer_phone', 'customer_address', 'customer_state', 'customer_city', 'customer_area', 'customer_pincode'];
+    const requiredFields = ['customer_name', 'customer_email', 'customer_phone', 'customer_address', 'customer_state', 'customer_city', 'customer_pincode'];
     for (let field of requiredFields) {
         const input = document.querySelector(`[name="${field}"]`);
         if (!input.value.trim()) {

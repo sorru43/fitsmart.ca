@@ -1736,29 +1736,51 @@ def subscribe(plan_id):
         hst_amount = base_price * 0.13
         total_amount = base_price + hst_amount
         
-        # Get all states with their cities and areas for the cascading dropdown
+        # Get all delivery locations grouped by province for the cascading dropdown
+        from collections import defaultdict
         locations_data = []
         try:
-            states = State.query.order_by(State.name).all()
-            for state in states:
+            # Get all active delivery locations
+            delivery_locations = DeliveryLocation.query.filter_by(is_active=True).order_by(
+                DeliveryLocation.province, DeliveryLocation.city
+            ).all()
+            
+            # Province code to name mapping
+            province_map = {
+                'AB': 'Alberta', 'BC': 'British Columbia', 'MB': 'Manitoba',
+                'NB': 'New Brunswick', 'NL': 'Newfoundland and Labrador',
+                'NS': 'Nova Scotia', 'NT': 'Northwest Territories',
+                'NU': 'Nunavut', 'ON': 'Ontario', 'PE': 'Prince Edward Island',
+                'QC': 'Quebec', 'SK': 'Saskatchewan', 'YT': 'Yukon'
+            }
+            
+            # Group locations by province
+            locations_by_province = defaultdict(list)
+            for location in delivery_locations:
+                province_name = province_map.get(location.province, location.province)
+                locations_by_province[province_name].append(location.city)
+            
+            # Convert to the format expected by the frontend (matching old State/City structure)
+            # Use a counter for IDs since we don't have State/City IDs anymore
+            counter = 1
+            for province_name in sorted(locations_by_province.keys()):
+                cities_list = sorted(set(locations_by_province[province_name]))  # Remove duplicates and sort
                 state_data = {
-                    'id': state.id,
-                    'name': state.name,
+                    'id': counter,
+                    'name': province_name,
                     'cities': []
                 }
-                for city in state.cities:
+                counter += 1
+                for city_name in cities_list:
                     city_data = {
-                        'id': city.id,
-                        'name': city.name,
-                        'areas': []
+                        'id': counter,
+                        'name': city_name,
+                        'areas': []  # Empty areas array for compatibility
                     }
-                    for area in city.areas:
-                        city_data['areas'].append({
-                            'id': area.id,
-                            'name': area.name
-                        })
+                    counter += 1
                     state_data['cities'].append(city_data)
                 locations_data.append(state_data)
+                
         except Exception as e:
             current_app.logger.warning(f"Could not load locations from database: {e}")
             locations_data = []
@@ -2148,12 +2170,12 @@ def process_checkout():
         applied_coupon_code = request.form.get('applied_coupon_code')
         coupon_discount = request.form.get('coupon_discount', '0')
         
-        # Validate required fields
+        # Validate required fields (customer_area is optional for Canadian addresses)
         if not all([plan_id, frequency, customer_name, customer_email, customer_phone, 
-                   customer_address, customer_city, customer_state, customer_area, customer_pincode]):
+                   customer_address, customer_city, customer_state, customer_pincode]):
             return jsonify({
                 'success': False,
-                'error': 'Please fill in all required fields including State, City, and Area.'
+                'error': 'Please fill in all required fields including Province, City, and Postal Code.'
             }), 400
         
         # Get meal plan
@@ -2179,7 +2201,7 @@ def process_checkout():
             'customer_address': customer_address,
             'customer_city': customer_city,
             'customer_state': customer_state,
-            'customer_area': customer_area,
+            'customer_area': customer_area or '',  # Optional for Canadian addresses
             'customer_pincode': customer_pincode,
             'applied_coupon': applied_coupon_code,
             'coupon_discount': discount_amount,

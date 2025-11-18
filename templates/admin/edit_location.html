@@ -12,19 +12,35 @@
     <form action="{{ url_for('admin.admin_edit_location', id=location.id) }}" method="POST" class="p-6">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label for="city" class="block text-sm font-medium text-gray-700">City</label>
                 <input type="text" id="city" name="city" value="{{ location.city }}" required
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                    placeholder="Enter city name">
+                    placeholder="e.g., Vancouver">
             </div>
             <div>
-                <label for="province" class="block text-sm font-medium text-gray-700">Province</label>
-                <input type="text" id="province" name="province" value="{{ location.province }}" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                    placeholder="Enter province name">
+                <label for="province" class="block text-sm font-medium text-gray-700">Province / Territory</label>
+                <select id="province" name="province" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                    <option value="">Select province or territory</option>
+                    {% for code, name in provinces %}
+                        <option value="{{ name }}" {% if location.province == code %}selected{% endif %}>
+                            {{ name }} ({{ code }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Use official Canada Post province/territory names.</p>
             </div>
+        </div>
+        
+        <div class="mt-4">
+            <label for="postal_code_prefix" class="block text-sm font-medium text-gray-700">Postal Code Prefix (optional)</label>
+            <input type="text" id="postal_code_prefix" name="postal_code_prefix" maxlength="3"
+                   value="{{ location.postal_code_prefix or '' }}"
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm uppercase focus:border-primary-500 focus:ring-primary-500"
+                   placeholder="e.g., H3Z">
+            <p class="text-xs text-gray-500 mt-1">First three characters of the postal code (e.g., <strong>H3Z</strong> from H3Z 2Y7).</p>
         </div>
         
         <div class="flex items-center">

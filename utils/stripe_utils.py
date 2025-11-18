@@ -7,11 +7,20 @@ import stripe
 from datetime import datetime, timedelta
 from flask import current_app
 
-# Initialize Stripe with API key from environment variable
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
-
 # Constants
 CURRENCY = 'cad'  # Canadian Dollar
+
+def get_stripe_api_key():
+    """
+    Get Stripe API key from config or environment variable.
+    """
+    try:
+        if current_app:
+            return current_app.config.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_SECRET_KEY')
+    except RuntimeError:
+        # Outside of application context
+        pass
+    return os.environ.get('STRIPE_SECRET_KEY')
 
 def create_stripe_customer(name, email, phone, address):
     """
@@ -27,7 +36,12 @@ def create_stripe_customer(name, email, phone, address):
         str: Stripe customer ID if successful, None otherwise
     """
     try:
-        stripe.api_key = current_app.config['STRIPE_SECRET_KEY']
+        api_key = get_stripe_api_key()
+        if not api_key:
+            logging.error("Stripe API key not configured")
+            return None
+        
+        stripe.api_key = api_key
         
         customer = stripe.Customer.create(
             name=name,
@@ -60,7 +74,12 @@ def create_stripe_checkout_session(customer_id, meal_plan_name, price_amount, fr
         dict: Stripe checkout session data if successful, None otherwise
     """
     try:
-        stripe.api_key = current_app.config['STRIPE_SECRET_KEY']
+        api_key = get_stripe_api_key()
+        if not api_key:
+            logging.error("Stripe API key not configured")
+            return None
+        
+        stripe.api_key = api_key
         
         # Create a price object for the subscription
         price = stripe.Price.create(
@@ -111,6 +130,12 @@ def retrieve_subscription(subscription_id):
         dict: Subscription details if successful, None otherwise
     """
     try:
+        api_key = get_stripe_api_key()
+        if not api_key:
+            logging.error("Stripe API key not configured")
+            return None
+        
+        stripe.api_key = api_key
         subscription = stripe.Subscription.retrieve(subscription_id)
         return subscription
     except Exception as e:
@@ -129,6 +154,13 @@ def cancel_subscription(subscription_id, cancel_at_period_end=True):
         bool: True if successful, False otherwise
     """
     try:
+        api_key = get_stripe_api_key()
+        if not api_key:
+            logging.error("Stripe API key not configured")
+            return False
+        
+        stripe.api_key = api_key
+        
         if cancel_at_period_end:
             stripe.Subscription.modify(
                 subscription_id,
@@ -152,6 +184,13 @@ def pause_subscription(subscription_id):
         bool: True if successful, False otherwise
     """
     try:
+        api_key = get_stripe_api_key()
+        if not api_key:
+            logging.error("Stripe API key not configured")
+            return False
+        
+        stripe.api_key = api_key
+        
         # Get the subscription
         subscription = stripe.Subscription.retrieve(subscription_id)
         
@@ -179,6 +218,13 @@ def resume_subscription(subscription_id):
         bool: True if successful, False otherwise
     """
     try:
+        api_key = get_stripe_api_key()
+        if not api_key:
+            logging.error("Stripe API key not configured")
+            return False
+        
+        stripe.api_key = api_key
+        
         # Remove the pause_collection to resume the subscription
         stripe.Subscription.modify(
             subscription_id,
@@ -202,6 +248,13 @@ def create_portal_session(customer_id, return_url):
         str: URL to the customer portal if successful, None otherwise
     """
     try:
+        api_key = get_stripe_api_key()
+        if not api_key:
+            logging.error("Stripe API key not configured")
+            return None
+        
+        stripe.api_key = api_key
+        
         session = stripe.billing_portal.Session.create(
             customer=customer_id,
             return_url=return_url
@@ -224,6 +277,12 @@ def handle_webhook_event(payload, signature, webhook_secret):
         dict: The event data if signature is valid, None otherwise
     """
     try:
+        # Note: Webhook signature verification doesn't require API key
+        # but we'll set it if available for consistency
+        api_key = get_stripe_api_key()
+        if api_key:
+            stripe.api_key = api_key
+        
         event = stripe.Webhook.construct_event(
             payload, signature, webhook_secret
         )

@@ -222,17 +222,29 @@ function confirmDelete() {
             'X-CSRFToken': '{{ csrf_token() }}'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        // Check if response is ok
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.message || `HTTP error! status: ${response.status}`);
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
+            // Show success message if there's additional info
+            if (data.message && data.message.includes('usage record')) {
+                alert(data.message);
+            }
             window.location.reload();
         } else {
-            alert(data.message || 'An error occurred');
+            alert(data.message || 'An error occurred while deleting the coupon');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while processing your request');
+        alert(error.message || 'An error occurred while processing your request. Please try again.');
     })
     .finally(() => {
         closeModal();

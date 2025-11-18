@@ -7,31 +7,102 @@ from flask import Blueprint, render_template, request, jsonify, flash, redirect,
 from flask_login import login_required
 from database.models import User, Order, Subscription, MealPlan, Holiday, db
 from datetime import datetime, timedelta
-from email_marketing_system import email_system
 import json
 
+# Import email_system with error handling
+try:
+    from email_marketing_system import email_system
+except (ImportError, Exception) as e:
+    # Set to None if import fails - will be handled in routes
+    email_system = None
+
 email_campaign_bp = Blueprint('email_campaign', __name__)
+
+# Context processor to make site settings and has_blueprint available to all email_campaign templates
+@email_campaign_bp.context_processor
+def inject_site_settings():
+    """Inject site settings and has_blueprint into all email_campaign templates"""
+    def has_blueprint(blueprint_name):
+        """Check if a blueprint is registered"""
+        try:
+            return blueprint_name in current_app.blueprints
+        except:
+            return False
+    
+    try:
+        from database.models import SiteSetting
+        settings = {}
+        site_settings = SiteSetting.query.all()
+        for setting in site_settings:
+            settings[setting.key] = setting.value
+        
+        # Default values if not set
+        if 'site_logo' not in settings:
+            settings['site_logo'] = '/static/images/logo white.png'
+        if 'company_name' not in settings:
+            settings['company_name'] = 'FitSmart'
+        if 'company_tagline' not in settings:
+            settings['company_tagline'] = 'Healthy Meal Delivery'
+        
+        return {'site_settings': settings, 'has_blueprint': has_blueprint}
+    except Exception as e:
+        current_app.logger.error(f"Error loading site settings: {str(e)}")
+        return {
+            'site_settings': {
+                'site_logo': '/static/images/logo white.png',
+                'company_name': 'FitSmart',
+                'company_tagline': 'Healthy Meal Delivery'
+            }, 
+            'has_blueprint': has_blueprint
+        }
 
 @email_campaign_bp.route('/admin/email-campaigns')
 @login_required
 def email_campaigns_dashboard():
     """Email campaigns dashboard"""
     try:
+        # Check if email_system is available
+        if email_system is None:
+            current_app.logger.warning("email_system is not available - using default values")
+        
+        # Default stats if email_system is not available
+        default_stats = {
+            'total_campaigns': 6,
+            'campaigns_sent': 0,
+            'open_rate': 0.0,
+            'click_rate': 0.0,
+            'conversion_rate': 0.0
+        }
+        
         # Get campaign statistics
-        stats = email_system.get_campaign_stats()
+        if email_system and hasattr(email_system, 'get_campaign_stats'):
+            try:
+                stats = email_system.get_campaign_stats()
+            except Exception as e:
+                current_app.logger.warning(f"Error getting campaign stats: {e}")
+                stats = default_stats
+        else:
+            stats = default_stats
         
         # Get recent campaigns (this would come from a Campaign model)
         recent_campaigns = []  # Placeholder for actual campaign data
         
         # Get user segments for targeting
-        total_users = User.query.count()
-        active_users = User.query.filter_by(is_active=True).count()
-        new_users_this_week = User.query.filter(
-            User.created_at >= datetime.now() - timedelta(days=7)
-        ).count()
-        inactive_users = User.query.filter(
-            User.created_at <= datetime.now() - timedelta(days=30)
-        ).count()
+        try:
+            total_users = User.query.count()
+            active_users = User.query.filter_by(is_active=True).count()
+            new_users_this_week = User.query.filter(
+                User.created_at >= datetime.now() - timedelta(days=7)
+            ).count()
+            inactive_users = User.query.filter(
+                User.created_at <= datetime.now() - timedelta(days=30)
+            ).count()
+        except Exception as e:
+            current_app.logger.warning(f"Error getting user statistics: {e}")
+            total_users = 0
+            active_users = 0
+            new_users_this_week = 0
+            inactive_users = 0
         
         return render_template('admin/email_campaigns/dashboard.html',
                              stats=stats,
@@ -41,8 +112,8 @@ def email_campaigns_dashboard():
                              new_users_this_week=new_users_this_week,
                              inactive_users=inactive_users)
     except Exception as e:
-        current_app.logger.error(f"Error in email campaigns dashboard: {str(e)}")
-        flash('Error loading email campaigns dashboard', 'error')
+        current_app.logger.error(f"Error loading email campaigns dashboard: {str(e)}", exc_info=True)
+        flash(f'Error loading email campaigns dashboard: {str(e)}', 'error')
         return redirect(url_for('admin.admin_dashboard'))
 
 @email_campaign_bp.route('/admin/email-campaigns/welcome-series')
