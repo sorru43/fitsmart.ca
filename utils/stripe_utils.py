@@ -38,24 +38,51 @@ def create_stripe_customer(name, email, phone, address):
     try:
         api_key = get_stripe_api_key()
         if not api_key:
-            logging.error("Stripe API key not configured")
+            logging.error("Stripe API key not configured - check STRIPE_SECRET_KEY in environment variables")
             return None
         
         stripe.api_key = api_key
         
-        customer = stripe.Customer.create(
-            name=name,
-            email=email,
-            phone=phone,
-            address=address,
-            metadata={
+        # Prepare customer data - make phone and address optional
+        customer_data = {
+            'name': name,
+            'email': email,
+            'metadata': {
                 'source': 'website'
             }
-        )
+        }
         
+        # Add phone if provided
+        if phone:
+            customer_data['phone'] = phone
+        
+        # Add address if provided and properly formatted
+        if address:
+            # Ensure address is a dict and has required fields
+            if isinstance(address, dict):
+                # Stripe requires at least line1 for address
+                if address.get('line1') or address.get('line_1'):
+                    customer_data['address'] = {
+                        'line1': address.get('line1') or address.get('line_1', ''),
+                        'city': address.get('city', ''),
+                        'state': address.get('state', ''),
+                        'postal_code': address.get('postal_code', ''),
+                        'country': address.get('country', 'CA')
+                    }
+        
+        customer = stripe.Customer.create(**customer_data)
+        
+        logging.info(f"Successfully created Stripe customer: {customer.id}")
         return customer.id
+    except stripe.error.StripeError as e:
+        # Stripe-specific errors
+        error_msg = f"Stripe API error creating customer: {e.user_message or str(e)} (Code: {e.code})"
+        logging.error(error_msg)
+        return None
     except Exception as e:
-        logging.error(f"Error creating Stripe customer: {str(e)}")
+        # Other errors
+        error_msg = f"Error creating Stripe customer: {str(e)} (Type: {type(e).__name__})"
+        logging.error(error_msg)
         return None
 
 def create_stripe_checkout_session(customer_id, meal_plan_name, price_amount, frequency, success_url, cancel_url):

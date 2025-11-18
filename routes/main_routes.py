@@ -2155,6 +2155,14 @@ def trial_request(plan_id):
 def process_checkout():
     """Process the checkout form and create Stripe checkout session"""
     try:
+        # Check if Stripe is configured
+        from utils.stripe_utils import get_stripe_api_key
+        if not get_stripe_api_key():
+            current_app.logger.error("Stripe API key not configured")
+            return jsonify({
+                'success': False,
+                'error': 'Payment system is not configured. Please contact support.'
+            }), 500
         # Get form data
         plan_id = request.form.get('plan_id')
         frequency = request.form.get('frequency')
@@ -2178,11 +2186,38 @@ def process_checkout():
                 'error': 'Please fill in all required fields including Province, City, and Postal Code.'
             }), 400
         
+        # Convert plan_id to int
+        try:
+            plan_id = int(plan_id)
+        except (ValueError, TypeError):
+            return jsonify({
+                'success': False,
+                'error': 'Invalid meal plan ID.'
+            }), 400
+        
         # Get meal plan
-        meal_plan = MealPlan.query.get_or_404(plan_id)
+        meal_plan = MealPlan.query.get(plan_id)
+        if not meal_plan:
+            return jsonify({
+                'success': False,
+                'error': 'Meal plan not found.'
+            }), 404
         
         # Calculate price with tax (HST/GST for Canada)
-        base_price = float(meal_plan.price_weekly if frequency == 'weekly' else meal_plan.price_monthly)
+        try:
+            price_field = meal_plan.price_weekly if frequency == 'weekly' else meal_plan.price_monthly
+            if price_field is None:
+                return jsonify({
+                    'success': False,
+                    'error': f'Price not set for {frequency} plan.'
+                }), 400
+            base_price = float(price_field)
+        except (ValueError, TypeError) as e:
+            current_app.logger.error(f"Error converting price: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': 'Invalid price configuration. Please contact support.'
+            }), 500
         tax_amount = base_price * 0.13  # 13% HST (Ontario, Canada)
         subtotal = base_price + tax_amount
         
@@ -2233,10 +2268,18 @@ def process_checkout():
             )
             
             if not stripe_customer_id:
-                current_app.logger.error("Failed to create Stripe customer")
+                current_app.logger.error("Failed to create Stripe customer - check logs for details")
+                # Check if it's an API key issue
+                from utils.stripe_utils import get_stripe_api_key
+                api_key = get_stripe_api_key()
+                if not api_key:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Payment system configuration error. Please contact support.'
+                    }), 500
                 return jsonify({
                     'success': False,
-                    'error': 'Error creating customer. Please try again.'
+                    'error': 'Error creating customer. Please check your information and try again.'
                 }), 500
             
             # Save customer ID to user if exists
@@ -2274,10 +2317,13 @@ def process_checkout():
         })
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         current_app.logger.error(f"Error processing checkout: {str(e)}")
+        current_app.logger.error(f"Traceback: {error_trace}")
         return jsonify({
             'success': False,
-            'error': 'An error occurred while processing your order. Please try again.'
+            'error': f'An error occurred while processing your order: {str(e)}. Please try again.'
         }), 500
 
 @main_bp.route('/stripe-webhook', methods=['POST'])
