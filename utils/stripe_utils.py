@@ -14,13 +14,26 @@ def get_stripe_api_key():
     """
     Get Stripe API key from config or environment variable.
     """
+    api_key = None
+    
+    # Try to get from Flask app config first
     try:
         if current_app:
-            return current_app.config.get('STRIPE_SECRET_KEY') or os.environ.get('STRIPE_SECRET_KEY')
+            api_key = current_app.config.get('STRIPE_SECRET_KEY')
+            if api_key:
+                return api_key
     except RuntimeError:
         # Outside of application context
         pass
-    return os.environ.get('STRIPE_SECRET_KEY')
+    
+    # Fall back to environment variable
+    api_key = os.environ.get('STRIPE_SECRET_KEY')
+    
+    # Log warning if key is not found (but don't spam logs)
+    if not api_key:
+        logging.warning("STRIPE_SECRET_KEY not found in config or environment variables. Please add it to your .env file.")
+    
+    return api_key
 
 def create_stripe_customer(name, email, phone, address):
     """
