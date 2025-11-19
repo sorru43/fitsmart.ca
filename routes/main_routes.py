@@ -1772,10 +1772,25 @@ def subscribe(plan_id):
                 }
                 counter += 1
                 for city_name in cities_list:
+                    # Find matching State and City to get areas
+                    areas_list = []
+                    try:
+                        # Find State by name
+                        state = State.query.filter_by(name=province_name).first()
+                        if state:
+                            # Find City by name and state
+                            city = City.query.filter_by(name=city_name, state_id=state.id).first()
+                            if city:
+                                # Get all areas for this city
+                                areas = Area.query.filter_by(city_id=city.id).order_by(Area.name).all()
+                                areas_list = [{'id': area.id, 'name': area.name} for area in areas]
+                    except Exception as e:
+                        current_app.logger.warning(f"Error loading areas for {city_name}, {province_name}: {e}")
+                    
                     city_data = {
                         'id': counter,
                         'name': city_name,
-                        'areas': []  # Empty areas array for compatibility
+                        'areas': areas_list  # Populate areas from Area model
                     }
                     counter += 1
                     state_data['cities'].append(city_data)
