@@ -949,7 +949,10 @@
                             <span class="relative z-10">About FitSmart</span>
                             <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-green-500"></span>
                         </h3>
-                        <p class="text-gray-300 mb-4 text-sm md:text-base">{{ site_settings.get('company_tagline', 'FitSmart provides fresh, nutritionist-curated meal plans delivered to your doorstep in Ludhiana. We use 100% fresh ingredients to create healthy, delicious meals that help you achieve your health goals.') }}</p>
+                        <p class="text-gray-300 mb-4 text-sm md:text-base">{{ site_settings.get('company_tagline', 'FitSmart provides fresh, nutritionist-curated meal plans delivered to your doorstep. We use 100% fresh ingredients to create healthy, delicious meals that help you achieve your health goals.') }}</p>
+                        <a href="{{ url_for('main.delivery_locations') }}" class="text-primary hover:text-primary-light transition-colors duration-300 inline-flex items-center mt-2 text-sm">
+                            <i class="fas fa-map-marker-alt mr-2"></i>Know Our Delivery Locations
+                        </a>
                         {% if site_settings.get('show_social_links') == 'True' %}
                         <div class="flex space-x-5 mt-6">
                             {% if site_settings.get('facebook_url') %}
@@ -1006,6 +1009,9 @@
                             <li><a href="{{ url_for('main.index') }}" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Home</a></li>
                             <li><a href="{{ url_for('main.meal_calculator') }}" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Meal Calculator</a></li>
                             <li><a href="{{ url_for('main.meal_plans') }}" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Meal Plans</a></li>
+                            <li><a href="{{ url_for('main.delivery_locations') }}" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">
+                                <i class="fas fa-map-marker-alt mr-2"></i>Delivery Locations
+                            </a></li>
                             <li><a href="{{ url_for('main.blog') }}" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">Blog</a></li>
                             <li><a href="{{ url_for('main.index') }}#faq" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">FAQ</a></li>
                             <li><a href="#" class="text-gray-300 hover:text-green-500 transition-colors duration-300 inline-block py-1">About Us</a></li>
@@ -1108,6 +1114,7 @@
                             <ul class="space-y-1 text-xs">
                                 <li><a href="{{ url_for('main.index') }}" class="text-gray-300 hover:text-green-500">Home</a></li>
                                 <li><a href="{{ url_for('main.meal_calculator') }}" class="text-gray-300 hover:text-green-500">Calculator</a></li>
+                                <li><a href="{{ url_for('main.delivery_locations') }}" class="text-gray-300 hover:text-green-500">Locations</a></li>
                                 <li><a href="{{ url_for('main.blog') }}" class="text-gray-300 hover:text-green-500">Blog</a></li>
                             </ul>
                         </div>
