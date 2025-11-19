@@ -350,7 +350,109 @@ def stripe_webhook():
                     db.session.commit()
                     logging.info(f"Marked subscription {subscription.id} as cancelled")
         
-        # Add more event handling as needed
+        elif event_type == 'invoice.payment_succeeded':
+            # Recurring payment succeeded - subscription renewed
+            invoice = event_data
+            subscription_id = invoice.get('subscription')
+            customer_id = invoice.get('customer')
+            amount_paid = invoice.get('amount_paid', 0) / 100  # Convert from cents
+            period_end = datetime.fromtimestamp(invoice.get('period_end', 0))
+            
+            if subscription_id:
+                subscription = Subscription.query.filter_by(stripe_subscription_id=subscription_id).first()
+                
+                if subscription:
+                    # Update subscription period
+                    subscription.current_period_start = datetime.fromtimestamp(invoice.get('period_start', 0))
+                    subscription.current_period_end = period_end
+                    subscription.status = SubscriptionStatus.ACTIVE
+                    
+                    # Create order record for this payment
+                    from database.models import Order
+                    order = Order(
+                        user_id=subscription.user_id,
+                        meal_plan_id=subscription.meal_plan_id,
+                        amount=amount_paid,
+                        total_amount=amount_paid,
+                        status='confirmed',
+                        payment_status='captured',
+                        payment_id=invoice.get('payment_intent'),
+                        order_id=invoice.get('id')
+                    )
+                    db.session.add(order)
+                    db.session.commit()
+                    
+                    # Send payment success notification
+                    try:
+                        from utils.email_functions import send_payment_success_email
+                        from utils.sms_utils import send_payment_success_sms
+                        
+                        user = subscription.user
+                        send_payment_success_email(user, subscription, amount_paid, period_end)
+                        if user.phone:
+                            send_payment_success_sms(user.phone, user.name, subscription.meal_plan.name, amount_paid, period_end)
+                    except Exception as e:
+                        logging.error(f"Error sending payment success notification: {str(e)}")
+                    
+                    logging.info(f"Processed successful recurring payment for subscription {subscription.id}")
+        
+        elif event_type == 'invoice.payment_failed':
+            # Recurring payment failed
+            invoice = event_data
+            subscription_id = invoice.get('subscription')
+            customer_id = invoice.get('customer')
+            amount_due = invoice.get('amount_due', 0) / 100  # Convert from cents
+            attempt_count = invoice.get('attempt_count', 0)
+            
+            if subscription_id:
+                subscription = Subscription.query.filter_by(stripe_subscription_id=subscription_id).first()
+                
+                if subscription:
+                    # Update subscription status if payment failed multiple times
+                    if attempt_count >= 3:
+                        subscription.status = SubscriptionStatus.CANCELED
+                        logging.warning(f"Subscription {subscription.id} cancelled due to multiple payment failures")
+                    
+                    db.session.commit()
+                    
+                    # Send payment failure notification
+                    try:
+                        from utils.email_functions import send_payment_failed_email
+                        from utils.sms_utils import send_payment_failed_sms
+                        
+                        user = subscription.user
+                        send_payment_failed_email(user, subscription, amount_due, attempt_count)
+                        if user.phone:
+                            send_payment_failed_sms(user.phone, user.name, subscription.meal_plan.name, amount_due, attempt_count)
+                    except Exception as e:
+                        logging.error(f"Error sending payment failure notification: {str(e)}")
+                    
+                    logging.warning(f"Payment failed for subscription {subscription.id}, attempt {attempt_count}")
+        
+        elif event_type == 'invoice.upcoming':
+            # Invoice will be created soon - send reminder
+            invoice = event_data
+            subscription_id = invoice.get('subscription')
+            amount_due = invoice.get('amount_due', 0) / 100  # Convert from cents
+            due_date = datetime.fromtimestamp(invoice.get('period_end', 0))
+            
+            if subscription_id:
+                subscription = Subscription.query.filter_by(stripe_subscription_id=subscription_id).first()
+                
+                if subscription:
+                    # Send payment reminder notification
+                    try:
+                        from utils.email_functions import send_payment_reminder_email
+                        from utils.sms_utils import send_payment_reminder_sms
+                        
+                        user = subscription.user
+                        send_payment_reminder_email(user, subscription, amount_due, due_date)
+                        if user.phone:
+                            send_payment_reminder_sms(user.phone, user.name, subscription.meal_plan.name, amount_due, due_date)
+                    except Exception as e:
+                        logging.error(f"Error sending payment reminder: {str(e)}")
+                    
+                    logging.info(f"Sent payment reminder for subscription {subscription.id}")
         
         return jsonify({'status': 'success'}), 200
         
