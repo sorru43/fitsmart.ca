@@ -130,7 +130,7 @@ def create_stripe_checkout_session(customer_id, meal_plan_name, price_amount, fr
                 'interval': 'week' if frequency == 'weekly' else 'month'
             },
             product_data={
-                'name': f"{meal_plan_name} - {frequency.title()} Plan"
+                'name': f"FitSmart - {meal_plan_name} ({frequency.title()} Plan)"
             }
         )
         
