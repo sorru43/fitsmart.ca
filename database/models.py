@@ -210,6 +210,9 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(20))
     name = db.Column(db.String(100))
     email_verified = db.Column(db.Boolean, default=False)
+    
+    # Stripe integration
+    stripe_customer_id = db.Column(db.String(100), unique=True, nullable=True, index=True)
 
     # Relationship to orders - fixed to match actual database
     orders = db.relationship('Order', backref='user', lazy=True, foreign_keys='Order.user_id')
