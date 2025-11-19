@@ -2763,10 +2763,12 @@ def checkout_success():
                 db.session.flush()
                 
                 # Create order record for successful checkout
+                order_price = checkout_data.get('price', meal_plan.price_weekly if checkout_data.get('frequency') == 'weekly' else meal_plan.price_monthly)
                 order = Order(
                     user_id=user_id,
                     meal_plan_id=plan_id,
-                    amount=checkout_data.get('price', meal_plan.get_price_weekly()),
+                    amount=order_price,
+                    total_amount=order_price,  # Set total_amount to same as amount
                     status='confirmed',
                     payment_status='captured',
                     payment_id=checkout_session_id,
