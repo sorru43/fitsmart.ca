@@ -115,10 +115,16 @@ The Stripe integration is **mostly complete** but has **critical issues** that n
 ## 📋 Recommended Actions
 
 ### Immediate (Critical)
-1. ✅ Add `stripe_customer_id` field to User model
-2. ✅ Create database migration for User model update
-3. ✅ Remove duplicate webhook handler
-4. ✅ Consolidate webhook logic
+1. ✅ Add `stripe_customer_id` field to User model - **COMPLETED**
+2. ⚠️ **TODO**: Create database migration for User model update
+   ```bash
+   flask db migrate -m "Add stripe_customer_id to User model"
+   flask db upgrade
+   ```
+3. ⚠️ **TODO**: Remove duplicate webhook handler from `routes/main_routes.py`
+   - Keep the one in `routes/stripe_routes.py` (better implementation)
+   - Remove lines 2329-2381 from `routes/main_routes.py`
+4. ⚠️ **TODO**: Verify webhook endpoint URL in Stripe dashboard points to correct route
 
 ### Short-term (Important)
 5. ✅ Remove or document `routes/routes_stripe.py`
