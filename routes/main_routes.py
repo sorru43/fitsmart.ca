@@ -2316,10 +2316,26 @@ def process_checkout():
         )
         
         if not checkout_session:
-            current_app.logger.error("Failed to create Stripe checkout session")
+            current_app.logger.error("Failed to create Stripe checkout session - check server logs for details")
+            # Check if it's an API key issue
+            from utils.stripe_utils import get_stripe_api_key
+            api_key = get_stripe_api_key()
+            if not api_key:
+                return jsonify({
+                    'success': False,
+                    'error': 'Payment system is not configured. Please contact support.'
+                }), 500
+            
+            # Check if customer was created successfully
+            if not stripe_customer_id:
+                return jsonify({
+                    'success': False,
+                    'error': 'Error setting up payment. Please check your information and try again.'
+                }), 500
+            
             return jsonify({
                 'success': False,
-                'error': 'Error creating checkout session. Please try again.'
+                'error': 'Error creating checkout session. Please try again or contact support if the problem persists.'
             }), 500
         
         # Store checkout session ID

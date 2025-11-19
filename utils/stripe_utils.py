@@ -122,6 +122,7 @@ def create_stripe_checkout_session(customer_id, meal_plan_name, price_amount, fr
         stripe.api_key = api_key
         
         # Create a price object for the subscription
+        # Note: product_data only accepts 'name', not 'description'
         price = stripe.Price.create(
             unit_amount=int(price_amount * 100),  # Convert to cents
             currency='cad',
@@ -129,8 +130,7 @@ def create_stripe_checkout_session(customer_id, meal_plan_name, price_amount, fr
                 'interval': 'week' if frequency == 'weekly' else 'month'
             },
             product_data={
-                'name': f"{meal_plan_name} - {frequency.title()} Plan",
-                'description': f"Subscription to {meal_plan_name} ({frequency} delivery)"
+                'name': f"{meal_plan_name} - {frequency.title()} Plan"
             }
         )
         
@@ -155,8 +155,18 @@ def create_stripe_checkout_session(customer_id, meal_plan_name, price_amount, fr
             'id': session.id,
             'url': session.url
         }
+    except stripe.error.StripeError as e:
+        # Stripe-specific errors
+        error_msg = f"Stripe API error creating checkout session: {e.user_message or str(e)} (Code: {e.code}, Type: {type(e).__name__})"
+        logging.error(error_msg)
+        logging.error(f"Stripe error details: {e}")
+        return None
     except Exception as e:
-        logging.error(f"Error creating Stripe checkout session: {str(e)}")
+        # Other errors
+        error_msg = f"Error creating Stripe checkout session: {str(e)} (Type: {type(e).__name__})"
+        logging.error(error_msg)
+        import traceback
+        logging.error(f"Traceback: {traceback.format_exc()}")
         return None
 
 def retrieve_subscription(subscription_id):
