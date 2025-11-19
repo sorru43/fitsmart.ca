@@ -186,12 +186,14 @@
                         
                         <div>
                             <label class="block text-sm font-medium mb-2 text-white">Postal Code *</label>
-                            <input type="text" name="customer_pincode" required 
+                            <input type="text" name="customer_pincode" id="customer_pincode" required 
                                    class="w-full px-3 py-3 sm:py-2 rounded-md bg-dark text-white border border-gray-600 text-base"
                                    value="{{ current_user.postal_code if current_user.is_authenticated else '' }}"
                                    placeholder="e.g., M5V 2H1"
-                                   pattern="[A-Za-z][0-9][A-Za-z] ?[0-9][A-Za-z][0-9]"
-                                   title="Canadian postal code format: A1A 1A1">
+                                   pattern="[A-Za-z][0-9][A-Za-z][ -]?[0-9][A-Za-z][0-9]"
+                                   title="Please enter a valid Canadian postal code (e.g., M5V 2H1 or M5V2H1)"
+                                   maxlength="7">
+                            <p class="text-xs text-gray-400 mt-1">Format: A1A 1A1 (space optional)</p>
                         </div>
                         
                         <div>
@@ -354,6 +356,28 @@
 <script>
 // Location data from backend
 const locationsData = {{ locations_data|tojson|safe }};
+
+// Auto-format postal code
+document.addEventListener('DOMContentLoaded', function() {
+    const postalCodeInput = document.getElementById('customer_pincode');
+    if (postalCodeInput) {
+        postalCodeInput.addEventListener('input', function(e) {
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            
+            // Auto-format as user types (A1A1A1 -> A1A 1A1)
+            if (value.length > 3) {
+                value = value.substring(0, 3) + ' ' + value.substring(3, 6);
+            }
+            
+            // Limit to 7 characters (A1A 1A1)
+            if (value.length > 7) {
+                value = value.substring(0, 7);
+            }
+            
+            e.target.value = value;
+        });
+    }
+});
 
 // Coupon functionality
 let originalTotal = {{ total_amount }};
