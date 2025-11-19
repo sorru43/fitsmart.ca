@@ -99,3 +99,5 @@ coverage.xml
 .dmypy.json
 dmypy.json
 
+instance/*.db
+instance/healthyrizz.db
