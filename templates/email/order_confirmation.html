@@ -100,7 +100,7 @@
                 <p><strong>Name:</strong> {{ order.customer_name }}</p>
                 <p><strong>Address:</strong><br>
                 {{ order.customer_address }}<br>
-                {{ order.customer_city }}, {{ order.customer_state }} - {{ order.customer_pincode }}</p>
+                {{ order.customer_city }}, {{ order.customer_state }} (Postal Code: {{ order.customer_pincode }})</p>
                 <p><strong>Phone:</strong> {{ order.customer_phone }}</p>
                 {% if order.delivery_instructions %}
                 <p><strong>Delivery Instructions:</strong><br>

@@ -74,7 +74,7 @@
                             <div class="text-white">
                                 <p class="font-semibold">{{ order.customer_name }}</p>
                                 <p>{{ order.customer_address }}</p>
-                                <p>{{ order.customer_city }}, {{ order.customer_state }} - {{ order.customer_pincode }}</p>
+                                <p>{{ order.customer_city }}, {{ order.customer_state }} (Postal Code: {{ order.customer_pincode }})</p>
                                 <p>Phone: {{ order.customer_phone }}</p>
                                 {% if order.delivery_instructions %}
                                 <p class="mt-2 text-gray-400">

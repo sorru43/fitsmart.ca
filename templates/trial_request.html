@@ -119,8 +119,8 @@
                         </div>
 
                         <div>
-                            <label for="postal_code" class="block text-sm font-medium text-gray-300 mb-2">PIN Code</label>
-                            {{ form.postal_code(class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50", placeholder="6-digit PIN code") }}
+                            <label for="postal_code" class="block text-sm font-medium text-gray-300 mb-2">Postal Code / ZIP</label>
+                            {{ form.postal_code(class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50", placeholder="Enter postal code or ZIP") }}
                             {% if form.postal_code.errors %}
                             <p class="mt-1 text-sm text-red-500">{{ form.postal_code.errors[0] }}</p>
                             {% endif %}

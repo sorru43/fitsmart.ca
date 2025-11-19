@@ -133,6 +133,21 @@ def create_app(config_class=Config):
                 'show_hygiene_badge': 'True',
                 'hygiene_badge_text': '100% Hygienic'
             }}
+    
+    @app.context_processor
+    def inject_stripe_config():
+        """Inject Stripe publishable key into template context"""
+        try:
+            return {
+                'stripe_publishable_key': app.config.get('STRIPE_PUBLISHABLE_KEY', ''),
+                'stripe_enabled': bool(app.config.get('STRIPE_SECRET_KEY'))
+            }
+        except Exception as e:
+            app.logger.error(f"Could not inject Stripe config: {e}")
+            return {
+                'stripe_publishable_key': '',
+                'stripe_enabled': False
+            }
 
     @app.context_processor
     def inject_active_banner():
@@ -195,6 +210,14 @@ def create_app(config_class=Config):
     # Import and register Email Campaign routes
     from routes.email_campaign_routes import email_campaign_bp
     app.register_blueprint(email_campaign_bp)
+    
+    # Import and register Stripe routes
+    try:
+        from routes.stripe_routes import stripe_bp
+        app.register_blueprint(stripe_bp)
+        logger.info("Stripe routes registered successfully")
+    except Exception as e:
+        logger.warning(f"Could not register Stripe blueprint: {e}")
     
     app.register_blueprint(pwa_bp)  # Register PWA blueprint
 

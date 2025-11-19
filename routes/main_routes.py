@@ -1736,29 +1736,66 @@ def subscribe(plan_id):
         hst_amount = base_price * 0.13
         total_amount = base_price + hst_amount
         
-        # Get all states with their cities and areas for the cascading dropdown
+        # Get all delivery locations grouped by province for the cascading dropdown
+        from collections import defaultdict
         locations_data = []
         try:
-            states = State.query.order_by(State.name).all()
-            for state in states:
+            # Get all active delivery locations
+            delivery_locations = DeliveryLocation.query.filter_by(is_active=True).order_by(
+                DeliveryLocation.province, DeliveryLocation.city
+            ).all()
+            
+            # Province code to name mapping
+            province_map = {
+                'AB': 'Alberta', 'BC': 'British Columbia', 'MB': 'Manitoba',
+                'NB': 'New Brunswick', 'NL': 'Newfoundland and Labrador',
+                'NS': 'Nova Scotia', 'NT': 'Northwest Territories',
+                'NU': 'Nunavut', 'ON': 'Ontario', 'PE': 'Prince Edward Island',
+                'QC': 'Quebec', 'SK': 'Saskatchewan', 'YT': 'Yukon'
+            }
+            
+            # Group locations by province
+            locations_by_province = defaultdict(list)
+            for location in delivery_locations:
+                province_name = province_map.get(location.province, location.province)
+                locations_by_province[province_name].append(location.city)
+            
+            # Convert to the format expected by the frontend (matching old State/City structure)
+            # Use a counter for IDs since we don't have State/City IDs anymore
+            counter = 1
+            for province_name in sorted(locations_by_province.keys()):
+                cities_list = sorted(set(locations_by_province[province_name]))  # Remove duplicates and sort
                 state_data = {
-                    'id': state.id,
-                    'name': state.name,
+                    'id': counter,
+                    'name': province_name,
                     'cities': []
                 }
-                for city in state.cities:
+                counter += 1
+                for city_name in cities_list:
+                    # Find matching State and City to get areas
+                    areas_list = []
+                    try:
+                        # Find State by name
+                        state = State.query.filter_by(name=province_name).first()
+                        if state:
+                            # Find City by name and state
+                            city = City.query.filter_by(name=city_name, state_id=state.id).first()
+                            if city:
+                                # Get all areas for this city
+                                areas = Area.query.filter_by(city_id=city.id).order_by(Area.name).all()
+                                areas_list = [{'id': area.id, 'name': area.name} for area in areas]
+                    except Exception as e:
+                        current_app.logger.warning(f"Error loading areas for {city_name}, {province_name}: {e}")
+                    
                     city_data = {
-                        'id': city.id,
-                        'name': city.name,
-                        'areas': []
+                        'id': counter,
+                        'name': city_name,
+                        'areas': areas_list  # Populate areas from Area model
                     }
-                    for area in city.areas:
-                        city_data['areas'].append({
-                            'id': area.id,
-                            'name': area.name
-                        })
+                    counter += 1
                     state_data['cities'].append(city_data)
                 locations_data.append(state_data)
+                
         except Exception as e:
             current_app.logger.warning(f"Could not load locations from database: {e}")
             locations_data = []
@@ -2133,6 +2170,14 @@ def trial_request(plan_id):
 def process_checkout():
     """Process the checkout form and create Stripe checkout session"""
     try:
+        # Check if Stripe is configured
+        from utils.stripe_utils import get_stripe_api_key
+        if not get_stripe_api_key():
+            current_app.logger.error("Stripe API key not configured")
+            return jsonify({
+                'success': False,
+                'error': 'Payment system is not configured. Please contact support.'
+            }), 500
         # Get form data
         plan_id = request.form.get('plan_id')
         frequency = request.form.get('frequency')
@@ -2148,19 +2193,46 @@ def process_checkout():
         applied_coupon_code = request.form.get('applied_coupon_code')
         coupon_discount = request.form.get('coupon_discount', '0')
         
-        # Validate required fields
+        # Validate required fields (customer_area is optional for Canadian addresses)
         if not all([plan_id, frequency, customer_name, customer_email, customer_phone, 
-                   customer_address, customer_city, customer_state, customer_area, customer_pincode]):
+                   customer_address, customer_city, customer_state, customer_pincode]):
             return jsonify({
                 'success': False,
-                'error': 'Please fill in all required fields including State, City, and Area.'
+                'error': 'Please fill in all required fields including Province, City, and Postal Code.'
+            }), 400
+        
+        # Convert plan_id to int
+        try:
+            plan_id = int(plan_id)
+        except (ValueError, TypeError):
+            return jsonify({
+                'success': False,
+                'error': 'Invalid meal plan ID.'
             }), 400
         
         # Get meal plan
-        meal_plan = MealPlan.query.get_or_404(plan_id)
+        meal_plan = MealPlan.query.get(plan_id)
+        if not meal_plan:
+            return jsonify({
+                'success': False,
+                'error': 'Meal plan not found.'
+            }), 404
         
         # Calculate price with tax (HST/GST for Canada)
-        base_price = float(meal_plan.price_weekly if frequency == 'weekly' else meal_plan.price_monthly)
+        try:
+            price_field = meal_plan.price_weekly if frequency == 'weekly' else meal_plan.price_monthly
+            if price_field is None:
+                return jsonify({
+                    'success': False,
+                    'error': f'Price not set for {frequency} plan.'
+                }), 400
+            base_price = float(price_field)
+        except (ValueError, TypeError) as e:
+            current_app.logger.error(f"Error converting price: {str(e)}")
+            return jsonify({
+                'success': False,
+                'error': 'Invalid price configuration. Please contact support.'
+            }), 500
         tax_amount = base_price * 0.13  # 13% HST (Ontario, Canada)
         subtotal = base_price + tax_amount
         
@@ -2179,7 +2251,7 @@ def process_checkout():
             'customer_address': customer_address,
             'customer_city': customer_city,
             'customer_state': customer_state,
-            'customer_area': customer_area,
+            'customer_area': customer_area or '',  # Optional for Canadian addresses
             'customer_pincode': customer_pincode,
             'applied_coupon': applied_coupon_code,
             'coupon_discount': discount_amount,
@@ -2211,10 +2283,18 @@ def process_checkout():
             )
             
             if not stripe_customer_id:
-                current_app.logger.error("Failed to create Stripe customer")
+                current_app.logger.error("Failed to create Stripe customer - check logs for details")
+                # Check if it's an API key issue
+                from utils.stripe_utils import get_stripe_api_key
+                api_key = get_stripe_api_key()
+                if not api_key:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Payment system configuration error. Please contact support.'
+                    }), 500
                 return jsonify({
                     'success': False,
-                    'error': 'Error creating customer. Please try again.'
+                    'error': 'Error creating customer. Please check your information and try again.'
                 }), 500
             
             # Save customer ID to user if exists
@@ -2236,10 +2316,26 @@ def process_checkout():
         )
         
         if not checkout_session:
-            current_app.logger.error("Failed to create Stripe checkout session")
+            current_app.logger.error("Failed to create Stripe checkout session - check server logs for details")
+            # Check if it's an API key issue
+            from utils.stripe_utils import get_stripe_api_key
+            api_key = get_stripe_api_key()
+            if not api_key:
+                return jsonify({
+                    'success': False,
+                    'error': 'Payment system is not configured. Please contact support.'
+                }), 500
+            
+            # Check if customer was created successfully
+            if not stripe_customer_id:
+                return jsonify({
+                    'success': False,
+                    'error': 'Error setting up payment. Please check your information and try again.'
+                }), 500
+            
             return jsonify({
                 'success': False,
-                'error': 'Error creating checkout session. Please try again.'
+                'error': 'Error creating checkout session. Please try again or contact support if the problem persists.'
             }), 500
         
         # Store checkout session ID
@@ -2252,10 +2348,13 @@ def process_checkout():
         })
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
         current_app.logger.error(f"Error processing checkout: {str(e)}")
+        current_app.logger.error(f"Traceback: {error_trace}")
         return jsonify({
             'success': False,
-            'error': 'An error occurred while processing your order. Please try again.'
+            'error': f'An error occurred while processing your order: {str(e)}. Please try again.'
         }), 500
 
 @main_bp.route('/stripe-webhook', methods=['POST'])
@@ -3222,6 +3321,13 @@ def get_additional_services():
         return jsonify({
             'success': True,
             'services': services_data
+        })
+    except ImportError:
+        # AdditionalService model doesn't exist yet - return empty list
+        current_app.logger.warning("AdditionalService model not found - returning empty services list")
+        return jsonify({
+            'success': True,
+            'services': []
         })
         
     except Exception as e:

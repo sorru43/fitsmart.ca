@@ -7,18 +7,66 @@ from flask import Blueprint, render_template, request, jsonify, flash, redirect,
 from flask_login import login_required
 from database.models import User, Order, Subscription, MealPlan, Holiday, db
 from datetime import datetime, timedelta
-from whatsapp_marketing_system import whatsapp_system
 import json
 
+# Import whatsapp_system with error handling
+try:
+    from whatsapp_marketing_system import whatsapp_system
+except (ImportError, Exception) as e:
+    # Set to None if import fails - will be handled in routes
+    whatsapp_system = None
+
 admin_whatsapp_bp = Blueprint('admin_whatsapp', __name__)
+
+# Context processor to make site settings and has_blueprint available to all admin_whatsapp templates
+@admin_whatsapp_bp.context_processor
+def inject_site_settings():
+    """Inject site settings and has_blueprint into all admin_whatsapp templates"""
+    def has_blueprint(blueprint_name):
+        """Check if a blueprint is registered"""
+        try:
+            return blueprint_name in current_app.blueprints
+        except:
+            return False
+    
+    try:
+        from database.models import SiteSetting
+        settings = {}
+        site_settings = SiteSetting.query.all()
+        for setting in site_settings:
+            settings[setting.key] = setting.value
+        
+        # Default values if not set
+        if 'site_logo' not in settings:
+            settings['site_logo'] = '/static/images/logo white.png'
+        if 'company_name' not in settings:
+            settings['company_name'] = 'FitSmart'
+        if 'company_tagline' not in settings:
+            settings['company_tagline'] = 'Healthy Meal Delivery'
+        
+        return {'site_settings': settings, 'has_blueprint': has_blueprint}
+    except Exception as e:
+        current_app.logger.error(f"Error loading site settings: {str(e)}")
+        return {
+            'site_settings': {
+                'site_logo': '/static/images/logo white.png',
+                'company_name': 'FitSmart',
+                'company_tagline': 'Healthy Meal Delivery'
+            }, 
+            'has_blueprint': has_blueprint
+        }
 
 @admin_whatsapp_bp.route('/admin/whatsapp-campaigns')
 @login_required
 def whatsapp_campaigns_dashboard():
     """WhatsApp campaigns dashboard"""
     try:
-        # Get campaign statistics
-        analytics = whatsapp_system.get_analytics() if hasattr(whatsapp_system, 'get_analytics') else {
+        # Check if whatsapp_system is available
+        if whatsapp_system is None:
+            current_app.logger.warning("whatsapp_system is not available - using default values")
+        
+        # Default analytics if whatsapp_system is not available
+        default_analytics = {
             'total_messages_sent': 0,
             'messages_delivered': 0,
             'messages_read': 0,
@@ -27,16 +75,36 @@ def whatsapp_campaigns_dashboard():
             'read_rate': 0.0
         }
         
+        # Get campaign statistics
+        if whatsapp_system and hasattr(whatsapp_system, 'get_analytics'):
+            try:
+                analytics = whatsapp_system.get_analytics()
+            except Exception as e:
+                current_app.logger.warning(f"Error getting analytics: {e}")
+                analytics = default_analytics
+        else:
+            analytics = default_analytics
+        
         # Get user segments for targeting
-        total_users = User.query.count()
-        active_users = User.query.filter_by(is_active=True).count()
-        new_users_this_week = User.query.filter(
-            User.created_at >= datetime.now() - timedelta(days=7)
-        ).count()
-        users_with_phone = User.query.filter(User.phone.isnot(None)).count()
+        try:
+            total_users = User.query.count()
+            active_users = User.query.filter_by(is_active=True).count()
+            new_users_this_week = User.query.filter(
+                User.created_at >= datetime.now() - timedelta(days=7)
+            ).count()
+            users_with_phone = User.query.filter(User.phone.isnot(None)).count()
+        except Exception as e:
+            current_app.logger.warning(f"Error getting user statistics: {e}")
+            total_users = 0
+            active_users = 0
+            new_users_this_week = 0
+            users_with_phone = 0
         
         # Get available templates
-        templates = whatsapp_system.templates
+        if whatsapp_system and hasattr(whatsapp_system, 'templates'):
+            templates = whatsapp_system.templates
+        else:
+            templates = {}
         
         return render_template('admin/whatsapp_campaigns/dashboard.html',
                             analytics=analytics,
@@ -46,8 +114,8 @@ def whatsapp_campaigns_dashboard():
                             users_with_phone=users_with_phone,
                             templates=templates)
     except Exception as e:
-        current_app.logger.error(f"Error in WhatsApp campaigns dashboard: {str(e)}")
-        flash('Error loading WhatsApp campaigns dashboard', 'error')
+        current_app.logger.error(f"Error loading WhatsApp campaigns dashboard: {str(e)}", exc_info=True)
+        flash(f'Error loading WhatsApp campaigns dashboard: {str(e)}', 'error')
         return redirect(url_for('admin.admin_dashboard'))
 
 @admin_whatsapp_bp.route('/admin/whatsapp-campaigns/welcome-message')

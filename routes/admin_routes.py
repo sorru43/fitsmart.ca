@@ -46,6 +46,23 @@ from utils.meal_tracking import MealTracker
 # Configure logger
 logger = logging.getLogger(__name__)
 
+# Canadian provinces/territories for admin forms and dropdowns
+CANADIAN_PROVINCES = [
+    ('AB', 'Alberta'),
+    ('BC', 'British Columbia'),
+    ('MB', 'Manitoba'),
+    ('NB', 'New Brunswick'),
+    ('NL', 'Newfoundland and Labrador'),
+    ('NS', 'Nova Scotia'),
+    ('NT', 'Northwest Territories'),
+    ('NU', 'Nunavut'),
+    ('ON', 'Ontario'),
+    ('PE', 'Prince Edward Island'),
+    ('QC', 'Quebec'),
+    ('SK', 'Saskatchewan'),
+    ('YT', 'Yukon')
+]
+
 # Create Blueprint with explicit name and url_prefix
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin', template_folder='templates')
 
@@ -270,7 +287,13 @@ def admin_dashboard():
 @login_required
 @admin_required
 def admin_location_tree():
-    return render_template('admin/locations.html')
+    """Admin location management page showing DeliveryLocation data"""
+    from database.models import DeliveryLocation
+    locations = DeliveryLocation.query.order_by(
+        DeliveryLocation.province, 
+        DeliveryLocation.city
+    ).all()
+    return render_template('admin/location_tree.html', locations=locations)
 
 # --- AJAX CRUD for State ---
 @admin_bp.route('/locations/state', methods=['GET', 'POST'])
@@ -992,19 +1015,37 @@ def admin_add_location():
     from flask import current_app, request, flash, redirect, url_for
     
     if request.method == 'POST':
-        city = request.form.get('city')
-        province = request.form.get('province')
+        city = request.form.get('city', '').strip()
+        province = request.form.get('province', '').strip()
+        postal_code_prefix = request.form.get('postal_code_prefix', '').strip().upper()
         is_active = 'is_active' in request.form
+        
+        province_names = [name for _, name in CANADIAN_PROVINCES]
         
         # Validate inputs
         if not city or not province:
-            flash('City and province are required', 'error')
+            flash('City and province/territory are required', 'error')
+            return redirect(url_for('admin.admin_add_location'))
+        
+        if province not in province_names:
+            flash('Please select a valid province or territory', 'error')
+            return redirect(url_for('admin.admin_add_location'))
+        
+        # Convert province name to code (database stores 2-character codes)
+        province_code = None
+        for code, name in CANADIAN_PROVINCES:
+            if name == province:
+                province_code = code
+                break
+        
+        if not province_code:
+            flash('Invalid province selected', 'error')
             return redirect(url_for('admin.admin_add_location'))
         
         # Check if location already exists
         existing_location = DeliveryLocation.query.filter_by(
             city=city,
-            province=province
+            province=province_code
         ).first()
         
         if existing_location:
@@ -1015,11 +1056,11 @@ def admin_add_location():
             # Clear session to ensure clean state
             db.session.expire_all()
             
-            # Create new location
+            # Create new location (store province code, not name)
             new_location = DeliveryLocation(
                 city=city,
-                province=province,
-                postal_code_prefix='',  # Set to empty string instead of NULL
+                province=province_code,
+                postal_code_prefix=postal_code_prefix or None,
                 is_active=is_active
             )
             
@@ -1038,7 +1079,7 @@ def admin_add_location():
             flash(f'Error adding location: {str(e)}', 'error')
             return redirect(url_for('admin.admin_add_location'))
     
-    return render_template('admin/add_location.html')
+    return render_template('admin/add_location.html', provinces=CANADIAN_PROVINCES)
 
 @admin_bp.route('/locations/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -1052,19 +1093,37 @@ def admin_edit_location(id):
     location = DeliveryLocation.query.get_or_404(id)
     
     if request.method == 'POST':
-        city = request.form.get('city')
-        province = request.form.get('province')
+        city = request.form.get('city', '').strip()
+        province = request.form.get('province', '').strip()
+        postal_code_prefix = request.form.get('postal_code_prefix', '').strip().upper()
         is_active = 'is_active' in request.form
+        
+        province_names = [name for _, name in CANADIAN_PROVINCES]
         
         # Validate inputs
         if not city or not province:
             flash('All fields are required', 'error')
             return redirect(url_for('admin.admin_edit_location', id=id))
         
+        if province not in province_names:
+            flash('Please select a valid province or territory', 'error')
+            return redirect(url_for('admin.admin_edit_location', id=id))
+        
+        # Convert province name to code (database stores 2-character codes)
+        province_code = None
+        for code, name in CANADIAN_PROVINCES:
+            if name == province:
+                province_code = code
+                break
+        
+        if not province_code:
+            flash('Invalid province selected', 'error')
+            return redirect(url_for('admin.admin_edit_location', id=id))
+        
         # Check if another location with the same city+province exists
         existing_location = DeliveryLocation.query.filter(
             DeliveryLocation.city == city,
-            DeliveryLocation.province == province,
+            DeliveryLocation.province == province_code,
             DeliveryLocation.id != id
         ).first()
         
@@ -1073,9 +1132,10 @@ def admin_edit_location(id):
             return redirect(url_for('admin.admin_location_tree'))
         
         try:
-            # Update location
+            # Update location (store province code, not name)
             location.city = city
-            location.province = province
+            location.province = province_code
+            location.postal_code_prefix = postal_code_prefix or None
             location.is_active = is_active
             
             db.session.commit()
@@ -1089,7 +1149,7 @@ def admin_edit_location(id):
             flash(f'Error updating location: {str(e)}', 'error')
             return redirect(url_for('admin.admin_edit_location', id=id))
     
-    return render_template('admin/edit_location.html', location=location)
+    return render_template('admin/edit_location.html', location=location, provinces=CANADIAN_PROVINCES)
 
 @admin_bp.route('/notifications')
 @login_required
@@ -1424,15 +1484,44 @@ def admin_coupons():
 @login_required
 @admin_required
 def admin_delete_coupon(id):
-    """Delete a coupon"""
+    """Delete a coupon and its associated usage records"""
+    from database.models import CouponUsage
     try:
         coupon = CouponCode.query.get_or_404(id)
+        
+        # Check if coupon has usage records
+        usage_count = CouponUsage.query.filter_by(coupon_id=id).count()
+        
+        # Delete all associated CouponUsage records first (to avoid foreign key constraint)
+        if usage_count > 0:
+            CouponUsage.query.filter_by(coupon_id=id).delete()
+            current_app.logger.info(f"Deleted {usage_count} usage records for coupon {coupon.code}")
+        
+        # Now delete the coupon
         db.session.delete(coupon)
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Coupon deleted successfully'})
+        
+        current_app.logger.info(f"Successfully deleted coupon {coupon.code} (ID: {id})")
+        return jsonify({
+            'success': True, 
+            'message': f'Coupon deleted successfully. {usage_count} usage record(s) were also removed.'
+        })
     except Exception as e:
-        current_app.logger.error(f"Error deleting coupon: {str(e)}")
-        return jsonify({'success': False, 'message': 'An error occurred while deleting the coupon'}), 500
+        db.session.rollback()
+        error_msg = str(e)
+        current_app.logger.error(f"Error deleting coupon {id}: {error_msg}")
+        
+        # Provide more specific error message
+        if 'foreign key constraint' in error_msg.lower() or 'foreign key' in error_msg.lower():
+            return jsonify({
+                'success': False, 
+                'message': 'Cannot delete coupon because it has associated usage records. Please contact support.'
+            }), 500
+        else:
+            return jsonify({
+                'success': False, 
+                'message': f'An error occurred while deleting the coupon: {error_msg}'
+            }), 500
 
 @admin_bp.route('/coupons/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
