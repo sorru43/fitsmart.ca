@@ -135,6 +135,7 @@ def create_stripe_checkout_session(customer_id, meal_plan_name, price_amount, fr
         )
         
         # Create the checkout session
+        # Note: Stripe will replace {CHECKOUT_SESSION_ID} with the actual session ID
         session = stripe.checkout.Session.create(
             customer=customer_id,
             payment_method_types=['card'],
@@ -143,7 +144,7 @@ def create_stripe_checkout_session(customer_id, meal_plan_name, price_amount, fr
                 'quantity': 1
             }],
             mode='subscription',
-            success_url=success_url,
+            success_url=success_url,  # Should include ?session_id={CHECKOUT_SESSION_ID}
             cancel_url=cancel_url,
             metadata={
                 'meal_plan_name': meal_plan_name,
