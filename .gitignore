@@ -101,3 +101,5 @@ dmypy.json
 
 instance/*.db
 instance/healthyrizz.db
+.env
+.env
