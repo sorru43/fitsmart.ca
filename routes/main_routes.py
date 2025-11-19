@@ -2303,7 +2303,8 @@ def process_checkout():
                 db.session.commit()
         
         # Create Stripe checkout session
-        success_url = url_for('main.checkout_success', _external=True)
+        # Pass session_id in success URL so we can retrieve it from Stripe
+        success_url = url_for('main.checkout_success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}'
         cancel_url = url_for('main.meal_plans', _external=True)
         
         checkout_session = create_stripe_checkout_session(
@@ -2552,13 +2553,127 @@ def _cancel_stripe_subscription(subscription_data):
 @main_bp.route('/checkout-success')
 def checkout_success():
     """
-    Handle successful checkout using order_id parameter.
+    Handle successful checkout using Stripe session_id or order_id parameter.
     """
     try:
-        # Get order_id from URL parameter
+        # Get session_id from URL parameter (from Stripe redirect)
+        stripe_session_id = request.args.get('session_id')
         order_id = request.args.get('order_id')
         
-        if not order_id:
+        # If we have Stripe session_id, retrieve data from Stripe
+        if stripe_session_id:
+            try:
+                from utils.stripe_utils import get_stripe_api_key
+                import stripe
+                
+                api_key = get_stripe_api_key()
+                if api_key:
+                    stripe.api_key = api_key
+                    
+                    # Retrieve the checkout session from Stripe
+                    checkout_session = stripe.checkout.Session.retrieve(stripe_session_id)
+                    
+                    # Get customer ID and subscription ID from Stripe
+                    stripe_customer_id = checkout_session.get('customer')
+                    stripe_subscription_id = checkout_session.get('subscription')
+                    
+                    if stripe_customer_id:
+                        # Find user by Stripe customer ID
+                        user = User.query.filter_by(stripe_customer_id=stripe_customer_id).first()
+                        
+                        if user:
+                            # Find subscription by Stripe subscription ID
+                            subscription = None
+                            if stripe_subscription_id:
+                                subscription = Subscription.query.filter_by(
+                                    stripe_subscription_id=stripe_subscription_id
+                                ).first()
+                            
+                            # If no subscription found, find most recent one for this user
+                            if not subscription:
+                                subscription = Subscription.query.filter_by(
+                                    user_id=user.id
+                                ).order_by(Subscription.created_at.desc()).first()
+                            
+                            # Find order
+                            order = None
+                            if subscription:
+                                order = Order.query.filter_by(
+                                    user_id=user.id,
+                                    meal_plan_id=subscription.meal_plan_id
+                                ).order_by(Order.created_at.desc()).first()
+                            
+                            # Get meal plan
+                            meal_plan = None
+                            if subscription:
+                                meal_plan = MealPlan.query.get(subscription.meal_plan_id)
+                            
+                            # If subscription/order don't exist yet (webhook hasn't run), create them
+                            if not subscription or not order:
+                                # Get metadata from Stripe session
+                                metadata = checkout_session.get('metadata', {})
+                                plan_name = metadata.get('meal_plan_name', '')
+                                
+                                # Try to find meal plan by name
+                                if plan_name:
+                                    meal_plan = MealPlan.query.filter(
+                                        MealPlan.name.ilike(f'%{plan_name}%')
+                                    ).first()
+                                
+                                # If we have meal plan, create subscription and order
+                                if meal_plan and not subscription:
+                                    from database.models import SubscriptionFrequency, SubscriptionStatus
+                                    frequency_str = metadata.get('frequency', 'weekly')
+                                    frequency = SubscriptionFrequency.WEEKLY if frequency_str == 'weekly' else SubscriptionFrequency.MONTHLY
+                                    
+                                    subscription = Subscription(
+                                        user_id=user.id,
+                                        meal_plan_id=meal_plan.id,
+                                        frequency=frequency,
+                                        status=SubscriptionStatus.ACTIVE,
+                                        stripe_customer_id=stripe_customer_id,
+                                        stripe_subscription_id=stripe_subscription_id,
+                                        start_date=datetime.now(),
+                                        current_period_start=datetime.now(),
+                                        current_period_end=datetime.now() + timedelta(days=7 if frequency == SubscriptionFrequency.WEEKLY else 30),
+                                        price=meal_plan.price_weekly if frequency == SubscriptionFrequency.WEEKLY else meal_plan.price_monthly
+                                    )
+                                    db.session.add(subscription)
+                                    
+                                    # Create order
+                                    order = Order(
+                                        user_id=user.id,
+                                        meal_plan_id=meal_plan.id,
+                                        amount=subscription.price,
+                                        total_amount=subscription.price,
+                                        status='confirmed',
+                                        payment_status='captured',
+                                        payment_id=stripe_session_id,
+                                        order_id=stripe_session_id
+                                    )
+                                    db.session.add(order)
+                                    db.session.commit()
+                            
+                            if subscription and meal_plan:
+                                # Log user in if not already logged in
+                                if not current_user.is_authenticated:
+                                    login_user(user, remember=True)
+                                
+                                return render_template('checkout_success.html', 
+                                                      order=order,
+                                                      subscription=subscription, 
+                                                      plan=meal_plan,
+                                                      user=user)
+            except Exception as e:
+                current_app.logger.error(f"Error retrieving Stripe session: {str(e)}")
+                import traceback
+                current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+                # Fall through to other methods
+        
+        if order_id:
+            # Use order_id method (existing code continues below)
+            pass
+        else:
             # Fallback: try to get from session (for backward compatibility)
             checkout_data = session.get('checkout_data')
             checkout_session_id = session.get('checkout_session_id')
@@ -2589,8 +2704,18 @@ def checkout_success():
                 flash('Meal plan not found. Please try again.', 'warning')
                 return redirect(url_for('main.meal_plans'))
             
-            # Get user ID from session
+            # Get user ID from session or try to find by email
             user_id = session.get('user_id')
+            
+            if not user_id:
+                # Try to find user by email from checkout data
+                customer_email = checkout_data.get('customer_email')
+                if customer_email:
+                    user = User.query.filter_by(email=customer_email).first()
+                    if user:
+                        user_id = user.id
+                        # Log user in
+                        login_user(user, remember=True)
             
             if not user_id:
                 flash('User session expired. Please try again.', 'warning')
