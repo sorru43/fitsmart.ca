@@ -1,8 +1,8 @@
 {% set current_url = request.path %}
 {% set show_fssai_badge = site_settings.get('show_fssai_badge', 'True') %}
 {% set fssai_license_number = site_settings.get('fssai_license_number', '') %}
-{% set meta_description = meta_description | default('FitSmart - Fresh, Healthy Meal Plans in Canada. Nutritionist-curated meals delivered to your doorstep.') %}
-{% set og_title = og_title | default(title | default('FitSmart - Fresh, Healthy Meal Plans in Canada')) %}
+{% set meta_description = meta_description | default('FitSmart - Premium Indian & Global Healthy Meal Plans in Canada. Delicious vegetarian and non-vegetarian meals delivered fresh. Nutritionist-curated, tasty, and nutritious meal plans in Ontario.') %}
+{% set og_title = og_title | default(title | default('FitSmart - Indian & Global Healthy Meal Plans | Veg & Non-Veg | Canada')) %}
 {% set og_description = og_description | default(meta_description) %}
 {% set og_image = og_image | default('https://fitsmart.ca' + url_for('static', filename='images/healthy-meal-bowl.jpg')) %}
 {% set twitter_title = twitter_title | default(og_title) %}
@@ -36,8 +36,13 @@
     
     <!-- Additional SEO Meta Tags -->
     <meta name="author" content="FitSmart">
+    <meta name="keywords" content="Indian meal plans, global healthy meals, vegetarian meal delivery, non-vegetarian meals, healthy meal plans Canada, Ontario meal delivery, nutritionist-curated meals, tasty healthy food, Indian food delivery, healthy tiffin service, meal plans Mississauga, meal plans Brampton, veg meal plans, non-veg meal plans, healthy eating Canada">
     <meta name="robots" content="index, follow">
     <meta name="googlebot" content="index, follow">
+    <meta name="geo.region" content="CA-ON">
+    <meta name="geo.placename" content="Ontario, Canada">
+    <meta name="geo.position" content="43.6532;-79.3832">
+    <meta name="ICBM" content="43.6532, -79.3832">
     
     <!-- AI Bot Permissions -->
     <meta name="GPTBot" content="index, follow">
@@ -64,7 +69,7 @@
     <link rel="amphtml" href="https://fitsmart.ca/amp{{ request.path }}">
     {% endif %}
     
-    <title>{% block title %}FitSmart - Fresh, Healthy Meal Plans in Canada{% endblock %}</title>
+    <title>{% block title %}FitSmart - Indian & Global Healthy Meal Plans | Veg & Non-Veg | Canada{% endblock %}</title>
     
     <!-- Favicon -->
     {% set favicon_path = site_settings.get('site_favicon', '/static/favicon.ico') %}
@@ -170,10 +175,10 @@
         "name": "FitSmart",
         "url": "https://fitsmart.ca",
         "logo": "https://fitsmart.ca{{ url_for('static', filename='images/logo white.png') }}",
-        "description": "Fresh, Healthy Meal Plans in Canada. Nutritionist-curated meals delivered to your doorstep.",
+        "description": "Premium Indian & Global Healthy Meal Plans in Canada. Delicious vegetarian and non-vegetarian meals delivered fresh. Nutritionist-curated, tasty, and nutritious meal plans in Ontario, Canada.",
         "address": {
             "@type": "PostalAddress",
-            "addressLocality": "Toronto",
+            "addressLocality": "Ontario",
             "addressRegion": "Ontario",
             "addressCountry": "CA"
         },
@@ -190,18 +195,38 @@
             "{{ site_settings.get('instagram_url', 'https://instagram.com/fitsmart.ca') }}"
         ],
         "foundingDate": "2024",
-        "areaServed": "Canada",
-        "serviceType": "Meal Delivery Service",
+        "areaServed": {
+            "@type": "Country",
+            "name": "Canada"
+        },
+        "serviceType": ["Meal Delivery Service", "Indian Meal Plans", "Global Cuisine", "Vegetarian Meals", "Non-Vegetarian Meals"],
+        "keywords": "Indian meal plans, global healthy meals, vegetarian meal delivery, non-vegetarian meals, healthy meal plans Canada, Ontario meal delivery, nutritionist-curated meals, tasty healthy food, meal plans Mississauga, meal plans Brampton",
         "hasOfferCatalog": {
             "@type": "OfferCatalog",
-            "name": "Healthy Meal Plans",
+            "name": "Indian & Global Healthy Meal Plans",
             "itemListElement": [
                 {
                     "@type": "Offer",
                     "itemOffered": {
                         "@type": "Service",
+                        "name": "Indian Healthy Meal Plans",
+                        "description": "Authentic Indian vegetarian and non-vegetarian meals, nutritionist-curated and delivered fresh"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Global Healthy Meal Plans",
+                        "description": "International cuisine meal plans with balanced nutrition, available in vegetarian and non-vegetarian options"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
                         "name": "Weekly Meal Plan",
-                        "description": "Fresh, nutritious meals delivered weekly"
+                        "description": "Fresh, nutritious Indian and global meals delivered weekly - veg and non-veg options available"
                     }
                 },
                 {
@@ -209,11 +234,97 @@
                     "itemOffered": {
                         "@type": "Service",
                         "name": "Monthly Meal Plan",
-                        "description": "Comprehensive monthly nutrition program"
+                        "description": "Comprehensive monthly nutrition program with Indian and global cuisine - vegetarian and non-vegetarian options"
                     }
                 }
             ]
         }
+    }
+    </script>
+    
+    <!-- LocalBusiness Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FoodEstablishment",
+        "@id": "https://fitsmart.ca/#organization",
+        "name": "FitSmart",
+        "image": "https://fitsmart.ca{{ url_for('static', filename='images/healthy-meal-bowl.jpg') }}",
+        "description": "Premium Indian & Global Healthy Meal Plans in Canada. Delicious vegetarian and non-vegetarian meals delivered fresh. Nutritionist-curated, tasty, and nutritious meal plans available in Ontario.",
+        "url": "https://fitsmart.ca",
+        "telephone": "{{ site_settings.get('contact_phone', '') }}",
+        "email": "{{ site_settings.get('contact_email', '') }}",
+        "address": {
+            "@type": "PostalAddress",
+            "addressRegion": "Ontario",
+            "addressCountry": "CA"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": "43.6532",
+            "longitude": "-79.3832"
+        },
+        "areaServed": [
+            {
+                "@type": "City",
+                "name": "Mississauga",
+                "containedIn": {
+                    "@type": "State",
+                    "name": "Ontario"
+                }
+            },
+            {
+                "@type": "City",
+                "name": "Brampton",
+                "containedIn": {
+                    "@type": "State",
+                    "name": "Ontario"
+                }
+            },
+            {
+                "@type": "State",
+                "name": "Ontario"
+            },
+            {
+                "@type": "Country",
+                "name": "Canada"
+            }
+        ],
+        "servesCuisine": ["Indian", "Global", "Healthy", "Vegetarian", "Non-Vegetarian"],
+        "priceRange": "$$",
+        "menu": "https://fitsmart.ca/meal-plans",
+        "acceptsReservations": "False",
+        "hasMenu": {
+            "@type": "Menu",
+            "name": "Meal Plans",
+            "url": "https://fitsmart.ca/meal-plans",
+            "hasMenuSection": [
+                {
+                    "@type": "MenuSection",
+                    "name": "Indian Meal Plans",
+                    "description": "Authentic Indian vegetarian and non-vegetarian healthy meals"
+                },
+                {
+                    "@type": "MenuSection",
+                    "name": "Global Meal Plans",
+                    "description": "International healthy cuisine with balanced nutrition"
+                },
+                {
+                    "@type": "MenuSection",
+                    "name": "Vegetarian Plans",
+                    "description": "Plant-based healthy meal plans"
+                },
+                {
+                    "@type": "MenuSection",
+                    "name": "Non-Vegetarian Plans",
+                    "description": "Protein-rich healthy meal plans"
+                }
+            ]
+        },
+        "sameAs": [
+            "{{ site_settings.get('facebook_url', 'https://facebook.com/fitsmart') }}",
+            "{{ site_settings.get('instagram_url', 'https://instagram.com/fitsmart.ca') }}"
+        ]
     }
     </script>
     

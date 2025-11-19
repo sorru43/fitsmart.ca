@@ -211,6 +211,10 @@ def index():
             
             hero_slides = [MockHeroSlide('/static/uploads/20250629_165207_herobanner.webp')]
         
+        # Set SEO meta tags for homepage
+        meta_description = "FitSmart - Premium Indian & Global Healthy Meal Plans in Canada. Delicious vegetarian and non-vegetarian meals delivered fresh. Nutritionist-curated, tasty, and nutritious meal plans available in Ontario. Order now!"
+        og_title = "FitSmart - Indian & Global Healthy Meal Plans | Veg & Non-Veg | Canada"
+        
         # Create template context with proper CSRF handling
         template_context = {
             'faqs': faqs or [],
@@ -220,7 +224,9 @@ def index():
             'meal_plans': meal_plans or [],
             'full_width_sections': full_width_sections or [],
             'site_settings': site_settings or {},
-            'now': datetime.now()
+            'now': datetime.now(),
+            'meta_description': meta_description,
+            'og_title': og_title
         }
         
         # Ensure site_settings has ALL the required defaults for the template
@@ -637,7 +643,14 @@ def meal_plans():
         except Exception as e:
             current_app.logger.error(f'Error setting meal plans tracking: {str(e)}')
         
-        return render_template('meal-plans.html', meal_plans=plans)
+        # Set SEO meta tags for meal plans page
+        meta_description = "Browse our premium Indian & Global healthy meal plans in Canada. Choose from vegetarian and non-vegetarian options. Nutritionist-curated, tasty meals delivered fresh. Available in Ontario."
+        og_title = "Meal Plans - Indian & Global Healthy Meals | Veg & Non-Veg | FitSmart Canada"
+        
+        return render_template('meal-plans.html', 
+                              meal_plans=plans,
+                              meta_description=meta_description,
+                              og_title=og_title)
         
     except Exception as e:
         current_app.logger.error(f"Error loading meal plans: {e}")
@@ -1107,8 +1120,20 @@ def google_login():
         state = secrets.token_urlsafe(32)
         session['oauth_state'] = state
         
-        # Get redirect URI
+        # Get redirect URI - ensure it matches Google Cloud Console exactly
         redirect_uri = url_for('main.google_callback', _external=True)
+        
+        # Log the redirect URI for debugging
+        current_app.logger.info(f"Google OAuth redirect URI: {redirect_uri}")
+        current_app.logger.info(f"Request URL: {request.url}")
+        current_app.logger.info(f"Request host: {request.host}")
+        current_app.logger.info(f"Request scheme: {request.scheme}")
+        
+        # Ensure redirect URI uses HTTPS in production
+        if redirect_uri.startswith('http://') and not current_app.debug:
+            # Force HTTPS in production
+            redirect_uri = redirect_uri.replace('http://', 'https://')
+            current_app.logger.info(f"Updated redirect URI to HTTPS: {redirect_uri}")
         
         # Redirect to Google OAuth
         return current_app.google_oauth.authorize_redirect(redirect_uri, state=state)
