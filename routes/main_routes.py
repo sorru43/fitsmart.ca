@@ -3306,6 +3306,13 @@ def get_additional_services():
             'success': True,
             'services': services_data
         })
+    except ImportError:
+        # AdditionalService model doesn't exist yet - return empty list
+        current_app.logger.warning("AdditionalService model not found - returning empty services list")
+        return jsonify({
+            'success': True,
+            'services': []
+        })
         
     except Exception as e:
         current_app.logger.error(f"Error getting additional services: {str(e)}")
