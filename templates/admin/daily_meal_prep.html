@@ -169,30 +169,30 @@
                                     <h4 class="text-primary">{{ plan_data.name }}</h4>
                                     <div class="meal-counts">
                                         <span class="badge badge-success mr-2">
-                                            <i class="fas fa-leaf"></i> {{ plan_data.veg_count }} Veg
+                                            <i class="fas fa-leaf"></i> This meals {{ plan_data.veg_count }} (Veg)
                                         </span>
                                         {% if plan_data.nonveg_count > 0 %}
                                         <span class="badge badge-danger mr-2">
-                                            <i class="fas fa-drumstick-bite"></i> {{ plan_data.nonveg_count }} Non-Veg
+                                            <i class="fas fa-drumstick-bite"></i> This meals {{ plan_data.nonveg_count }} (Non-Veg)
                                         </span>
                                         {% endif %}
                                         {% if plan_data.breakfast_count > 0 %}
                                         <span class="badge badge-warning mr-2">
-                                            <i class="fas fa-coffee"></i> {{ plan_data.breakfast_count }} Breakfast
+                                            <i class="fas fa-coffee"></i> This meals {{ plan_data.breakfast_count }} (Breakfast)
                                         </span>
                                         {% endif %}
                                         {% if plan_data.lunch_count > 0 %}
                                         <span class="badge badge-primary mr-2">
-                                            <i class="fas fa-sun"></i> {{ plan_data.lunch_count }} Lunch
+                                            <i class="fas fa-sun"></i> This meals {{ plan_data.lunch_count }} (Lunch)
                                         </span>
                                         {% endif %}
                                         {% if plan_data.dinner_count > 0 %}
                                         <span class="badge badge-dark mr-2">
-                                            <i class="fas fa-moon"></i> {{ plan_data.dinner_count }} Dinner
+                                            <i class="fas fa-moon"></i> This meals {{ plan_data.dinner_count }} (Dinner)
                                         </span>
                                         {% endif %}
                                         <span class="badge badge-info">
-                                            <i class="fas fa-utensils"></i> {{ plan_data.total_count }} Total
+                                            <i class="fas fa-utensils"></i> Total: {{ plan_data.total_count }}
                                         </span>
                                     </div>
                                 </div>

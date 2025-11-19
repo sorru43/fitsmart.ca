@@ -7,7 +7,7 @@ This file contains all email functions needed for the application
 
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import current_app, render_template, url_for
 from flask_mail import Message
 from extensions import mail
@@ -432,24 +432,244 @@ The FitSmart Team
         logger.error(f"Failed to send payment failed email to {order.customer_email}: {str(e)}")
         return False
 
-def send_payment_reminder_email(subscription):
+def send_payment_success_email(user, subscription, amount, period_end):
     """
-    Send payment reminder email
+    Send payment success email for recurring subscription payment
     
     Args:
+        user: User object
         subscription: Subscription object
+        amount: Amount paid (float)
+        period_end: Period end date (datetime)
     Returns:
         bool: True if email sent successfully, False otherwise
     """
     try:
-        subject = "⏰ Payment Reminder - Your Subscription Renewal"
+        subject = f"✅ Payment Successful - Your {subscription.meal_plan.name} Subscription Renewed"
         
-        # Get the next payment date, handling different attribute names
-        next_payment_date = None
-        if hasattr(subscription, 'next_payment_date') and subscription.next_payment_date:
-            next_payment_date = subscription.next_payment_date
-        elif hasattr(subscription, 'next_billing_date') and subscription.next_billing_date:
-            next_payment_date = subscription.next_billing_date
+        html_content = f"""
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #10b981; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }}
+                .content {{ background: #f9f9f9; padding: 20px; border-radius: 8px; }}
+                .success {{ background: #d1fae5; border: 1px solid #10b981; padding: 15px; border-radius: 6px; margin: 15px 0; }}
+                .subscription-details {{ background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+                .footer {{ text-align: center; color: #666; font-size: 14px; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>✅ Payment Successful!</h1>
+                <p>Your Subscription Has Been Renewed</p>
+            </div>
+            
+            <div class="content">
+                <div class="success">
+                    <h2>🎉 Payment Confirmed!</h2>
+                    <p>Hello {user.name},</p>
+                    <p>Great news! Your recurring payment has been processed successfully. Your subscription has been renewed and your meal deliveries will continue without interruption.</p>
+                </div>
+                
+                <div class="subscription-details">
+                    <h3>📋 Payment Details</h3>
+                    <p><strong>Meal Plan:</strong> {subscription.meal_plan.name}</p>
+                    <p><strong>Amount Paid:</strong> ${amount:.2f} CAD</p>
+                    <p><strong>Payment Date:</strong> {datetime.now().strftime('%B %d, %Y')}</p>
+                    <p><strong>Next Billing Date:</strong> {period_end.strftime('%B %d, %Y')}</p>
+                    <p><strong>Frequency:</strong> {subscription.frequency.value.title()}</p>
+                </div>
+                
+                <div class="subscription-details">
+                    <h3>🚀 What's Next?</h3>
+                    <p>Your meal deliveries will continue as scheduled. No action is required from you - we'll automatically process your next payment on {period_end.strftime('%B %d, %Y')}.</p>
+                </div>
+                
+                <p>Thank you for being a valued FitSmart customer!</p>
+                
+                <p>Best regards,<br>The FitSmart Team</p>
+            </div>
+            
+            <div class="footer">
+                <p>This is an automated email from FitSmart.</p>
+                <p>&copy; {datetime.now().year} FitSmart. All rights reserved.</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_content = f"""
+Payment Successful - Subscription Renewed
+
+Hello {user.name},
+
+Great news! Your recurring payment has been processed successfully. Your subscription has been renewed and your meal deliveries will continue without interruption.
+
+Payment Details:
+- Meal Plan: {subscription.meal_plan.name}
+- Amount Paid: ${amount:.2f} CAD
+- Payment Date: {datetime.now().strftime('%B %d, %Y')}
+- Next Billing Date: {period_end.strftime('%B %d, %Y')}
+- Frequency: {subscription.frequency.value.title()}
+
+Your meal deliveries will continue as scheduled. No action is required from you - we'll automatically process your next payment on {period_end.strftime('%B %d, %Y')}.
+
+Thank you for being a valued FitSmart customer!
+
+Best regards,
+The FitSmart Team
+        """
+        
+        return send_email(
+            to_email=user.email,
+            from_email=os.getenv('MAIL_DEFAULT_SENDER', 'no-reply@fitsmart.ca'),
+            subject=subject,
+            html_content=html_content,
+            text_content=text_content
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to send payment success email to {user.email}: {str(e)}")
+        return False
+
+def send_payment_failed_email(user, subscription, amount, attempt_count):
+    """
+    Send payment failed email for recurring subscription payment
+    
+    Args:
+        user: User object
+        subscription: Subscription object
+        amount: Amount due (float)
+        attempt_count: Number of payment attempts (int)
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        subject = f"⚠️ Payment Failed - Action Required for Your {subscription.meal_plan.name} Subscription"
+        
+        html_content = f"""
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: #ef4444; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }}
+                .content {{ background: #f9f9f9; padding: 20px; border-radius: 8px; }}
+                .warning {{ background: #fee2e2; border: 1px solid #ef4444; padding: 15px; border-radius: 6px; margin: 15px 0; }}
+                .subscription-details {{ background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+                .button {{ display: inline-block; background: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 15px 0; }}
+                .footer {{ text-align: center; color: #666; font-size: 14px; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>⚠️ Payment Failed</h1>
+                <p>Action Required</p>
+            </div>
+            
+            <div class="content">
+                <div class="warning">
+                    <h2>Payment Could Not Be Processed</h2>
+                    <p>Hello {user.name},</p>
+                    <p>We attempted to process your recurring payment for your {subscription.meal_plan.name} subscription, but it was unsuccessful. This is attempt #{attempt_count}.</p>
+                </div>
+                
+                <div class="subscription-details">
+                    <h3>📋 Payment Details</h3>
+                    <p><strong>Meal Plan:</strong> {subscription.meal_plan.name}</p>
+                    <p><strong>Amount Due:</strong> ${amount:.2f} CAD</p>
+                    <p><strong>Attempt Number:</strong> {attempt_count}</p>
+                    <p><strong>Frequency:</strong> {subscription.frequency.value.title()}</p>
+                </div>
+                
+                <div class="subscription-details">
+                    <h3>🔧 What You Need to Do</h3>
+                    <ol>
+                        <li><strong>Update Your Payment Method:</strong> Log into your account and update your payment information</li>
+                        <li><strong>Check Your Card:</strong> Ensure your card has sufficient funds and is not expired</li>
+                        <li><strong>Contact Your Bank:</strong> Verify there are no restrictions on your card</li>
+                    </ol>
+                    <p><a href="https://fitsmart.ca/profile" class="button">Update Payment Method</a></p>
+                </div>
+                
+                <div class="warning">
+                    <h3>⚠️ Important</h3>
+                    <p>If payment is not updated within 3 attempts, your subscription will be automatically cancelled and meal deliveries will stop.</p>
+                </div>
+                
+                <p>Need help? Contact us at fitsmart.ca@gmail.com or call us for assistance.</p>
+                
+                <p>Best regards,<br>The FitSmart Team</p>
+            </div>
+            
+            <div class="footer">
+                <p>This is an automated email from FitSmart.</p>
+                <p>&copy; {datetime.now().year} FitSmart. All rights reserved.</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_content = f"""
+Payment Failed - Action Required
+
+Hello {user.name},
+
+We attempted to process your recurring payment for your {subscription.meal_plan.name} subscription, but it was unsuccessful. This is attempt #{attempt_count}.
+
+Payment Details:
+- Meal Plan: {subscription.meal_plan.name}
+- Amount Due: ${amount:.2f} CAD
+- Attempt Number: {attempt_count}
+- Frequency: {subscription.frequency.value.title()}
+
+What You Need to Do:
+1. Update Your Payment Method: Log into your account and update your payment information
+2. Check Your Card: Ensure your card has sufficient funds and is not expired
+3. Contact Your Bank: Verify there are no restrictions on your card
+
+Update Payment Method: https://fitsmart.ca/profile
+
+IMPORTANT: If payment is not updated within 3 attempts, your subscription will be automatically cancelled and meal deliveries will stop.
+
+Need help? Contact us at fitsmart.ca@gmail.com
+
+Best regards,
+The FitSmart Team
+        """
+        
+        return send_email(
+            to_email=user.email,
+            from_email=os.getenv('MAIL_DEFAULT_SENDER', 'no-reply@fitsmart.ca'),
+            subject=subject,
+            html_content=html_content,
+            text_content=text_content
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to send payment failed email to {user.email}: {str(e)}")
+        return False
+
+def send_payment_reminder_email(user=None, subscription=None, amount=None, due_date=None):
+    """
+    Send payment reminder email before recurring payment
+    
+    Args:
+        user: User object (optional, will use subscription.user if not provided)
+        subscription: Subscription object (required)
+        amount: Amount due (float, optional)
+        due_date: Payment due date (datetime, optional)
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    # Handle legacy call with just subscription
+    if subscription and not user:
+        user = subscription.user
+        # Try to get amount and due_date from subscription
+        amount = amount or subscription.price
+        due_date = due_date or subscription.current_period_end
+    try:
+        subject = f"⏰ Payment Reminder - Your {subscription.meal_plan.name} Subscription Renewal"
         
         html_content = f"""
         <html>
@@ -461,7 +681,6 @@ def send_payment_reminder_email(subscription):
                 .reminder {{ background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 15px 0; }}
                 .subscription-details {{ background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }}
                 .footer {{ text-align: center; color: #666; font-size: 14px; margin-top: 20px; }}
-                .button {{ display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 15px 0; }}
             </style>
         </head>
         <body>
@@ -473,43 +692,27 @@ def send_payment_reminder_email(subscription):
             <div class="content">
                 <div class="reminder">
                     <h2>💰 Payment Due Soon</h2>
-                    <p>Hello {subscription.user.name},</p>
-                    <p>This is a friendly reminder that your subscription renewal payment is due soon. To ensure uninterrupted meal deliveries, please update your payment method.</p>
+                    <p>Hello {user.name},</p>
+                    <p>This is a friendly reminder that your subscription renewal payment will be processed automatically on {due_date.strftime('%B %d, %Y')}.</p>
                 </div>
                 
                 <div class="subscription-details">
                     <h3>📋 Subscription Details</h3>
-                    <p><strong>Plan:</strong> {subscription.meal_plan.name}</p>
-                    <p><strong>Amount:</strong> ₹{subscription.amount}</p>
-                    <p><strong>Due Date:</strong> {next_payment_date.strftime('%d/%m/%Y') if next_payment_date else 'Soon'}</p>
-                    <p><strong>Subscription ID:</strong> #{subscription.id}</p>
+                    <p><strong>Meal Plan:</strong> {subscription.meal_plan.name}</p>
+                    <p><strong>Amount:</strong> ${amount:.2f} CAD</p>
+                    <p><strong>Due Date:</strong> {due_date.strftime('%B %d, %Y')}</p>
+                    <p><strong>Frequency:</strong> {subscription.frequency.value.title()}</p>
                 </div>
                 
                 <div class="subscription-details">
-                    <h3>🔧 What You Need to Do</h3>
-                    <ol>
-                        <li><strong>Log into your account</strong> at https://fitsmart.ca/login</li>
-                        <li><strong>Go to Subscription Management</strong> in your dashboard</li>
-                        <li><strong>Update your payment method</strong> if needed</li>
-                        <li><strong>Ensure sufficient funds</strong> are available</li>
-                    </ol>
-                </div>
-                
-                <div class="subscription-details">
-                    <h3>⚠️ Important Notes</h3>
+                    <h3>✅ No Action Required</h3>
+                    <p>Your payment will be processed automatically using your saved payment method. To ensure uninterrupted meal deliveries, please:</p>
                     <ul>
-                        <li>Your meal deliveries will continue uninterrupted once payment is processed</li>
-                        <li>You can update your payment method anytime before the due date</li>
-                        <li>If payment fails, we'll notify you and give you time to resolve it</li>
-                        <li>You can pause or cancel your subscription anytime</li>
+                        <li>Ensure your payment method is up to date</li>
+                        <li>Check that your card has sufficient funds</li>
+                        <li>Verify your card is not expired</li>
                     </ul>
-                </div>
-                
-                <div class="subscription-details">
-                    <h3>📞 Need Help?</h3>
-                    <p><strong>Email:</strong> <a href="mailto:fitsmart.ca@gmail.com">fitsmart.ca@gmail.com</a></p>
-                    <p><strong>Phone:</strong> <a href="tel:+919876543210">+91-98765-43210</a></p>
-                    <p><strong>Live Chat:</strong> Available on our website</p>
+                    <p><a href="https://fitsmart.ca/profile">Update Payment Method</a></p>
                 </div>
                 
                 <p>Thank you for being a valued FitSmart customer!</p>
@@ -518,7 +721,7 @@ def send_payment_reminder_email(subscription):
             </div>
             
             <div class="footer">
-                <p>This is an automated reminder from FitSmart.</p>
+                <p>This is an automated email from FitSmart.</p>
                 <p>&copy; {datetime.now().year} FitSmart. All rights reserved.</p>
             </div>
         </body>
@@ -526,46 +729,30 @@ def send_payment_reminder_email(subscription):
         """
         
         text_content = f"""
-Payment Reminder - Your Subscription Renewal
+Payment Reminder - Subscription Renewal Due Soon
 
-Hello {subscription.user.name},
+Hello {user.name},
 
-This is a friendly reminder that your subscription renewal payment is due soon. To ensure uninterrupted meal deliveries, please update your payment method.
+This is a friendly reminder that your subscription renewal payment will be processed automatically on {due_date.strftime('%B %d, %Y')}.
 
 Subscription Details:
-- Plan: {subscription.meal_plan.name}
-- Amount: ₹{subscription.amount}
-- Due Date: {next_payment_date.strftime('%d/%m/%Y') if next_payment_date else 'Soon'}
-- Subscription ID: #{subscription.id}
+- Meal Plan: {subscription.meal_plan.name}
+- Amount: ${amount:.2f} CAD
+- Due Date: {due_date.strftime('%B %d, %Y')}
+- Frequency: {subscription.frequency.value.title()}
 
-What You Need to Do:
-1. Log into your account at https://fitsmart.ca/login
-2. Go to Subscription Management in your dashboard
-3. Update your payment method if needed
-4. Ensure sufficient funds are available
+No Action Required: Your payment will be processed automatically using your saved payment method. To ensure uninterrupted meal deliveries, please ensure your payment method is up to date and has sufficient funds.
 
-Important Notes:
-- Your meal deliveries will continue uninterrupted once payment is processed
-- You can update your payment method anytime before the due date
-- If payment fails, we'll notify you and give you time to resolve it
-- You can pause or cancel your subscription anytime
-
-Need Help?
-- Email: fitsmart.ca@gmail.com
-- Phone: +91-98765-43210
-- Live Chat: Available on our website
+Update Payment Method: https://fitsmart.ca/profile
 
 Thank you for being a valued FitSmart customer!
 
 Best regards,
 The FitSmart Team
-
-This is an automated reminder from FitSmart.
-© {datetime.now().year} FitSmart. All rights reserved.
         """
         
         return send_email(
-            to_email=subscription.user.email,
+            to_email=user.email,
             from_email=os.getenv('MAIL_DEFAULT_SENDER', 'no-reply@fitsmart.ca'),
             subject=subject,
             html_content=html_content,
@@ -573,8 +760,9 @@ This is an automated reminder from FitSmart.
         )
         
     except Exception as e:
-        logger.error(f"Failed to send payment reminder email to {subscription.user.email}: {str(e)}")
+        logger.error(f"Failed to send payment reminder email to {user.email}: {str(e)}")
         return False
+
 
 # ============================================================================
 # ADMIN NOTIFICATION EMAILS

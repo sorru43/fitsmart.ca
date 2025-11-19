@@ -69,6 +69,21 @@ def send_subscription_reminder(phone_number, subscription_type, renewal_date):
     message = f"Your HealthyRizz {subscription_type} subscription will renew on {renewal_date}. Please ensure your payment method is up to date."
     return send_sms(phone_number, message)
 
+def send_payment_success_sms(phone_number, customer_name, meal_plan_name, amount, period_end):
+    """Send payment success SMS for recurring subscription payment"""
+    message = f"Hi {customer_name}! Your {meal_plan_name} subscription payment of ${amount:.2f} CAD was successful. Next billing: {period_end.strftime('%B %d, %Y')}. Thank you! - FitSmart"
+    return send_sms(phone_number, message)
+
+def send_payment_failed_sms(phone_number, customer_name, meal_plan_name, amount, attempt_count):
+    """Send payment failed SMS for recurring subscription payment"""
+    message = f"Hi {customer_name}! Payment failed for your {meal_plan_name} subscription (${amount:.2f} CAD). Attempt #{attempt_count}. Please update your payment method at fitsmart.ca/profile to avoid cancellation. - FitSmart"
+    return send_sms(phone_number, message)
+
+def send_payment_reminder_sms(phone_number, customer_name, meal_plan_name, amount, due_date):
+    """Send payment reminder SMS before recurring payment"""
+    message = f"Hi {customer_name}! Your {meal_plan_name} subscription will renew automatically on {due_date.strftime('%B %d, %Y')} for ${amount:.2f} CAD. Ensure your payment method is up to date. - FitSmart"
+    return send_sms(phone_number, message)
+
 def send_bulk_sms(recipients, message_generator_func, batch_size=10, batch_delay=2):
     """
     Send bulk SMS messages to a list of recipients with rate limiting

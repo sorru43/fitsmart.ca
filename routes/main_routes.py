@@ -2684,11 +2684,38 @@ def checkout_success():
                                 if not current_user.is_authenticated:
                                     login_user(user, remember=True)
                                 
+                                # Calculate delivery information based on subscription time
+                                current_hour = datetime.now().hour
+                                delivery_info = None
+                                
+                                if current_hour < 10:
+                                    # Subscribed before 10 AM - same day delivery for next day meals
+                                    delivery_date = (datetime.now() + timedelta(days=1)).strftime('%A, %B %d, %Y')
+                                    delivery_info = {
+                                        'message': 'Great news! Since you subscribed before 10 AM, your meals will be delivered today for tomorrow\'s consumption.',
+                                        'delivery_date': delivery_date
+                                    }
+                                elif current_hour >= 11:
+                                    # Subscribed after 11 AM - next day delivery
+                                    delivery_date = (datetime.now() + timedelta(days=2)).strftime('%A, %B %d, %Y')
+                                    delivery_info = {
+                                        'message': 'Your meals will be delivered tomorrow. Thank you for subscribing!',
+                                        'delivery_date': delivery_date
+                                    }
+                                else:
+                                    # Between 10 AM and 11 AM - next day delivery
+                                    delivery_date = (datetime.now() + timedelta(days=2)).strftime('%A, %B %d, %Y')
+                                    delivery_info = {
+                                        'message': 'Your meals will be delivered tomorrow. Thank you for subscribing!',
+                                        'delivery_date': delivery_date
+                                    }
+                                
                                 return render_template('checkout_success.html', 
                                                       order=order,
                                                       subscription=subscription, 
                                                       plan=meal_plan,
-                                                      user=user)
+                                                      user=user,
+                                                      delivery_info=delivery_info)
             except Exception as e:
                 current_app.logger.error(f"Error retrieving Stripe session: {str(e)}")
                 import traceback
@@ -2812,11 +2839,39 @@ def checkout_success():
                 flash('Please complete your account setup to access your subscription.', 'info')
                 return redirect(url_for('main.signup_complete', order_id=order.id))
             
+            # Calculate delivery information based on subscription time
+            current_hour = datetime.now().hour
+            delivery_info = None
+            
+            if subscription:
+                if current_hour < 10:
+                    # Subscribed before 10 AM - same day delivery for next day meals
+                    delivery_date = (datetime.now() + timedelta(days=1)).strftime('%A, %B %d, %Y')
+                    delivery_info = {
+                        'message': 'Great news! Since you subscribed before 10 AM, your meals will be delivered today for tomorrow\'s consumption.',
+                        'delivery_date': delivery_date
+                    }
+                elif current_hour >= 11:
+                    # Subscribed after 11 AM - next day delivery
+                    delivery_date = (datetime.now() + timedelta(days=2)).strftime('%A, %B %d, %Y')
+                    delivery_info = {
+                        'message': 'Your meals will be delivered tomorrow. Thank you for subscribing!',
+                        'delivery_date': delivery_date
+                    }
+                else:
+                    # Between 10 AM and 11 AM - next day delivery
+                    delivery_date = (datetime.now() + timedelta(days=2)).strftime('%A, %B %d, %Y')
+                    delivery_info = {
+                        'message': 'Your meals will be delivered tomorrow. Thank you for subscribing!',
+                        'delivery_date': delivery_date
+                    }
+            
             # Show success page
             return render_template('checkout_success.html', 
                                   subscription=subscription, 
                                   plan=meal_plan,
-                                  order=order)
+                                  order=order,
+                                  delivery_info=delivery_info)
         
         # Get order from database using order_id
         order = Order.query.get(order_id)
@@ -2882,12 +2937,41 @@ def checkout_success():
             flash('Please complete your account setup to access your subscription.', 'info')
             return redirect(url_for('main.signup_complete', order_id=order.id))
         
+        # Calculate delivery information based on subscription time
+        from datetime import datetime, timedelta
+        current_hour = datetime.now().hour
+        delivery_info = None
+        
+        if subscription:
+            if current_hour < 10:
+                # Subscribed before 10 AM - same day delivery for next day meals
+                delivery_date = (datetime.now() + timedelta(days=1)).strftime('%A, %B %d, %Y')
+                delivery_info = {
+                    'message': 'Great news! Since you subscribed before 10 AM, your meals will be delivered today for tomorrow\'s consumption.',
+                    'delivery_date': delivery_date
+                }
+            elif current_hour >= 11:
+                # Subscribed after 11 AM - next day delivery
+                delivery_date = (datetime.now() + timedelta(days=2)).strftime('%A, %B %d, %Y')
+                delivery_info = {
+                    'message': 'Your meals will be delivered tomorrow. Thank you for subscribing!',
+                    'delivery_date': delivery_date
+                }
+            else:
+                # Between 10 AM and 11 AM - next day delivery
+                delivery_date = (datetime.now() + timedelta(days=2)).strftime('%A, %B %d, %Y')
+                delivery_info = {
+                    'message': 'Your meals will be delivered tomorrow. Thank you for subscribing!',
+                    'delivery_date': delivery_date
+                }
+        
         # Show success page
         return render_template('checkout_success.html', 
                               order=order,
                               subscription=subscription, 
                               plan=meal_plan,
-                              user=user)
+                              user=user,
+                              delivery_info=delivery_info)
                               
     except Exception as e:
         current_app.logger.error(f"Error processing checkout success: {str(e)}")
